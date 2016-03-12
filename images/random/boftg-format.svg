@@ -10,7 +10,7 @@
 	.st7{fill:#3BBEE9;}
 	.st8{fill:none;stroke:#3BBEE9;stroke-width:2;stroke-miterlimit:10;}
 	.st9{fill:none;stroke:#EE3145;stroke-width:2;stroke-miterlimit:10;}
-	.st10{fill:#FFFFFF;}
+	.st10{fill:#FFFFFF;filter: drop-shadow(0px 0px 1px #000);}
 	.st11{fill:none;stroke:#79C798;stroke-width:2;stroke-miterlimit:10;}
 </style>
 <g>
