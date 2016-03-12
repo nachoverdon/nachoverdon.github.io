@@ -11,7 +11,7 @@
 	.st7{fill:#3BBEE9;}
 	.st8{fill:none;stroke:#3BBEE9;stroke-width:2;stroke-miterlimit:10;}
 	.st9{fill:none;stroke:#EE3145;stroke-width:2;stroke-miterlimit:10;}
-	.st10{fill:#FFFFFF;stroke:#000;stroke-opacity:0.8;}
+	.st10{fill:#FFFFFF;stroke:#000;stroke-opacity:0.8;stroke-width: 0.5;}
 	.st11{fill:none;stroke:#79C798;stroke-width:2;stroke-miterlimit:10;}
 </style>
 <g>
