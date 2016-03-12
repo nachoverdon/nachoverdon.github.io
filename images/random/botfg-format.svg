@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 1101.5 333.3" style="enable-background:new 0 0 1101.5 333.3;" xml:space="preserve" class="">
 <style type="text/css">
-	.st0{fill:#3a92ff;filter:drop-shadow(0px 1px 0px #000) drop-shadow(0px -1px 0px #000) drop-shadow(1px 0px 0px #000) drop-shadow(-1px 0px 0px #000)  drop-shadow(0px 0px 2px #000) ;}
+	.st0{fill:#3a92ff;}
 	.st1{fill:#53405B;}
 	.st2{opacity:0.32;fill:#EE3145;}
 	.st3{fill:#EE3145;}
@@ -11,7 +11,7 @@
 	.st7{fill:#3BBEE9;}
 	.st8{fill:none;stroke:#3BBEE9;stroke-width:2;stroke-miterlimit:10;}
 	.st9{fill:none;stroke:#EE3145;stroke-width:2;stroke-miterlimit:10;}
-	.st10{fill:#fff;filter:drop-shadow(0px 1px 0px #000) drop-shadow(0px -1px 0px #000) drop-shadow(1px 0px 0px #000) drop-shadow(-1px 0px 0px #000);}
+	.st10{fill:#fff;}
 	.st11{fill:none;stroke:#79C798;stroke-width:2;stroke-miterlimit:10;}
 </style>
 <g>
