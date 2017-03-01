@@ -12,7 +12,8 @@ email: nverblaz@gmail.com
 description: Games. Web. SSBM. Foutaises.
 baseurl: ''
 url: http://justht.ml/
-title_description: Games. Web. SSBM. Foutaises.
+title_description: "Games. Web. SSBM. Foutaises."
+title_image: "https://www.gravatar.com/avatar/00000000000000000000000000000000?s=500&d=mm"
 post_limit: 5
 twitter_username: bazoo_mv
 github_username: nachoverdon
