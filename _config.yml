@@ -1,8 +1,16 @@
+---
 title: Nacho Verdón
+timezone: UTC
+collections:
+  posts:
+    title: Posts
+    output: true
+  uploads:
+    title: Uploads
+    output: true
 description: 
 google_analytics: 
 show_downloads: true
 theme: jekyll-theme-cayman
-
 gems:
-  - jekyll-mentions
+- jekyll-mentions
