@@ -1,6 +1,41 @@
 title: Nacho Verdón
-description: 
-google_analytics: 
+email: nverblaz@gmail.com
+description: "Games. Web. SSBM. Foutaises."
+baseurl: ""
+url: "http://justht.ml/"
+title_description: "Games. Web. SSBM. Foutaises."
+# title_image: ""
+# google_analytics: ""
+post_limit: 5
+# description: 
+# google_analytics: 
+
+
+# Social usernames/URLs
+twitter_username: bazoo_mv
+github_username:  nachoverdon
+instagram_username: 
+reddit_username: 
+# linkedin_link: http://carte-noire.jacobtomlinson.co.uk/
+# google_plus_link: http://carte-noire.jacobtomlinson.co.uk/
+# stackoverflow_link: http://carte-noire.jacobtomlinson.co.uk/
+# xing_link:
+# facebook_link:
+
+# Footer
+footer_left: "Made with <i class=\"fa fa-heart\"></i> by <a href=\"https://twitter.com/_JacobTomlinson\">Jacob Tomlinson</a>"
+footer_right: "&lt;/&gt; on <a href=\"https://github.com/jacobtomlinson/carte-noire\">Github</a> &nbsp;<i class=\"fa fa-github-alt\"></i>"
+
+# Build settings
+markdown: kramdown
+
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+permalink: pretty
+exclude: [vendor]
+
 show_downloads: true
 theme: jekyll-theme-cayman
 
