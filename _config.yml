@@ -1,46 +1,34 @@
+---
 title: Nacho Verdón
+timezone: UTC
+collections:
+  posts:
+    title: Posts
+    output: true
+  uploads:
+    title: Uploads
+    output: true
 email: nverblaz@gmail.com
-description: "Games. Web. SSBM. Foutaises."
-baseurl: ""
-url: "http://justht.ml/"
-title_description: "Games. Web. SSBM. Foutaises."
-# title_image: ""
-# google_analytics: ""
+description: Games. Web. SSBM. Foutaises.
+baseurl: ''
+url: http://justht.ml/
+title_description: Games. Web. SSBM. Foutaises.
 post_limit: 5
-# description: 
-# google_analytics: 
-
-
-# Social usernames/URLs
 twitter_username: bazoo_mv
-github_username:  nachoverdon
+github_username: nachoverdon
 instagram_username: 
 reddit_username: 
-# linkedin_link: http://carte-noire.jacobtomlinson.co.uk/
-# google_plus_link: http://carte-noire.jacobtomlinson.co.uk/
-# stackoverflow_link: http://carte-noire.jacobtomlinson.co.uk/
-# xing_link:
-# facebook_link:
-
-# Footer
-footer_left: "Made with <i class=\"fa fa-heart\"></i> by <a href=\"https://twitter.com/_JacobTomlinson\">Jacob Tomlinson</a>"
-footer_right: "&lt;/&gt; on <a href=\"https://github.com/jacobtomlinson/carte-noire\">Github</a> &nbsp;<i class=\"fa fa-github-alt\"></i>"
-
-# Build settings
+footer_left: Made with <i class="fa fa-heart"></i> by <a href="https://twitter.com/_JacobTomlinson">Jacob
+  Tomlinson</a>
+footer_right: '&lt;/&gt; on <a href="https://github.com/jacobtomlinson/carte-noire">Github</a>
+  &nbsp;<i class="fa fa-github-alt"></i>'
 markdown: kramdown
-
 kramdown:
   input: GFM
   syntax_highlighter: rouge
-
 permalink: pretty
-exclude: [vendor]
-
-timezone: UTC
-# description: 
-# google_analytics: 
-
+exclude:
+- vendor
 show_downloads: true
-# theme: jekyll-theme-cayman
 gems:
 - jekyll-mentions

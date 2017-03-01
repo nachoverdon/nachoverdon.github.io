@@ -1,15 +1,16 @@
 ---
-layout:     post
-title:      Carte Noire in Action
-date:       2014-06-10 12:31:19
-summary:    See what the different elements looks like.
-categories: jekyll
-thumbnail: cogs
+title: Carte Noire in Action
+date: 2014-06-10 12:31:19 Z
+categories:
+- jekyll
 tags:
- - demo
- - action
- - carte
- - noire
+- demo
+- action
+- carte
+- noire
+layout: post
+summary: See what the different elements looks like.
+thumbnail: cogs
 ---
 
 **Note** - This article is a derivative of ["See pixyll in action"][1], taken from the lovely jekyll theme [pixyll][4].
