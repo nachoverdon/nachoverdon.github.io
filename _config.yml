@@ -1,4 +1,6 @@
+---
 title: Nacho Verdón
+<<<<<<< HEAD
 email: nverblaz@gmail.com
 description: "Games. Web. SSBM. Foutaises."
 baseurl: ""
@@ -36,8 +38,12 @@ kramdown:
 permalink: pretty
 exclude: [vendor]
 
+=======
+timezone: UTC
+# description: 
+# google_analytics: 
+
 show_downloads: true
 theme: jekyll-theme-cayman
-
 gems:
-  - jekyll-mentions
+- jekyll-mentions
