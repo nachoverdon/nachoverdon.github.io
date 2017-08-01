@@ -3576,7 +3576,6 @@ var Main = function() {
 	this.TEXT_BLENDING_SPEED = 0.01;
 	this.GAME_BY = "A game by Nacho 'bazoo' Verdon";
 	this.GAME_NAME = "DOTGER";
-	haxegon_Scene.change(MenuScene);
 	haxegon_Core.delaycall($bind(this,this.startBlending),2);
 };
 $hxClasses["Main"] = Main;
@@ -40321,7 +40320,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 308264;
+	this.version = 247393;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = ["lime","utils","AssetCache"];
