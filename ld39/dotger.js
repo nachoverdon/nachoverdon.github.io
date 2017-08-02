@@ -1019,7 +1019,7 @@ $hxClasses["ApplicationMain"] = ApplicationMain;
 ApplicationMain.__name__ = ["ApplicationMain"];
 ApplicationMain.main = function() {
 	var projectName = "dotger";
-	var config = { build : "4", company : "Nacho 'bazoo' Verdón", file : "dotger", fps : 60, name : "Dotger", orientation : "landscape", packageName : "com.nachoverdon.dotger", version : "1.0.0", windows : [{ allowHighDPI : false, alwaysOnTop : false, antialiasing : 0, background : 1118481, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 480, hidden : null, maximized : null, minimized : null, parameters : { }, resizable : true, stencilBuffer : true, title : "Dotger", vsync : true, width : 768, x : null, y : null}]};
+	var config = { build : "5", company : "Nacho 'bazoo' Verdón", file : "dotger", fps : 60, name : "Dotger", orientation : "landscape", packageName : "com.nachoverdon.dotger", version : "1.0.0", windows : [{ allowHighDPI : false, alwaysOnTop : false, antialiasing : 0, background : 1118481, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 480, hidden : null, maximized : null, minimized : null, parameters : { }, resizable : true, stencilBuffer : true, title : "Dotger", vsync : true, width : 768, x : null, y : null}]};
 	lime_system_System.__registerEntryPoint(projectName,ApplicationMain.create,config);
 };
 ApplicationMain.create = function(config) {
@@ -3280,20 +3280,23 @@ EReg.prototype = {
 	,__class__: EReg
 };
 var GameScene = function() {
+	this._isPlayerAlive = true;
 	this._PLAYER_SPEED_Y = 10;
 	this._PLAYER_SPEED_X = 10;
 	this._PLAYER_MIN_SIZE = 4;
 	this._PLAYER_INITIAL_SATURATION = 0.5;
 	this._PLAYER_INITIAL_SIZE = 50;
 	this._PLAYER_INITIAL_DECREASE_SPEED = 0.05;
-	this._TXT_RESTART = "[R]estart";
+	this.GAME_OVER = "GAME OVER";
+	this.RESTART = "[R]estart";
 	this.DEBUG_MODE = false;
 };
 $hxClasses["GameScene"] = GameScene;
 GameScene.__name__ = ["GameScene"];
 GameScene.prototype = {
 	DEBUG_MODE: null
-	,_TXT_RESTART: null
+	,RESTART: null
+	,GAME_OVER: null
 	,_PLAYER_INITIAL_DECREASE_SPEED: null
 	,_PLAYER_INITIAL_SIZE: null
 	,_PLAYER_INITIAL_SATURATION: null
@@ -3305,6 +3308,7 @@ GameScene.prototype = {
 	,_playerSaturation: null
 	,_playerColor: null
 	,_playerAlpha: null
+	,_isPlayerAlive: null
 	,_playerX: null
 	,_playerY: null
 	,reset: function() {
@@ -3315,30 +3319,44 @@ GameScene.prototype = {
 		this.checkInputs();
 		this.drawPlayer();
 		this.debugGame();
+		if(!this._isPlayerAlive) {
+			this.gameOver();
+		}
 	}
 	,initialize: function() {
 		this._playerSize = this._PLAYER_INITIAL_SIZE;
 		this._playerDecreaseSpeed = this._PLAYER_INITIAL_DECREASE_SPEED;
 		this._playerSaturation = 0.5;
-		this._playerColor = haxegon_Col.hsl(haxegon_Core.get_time() * 30,this._playerSaturation,0.5);
+		this._playerColor = haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,this._playerSaturation,0.5);
 		this._playerAlpha = 1;
+		this._isPlayerAlive = true;
 		this._playerX = haxegon_Gfx.screenwidthmid;
 		this._playerY = haxegon_Gfx.screenheightmid;
 	}
+	,gameOver: function() {
+		haxegon_Text.align(haxegon_Text.CENTER);
+		haxegon_Text.set_size(4);
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid,haxegon_Gfx.screenheightmid - 50,this.GAME_OVER);
+		haxegon_Text.set_size(3);
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid,haxegon_Gfx.screenheightmid + 20,this.RESTART);
+	}
 	,checkInputs: function() {
 		this.checkPlayerInputs();
-		if(haxegon_Input.justpressed(haxegon_Key.R)) {
-			haxegon_Scene.change(MenuScene);
+		if(!this._isPlayerAlive) {
+			if(haxegon_Input.justpressed(haxegon_Key.R)) {
+				haxegon_Scene.change(MenuScene);
+			}
 		}
 	}
 	,decreasePlayerSizeBy: function(amount) {
 		this._playerSize -= amount;
-		if(this._playerSize < this._PLAYER_MIN_SIZE) {
+		if(this._playerSize < this._PLAYER_MIN_SIZE && this._isPlayerAlive) {
 			this.killPlayer();
 		}
 	}
 	,killPlayer: function() {
 		this._playerAlpha = 0;
+		this._isPlayerAlive = false;
 	}
 	,checkPlayerInputs: function() {
 		if(haxegon_Input.pressed(haxegon_Key.LEFT) || haxegon_Input.pressed(haxegon_Key.A)) {
@@ -3368,7 +3386,7 @@ GameScene.prototype = {
 		haxegon_Gfx.fillcircle(this._playerX,this._playerY,this._playerSize,this._playerColor,this._playerAlpha);
 	}
 	,changePlayerColor: function() {
-		this._playerColor = haxegon_Col.hsl(haxegon_Core.get_time() * 30,this._playerSaturation,0.5);
+		this._playerColor = haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,this._playerSaturation,0.5);
 	}
 	,testBackgroundColors: function() {
 	}
@@ -3392,9 +3410,9 @@ GameScene.prototype = {
 			this.testFilters();
 			this.testBackgroundColors();
 			haxegon_Debug.clear();
-			haxegon_Debug.log("FPS:               " + haxegon_Convert.tostring(haxegon_Core.get_fps()),{ fileName : "GameScene.hx", lineNumber : 173, className : "GameScene", methodName : "debugGame"});
-			haxegon_Debug.log("bg_sat: " + haxegon_Convert.tostring(Globals.backgroundSaturation),{ fileName : "GameScene.hx", lineNumber : 174, className : "GameScene", methodName : "debugGame"});
-			haxegon_Debug.log("bg_lig: " + haxegon_Convert.tostring(Globals.backgroundLightness),{ fileName : "GameScene.hx", lineNumber : 175, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("FPS:               " + haxegon_Convert.tostring(haxegon_Core.get_fps()),{ fileName : "GameScene.hx", lineNumber : 189, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("bg_sat: " + haxegon_Convert.tostring(Globals.backgroundSaturation),{ fileName : "GameScene.hx", lineNumber : 190, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("bg_lig: " + haxegon_Convert.tostring(Globals.backgroundLightness),{ fileName : "GameScene.hx", lineNumber : 191, className : "GameScene", methodName : "debugGame"});
 		}
 	}
 	,__class__: GameScene
@@ -3610,10 +3628,10 @@ Main.prototype = {
 		if(this.showText) {
 			var offset = 50;
 			haxegon_Text.set_size(4);
+			haxegon_Text.align(haxegon_Text.CENTER);
 			haxegon_Text.display(haxegon_Gfx.screenwidthmid,haxegon_Gfx.screenheightmid - offset,this.GAME_NAME,this.color);
 			haxegon_Text.set_size(3);
 			haxegon_Text.display(haxegon_Gfx.screenwidthmid,haxegon_Gfx.screenheightmid,this.GAME_BY,this.color);
-			haxegon_Text.align(haxegon_Text.CENTER);
 		}
 	}
 	,updateColor: function() {
@@ -3906,7 +3924,7 @@ var MenuScene = function() {
 	this._START_GAME_KEYS = [haxegon_Key.W,haxegon_Key.A,haxegon_Key.S,haxegon_Key.D,haxegon_Key.UP,haxegon_Key.DOWN,haxegon_Key.LEFT,haxegon_Key.RIGHT,haxegon_Key.ENTER,haxegon_Key.SPACE];
 	this._DOT_SHRINK_SPEED = 0.09;
 	this._DOT_BLEND_SPEED = 0.0025;
-	this._DOT_SPEED = 3;
+	this._DOT_SPEED = 4;
 	this._DOT_SIZE = 10;
 	this._DOT_LIGHTNESS = 0.8;
 	this._DOT_SATURATION = 0.8;
@@ -3915,7 +3933,12 @@ var MenuScene = function() {
 	this._TXT_SIZE = 3;
 	this._TXT_INITIAL_Y = haxegon_Gfx.screenheightmid;
 	this._TXT_INITIAL_X = 50;
-	this._TXT_PLAY = "Play!";
+	this._TXT_PLAY = "PLAY";
+	this._SAT_LIG_SPEED = 0.005;
+	this._SAT_LIG_MAX = 0.05;
+	this._HINT_OFFSET = 25;
+	this._HINT_DELAY = 6;
+	this._HOW_TO = "Arrows";
 	this._PLAYER_INITIAL_SHRINK_SPEED = 0.05;
 	this._PLAYER_INITIAL_LIGHTNESS = 0.5;
 	this._PLAYER_INITIAL_SATURATION = 0.5;
@@ -3933,6 +3956,14 @@ MenuScene.prototype = {
 	,_PLAYER_INITIAL_LIGHTNESS: null
 	,_PLAYER_INITIAL_SHRINK_SPEED: null
 	,player: null
+	,_HOW_TO: null
+	,_HINT_DELAY: null
+	,_HINT_OFFSET: null
+	,_SAT_LIG_MAX: null
+	,_SAT_LIG_SPEED: null
+	,_sat: null
+	,_lig: null
+	,_showHint: null
 	,_TXT_PLAY: null
 	,_TXT_INITIAL_X: null
 	,_TXT_INITIAL_Y: null
@@ -3963,11 +3994,18 @@ MenuScene.prototype = {
 		if(this._isSequenceRunnning) {
 			this.startGameSequence();
 		}
+		if(this._showHint && !this._isSequenceRunnning) {
+			this.displayHint();
+		}
 	}
 	,reset: function() {
 		this.initialize();
+		haxegon_Core.delaycall($bind(this,this.enableHint),this._HINT_DELAY);
 	}
 	,initialize: function() {
+		this._sat = 0;
+		this._lig = 0;
+		this._showHint = false;
 		this._isSequenceRunnning = false;
 		this._txtPlayX = this._TXT_INITIAL_X;
 		this._txtPlayY = this._TXT_INITIAL_Y;
@@ -3975,8 +4013,8 @@ MenuScene.prototype = {
 		this._txtPlayAlpha = 1;
 		this._dotX = this._DOT_INITIAL_X;
 		this._dotY = this._DOT_INITIAL_Y;
-		this.player = new Ball(this._PLAYER_INITIAL_X,this._PLAYER_INITIAL_Y,this._PLAYER_INITIAL_SIZE,haxegon_Col.hsl(haxegon_Core.get_time() * 30,this._PLAYER_INITIAL_SATURATION,this._PLAYER_INITIAL_LIGHTNESS));
-		this.dot = new Ball(this._dotX,this._dotY,this._DOT_SIZE,haxegon_Col.hsl(haxegon_Core.get_time() * 30,this._DOT_SATURATION,this._DOT_LIGHTNESS));
+		this.player = new Ball(this._PLAYER_INITIAL_X,this._PLAYER_INITIAL_Y,this._PLAYER_INITIAL_SIZE,haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,this._PLAYER_INITIAL_SATURATION,this._PLAYER_INITIAL_LIGHTNESS));
+		this.dot = new Ball(this._dotX,this._dotY,this._DOT_SIZE,haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,this._DOT_SATURATION,this._DOT_LIGHTNESS));
 		this.dot.blend(this._DOT_BLEND_SPEED);
 		this.dot.shrink(this._DOT_SHRINK_SPEED);
 		this.player.shrink(this._PLAYER_INITIAL_SHRINK_SPEED);
@@ -4033,9 +4071,31 @@ MenuScene.prototype = {
 	,displayPlayText: function() {
 		if(this._txtPlayDisplay) {
 			haxegon_Text.set_size(this._TXT_SIZE);
-			haxegon_Text.display(this._txtPlayX + this._DOT_SIZE,this._txtPlayY - this._DOT_SIZE,this._TXT_PLAY);
 			haxegon_Text.align(haxegon_Text.LEFT);
+			haxegon_Text.display(this._txtPlayX + this._DOT_SIZE,this._txtPlayY - this._DOT_SIZE,this._TXT_PLAY);
 		}
+	}
+	,enableHint: function() {
+		this._showHint = true;
+	}
+	,displayHint: function() {
+		if(this._sat >= this._SAT_LIG_MAX && this._lig >= this._SAT_LIG_MAX) {
+			this._sat = this._SAT_LIG_MAX;
+			this._lig = this._SAT_LIG_MAX;
+		} else {
+			this._sat += this._SAT_LIG_SPEED;
+			this._lig += this._SAT_LIG_SPEED;
+		}
+		var color = haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,Globals.backgroundSaturation + this._sat,Globals.backgroundLightness + this._lig);
+		var offset = this.player.get_size() + this._HINT_OFFSET;
+		haxegon_Text.align(haxegon_Text.CENTER);
+		haxegon_Text.rotation(90,haxegon_Text.CENTER,haxegon_Text.CENTER);
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid + haxegon_Convert.toint(haxegon_Text.height("<") / 2),haxegon_Gfx.screenheightmid - offset,"<",color);
+		haxegon_Text.rotation(90,haxegon_Text.CENTER,haxegon_Convert.toint(haxegon_Text.CENTER / 2));
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid + haxegon_Convert.toint(haxegon_Text.height(">") / 2),haxegon_Gfx.screenheightmid + offset,">",color);
+		haxegon_Text.rotation(0);
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid - offset,haxegon_Gfx.screenheightmid - haxegon_Convert.toint(haxegon_Text.height("<") / 2),"<",color);
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid + offset,haxegon_Gfx.screenheightmid - haxegon_Convert.toint(haxegon_Text.height(">") / 2),">",color);
 	}
 	,__class__: MenuScene
 };
@@ -40367,7 +40427,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 281068;
+	this.version = 131302;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = ["lime","utils","AssetCache"];
@@ -86254,7 +86314,7 @@ Ball.INITIAL_SATURATION = 0.5;
 Ball.INITIAL_LIGHTNESS = 0.5;
 Globals.backgroundSaturation = 0.3;
 Globals.backgroundLightness = 0.3;
-Globals.backgroundChangeSpeed = 30;
+Globals.backgroundChangeSpeed = 35;
 openfl_text_Font.__registeredFonts = [];
 Xml.Element = 0;
 Xml.PCData = 1;
