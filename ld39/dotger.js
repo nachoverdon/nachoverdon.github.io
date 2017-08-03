@@ -1019,7 +1019,7 @@ $hxClasses["ApplicationMain"] = ApplicationMain;
 ApplicationMain.__name__ = ["ApplicationMain"];
 ApplicationMain.main = function() {
 	var projectName = "dotger";
-	var config = { build : "6", company : "Nacho 'bazoo' Verdón", file : "dotger", fps : 60, name : "Dotger", orientation : "landscape", packageName : "com.nachoverdon.dotger", version : "1.0.0", windows : [{ allowHighDPI : false, alwaysOnTop : false, antialiasing : 0, background : 1118481, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 480, hidden : null, maximized : null, minimized : null, parameters : { }, resizable : true, stencilBuffer : true, title : "Dotger", vsync : true, width : 768, x : null, y : null}]};
+	var config = { build : "7", company : "Nacho 'bazoo' Verdón", file : "dotger", fps : 60, name : "Dotger", orientation : "landscape", packageName : "com.nachoverdon.dotger", version : "1.0.0", windows : [{ allowHighDPI : false, alwaysOnTop : false, antialiasing : 0, background : 1118481, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 480, hidden : null, maximized : null, minimized : null, parameters : { }, resizable : true, stencilBuffer : true, title : "Dotger", vsync : true, width : 768, x : null, y : null}]};
 	lime_system_System.__registerEntryPoint(projectName,ApplicationMain.create,config);
 };
 ApplicationMain.create = function(config) {
@@ -3204,6 +3204,7 @@ var Debris = function(x,y,size,speed,direction,color,alpha) {
 	this._direction = direction * Math.PI / 180;
 	this._color = color;
 	this._alpha = alpha;
+	this._isDead = false;
 	this.updateAngle();
 };
 $hxClasses["Debris"] = Debris;
@@ -3217,6 +3218,19 @@ Debris.prototype = {
 	,_angle: null
 	,_color: null
 	,_alpha: null
+	,_isDead: null
+	,getX: function() {
+		return this._x;
+	}
+	,getY: function() {
+		return this._y;
+	}
+	,getSize: function() {
+		return this._size;
+	}
+	,getDir: function() {
+		return this._direction;
+	}
 	,updateAngle: function() {
 		this._angle = haxegon_Core.get_time() * this._speed;
 	}
@@ -3225,10 +3239,16 @@ Debris.prototype = {
 		this._y += this._speed * Math.sin(this._direction);
 	}
 	,draw: function() {
+		if(this._isDead) {
+			return;
+		}
 		this.move();
 		this.updateAngle();
 		haxegon_Gfx.set_linethickness(2);
 		haxegon_Gfx.drawhexagon(this._x,this._y,this._size,this._angle,this._color,this._alpha);
+	}
+	,kill: function() {
+		this._isDead = true;
 	}
 	,__class__: Debris
 };
@@ -3325,6 +3345,7 @@ EReg.prototype = {
 	,__class__: EReg
 };
 var GameScene = function() {
+	this._DEBRIS_SPAWN_COOLDOWN = 5;
 	this._isPlayerAlive = true;
 	this._PLAYER_SPEED_Y = 10;
 	this._PLAYER_SPEED_X = 10;
@@ -3356,7 +3377,9 @@ GameScene.prototype = {
 	,_isPlayerAlive: null
 	,_playerX: null
 	,_playerY: null
-	,_debris: null
+	,_DEBRIS_SPAWN_COOLDOWN: null
+	,_nextDebris: null
+	,_debrisPool: null
 	,reset: function() {
 		this.initialize();
 	}
@@ -3379,6 +3402,7 @@ GameScene.prototype = {
 		this._isPlayerAlive = true;
 		this._playerX = haxegon_Gfx.screenwidthmid;
 		this._playerY = haxegon_Gfx.screenheightmid;
+		this._nextDebris = 0;
 		this.createDebris();
 	}
 	,gameOver: function() {
@@ -3391,7 +3415,9 @@ GameScene.prototype = {
 		haxegon_Text.display(haxegon_Gfx.screenwidthmid - Math.floor(haxegon_Text.width(this.RESTART) / 2) + haxegon_Text.width("[") + 3,haxegon_Gfx.screenheightmid + 20,"R",haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,Globals.backgroundSaturation + Globals.UI_TEXT_SATURATION,Globals.backgroundLightness + Globals.UI_TEXT_LIGHTNESS));
 	}
 	,checkInputs: function() {
-		this.checkPlayerInputs();
+		if(this._isPlayerAlive) {
+			this.checkPlayerInputs();
+		}
 		if(!this._isPlayerAlive) {
 			if(haxegon_Input.justpressed(haxegon_Key.R)) {
 				haxegon_Scene.change(MenuScene);
@@ -3399,9 +3425,11 @@ GameScene.prototype = {
 		}
 	}
 	,decreasePlayerSizeBy: function(amount) {
-		this._playerSize -= amount;
-		if(this._playerSize < this._PLAYER_MIN_SIZE && this._isPlayerAlive) {
+		if(this._playerSize <= this._PLAYER_MIN_SIZE && this._isPlayerAlive) {
+			this._playerSize = this._PLAYER_MIN_SIZE;
 			this.killPlayer();
+		} else if(this._isPlayerAlive) {
+			this._playerSize -= amount;
 		}
 	}
 	,killPlayer: function() {
@@ -3438,8 +3466,10 @@ GameScene.prototype = {
 	,changePlayerColor: function() {
 		this._playerColor = haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,this._playerSaturation,0.5);
 	}
+	,spawnDebris: function() {
+	}
 	,createDebris: function() {
-		this._debris = [];
+		this._debrisPool = [];
 		var directions = [0,90,180,270];
 		var _g = 0;
 		while(_g < 19) {
@@ -3449,26 +3479,84 @@ GameScene.prototype = {
 			var x = haxegon_Random["int"](size,haxegon_Gfx.screenwidth - size);
 			var y = haxegon_Random["int"](size,haxegon_Gfx.screenheight - size);
 			var speed = haxegon_Random["int"](2,6);
+			if(index == 0) {
+				dir = 180;
+			}
 			if(dir == 0) {
-				this._debris.push(new Debris(-size,y,size,speed,dir));
+				this._debrisPool.push(new Debris(-size,y,size,speed,dir));
+			} else if(dir == 90) {
+				this._debrisPool.push(new Debris(x,-size,size,speed,dir));
+			} else if(dir == 180) {
+				this._debrisPool.push(new Debris(haxegon_Gfx.screenwidth + size,y,size,speed,dir));
+			} else if(dir == 270) {
+				this._debrisPool.push(new Debris(x,haxegon_Gfx.screenwidth + size,size,speed,dir));
 			}
-			if(dir == 90) {
-				this._debris.push(new Debris(x,-size,size,speed,dir));
-			}
-			if(dir == 180) {
-				this._debris.push(new Debris(haxegon_Gfx.screenwidth + size,y,size,speed,dir));
-			}
-			if(dir == 270) {
-				this._debris.push(new Debris(x,haxegon_Gfx.screenwidth + size,size,speed,dir));
-			}
+		}
+	}
+	,checkOutOfBounds: function(x,y) {
+		if(!(x < 0 || x > haxegon_Gfx.screenwidth || y < 0)) {
+			return y > haxegon_Gfx.screenheight;
+		} else {
+			return true;
+		}
+	}
+	,isDebrisOutOfBounds: function(debris) {
+		var dir = debris.getDir();
+		var isOutOfBounds = false;
+		if(dir == 0) {
+			isOutOfBounds = this.checkOutOfBounds(debris.getX() + debris.getSize(),debris.getY());
+		} else if(dir == 90) {
+			isOutOfBounds = this.checkOutOfBounds(debris.getX(),debris.getY() + debris.getSize());
+		} else if(dir == 180) {
+			isOutOfBounds = this.checkOutOfBounds(debris.getX() - debris.getSize(),debris.getY());
+		} else if(dir == 270) {
+			isOutOfBounds = this.checkOutOfBounds(debris.getX(),debris.getY() - debris.getSize());
+		}
+		if(isOutOfBounds) {
+			HxOverrides.remove(this._debrisPool,debris);
+		}
+		return isOutOfBounds;
+	}
+	,checkCollisionDebrisPlayers: function(debris) {
+		if(!this._isPlayerAlive) {
+			return;
+		}
+		var debrisHitbox = 1.5;
+		var playerHitbox = 1.5;
+		var playerSize = this._playerSize * playerHitbox;
+		var debrisSize = debris.getSize() * debrisHitbox;
+		var player_y;
+		var player_x;
+		var player_w;
+		var player_h;
+		player_x = this._playerX - playerSize / 2;
+		player_y = this._playerY - playerSize / 2;
+		player_w = playerSize;
+		player_h = playerSize;
+		var deb_y;
+		var deb_x;
+		var deb_w;
+		var deb_h;
+		deb_x = debris.getX() - debrisSize / 2;
+		deb_y = debris.getY() - debrisSize / 2;
+		deb_w = debrisSize;
+		deb_h = debrisSize;
+		var isOverlaping = haxegon_Geom.overlap(player_x,player_y,player_w,player_h,deb_x,deb_y,deb_w,deb_h);
+		if(isOverlaping) {
+			debris.kill();
+			HxOverrides.remove(this._debrisPool,debris);
 		}
 	}
 	,drawDebris: function() {
 		var _g = 0;
-		var _g1 = this._debris;
+		var _g1 = this._debrisPool;
 		while(_g < _g1.length) {
 			var debris = _g1[_g];
 			++_g;
+			if(this.isDebrisOutOfBounds(debris)) {
+				return;
+			}
+			this.checkCollisionDebrisPlayers(debris);
 			debris.draw();
 		}
 	}
@@ -3494,9 +3582,9 @@ GameScene.prototype = {
 			this.testFilters();
 			this.testBackgroundColors();
 			haxegon_Debug.clear();
-			haxegon_Debug.log("FPS:               " + haxegon_Convert.tostring(haxegon_Core.get_fps()),{ fileName : "GameScene.hx", lineNumber : 229, className : "GameScene", methodName : "debugGame"});
-			haxegon_Debug.log("bg_sat: " + haxegon_Convert.tostring(Globals.backgroundSaturation),{ fileName : "GameScene.hx", lineNumber : 230, className : "GameScene", methodName : "debugGame"});
-			haxegon_Debug.log("bg_lig: " + haxegon_Convert.tostring(Globals.backgroundLightness),{ fileName : "GameScene.hx", lineNumber : 231, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("FPS:               " + haxegon_Convert.tostring(haxegon_Core.get_fps()),{ fileName : "GameScene.hx", lineNumber : 305, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("bg_sat: " + haxegon_Convert.tostring(Globals.backgroundSaturation),{ fileName : "GameScene.hx", lineNumber : 306, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("bg_lig: " + haxegon_Convert.tostring(Globals.backgroundLightness),{ fileName : "GameScene.hx", lineNumber : 307, className : "GameScene", methodName : "debugGame"});
 		}
 	}
 	,__class__: GameScene
@@ -3684,7 +3772,6 @@ var Main = function() {
 	this.TEXT_BLENDING_SPEED = 0.01;
 	this.GAME_BY = "A game by Nacho 'bazoo' Verdon";
 	this.GAME_NAME = "DOTGER";
-	haxegon_Scene.change(GameScene);
 	haxegon_Core.delaycall($bind(this,this.startBlending),2);
 };
 $hxClasses["Main"] = Main;
@@ -4015,7 +4102,7 @@ var MenuScene = function() {
 	this._DOT_SATURATION = 0.8;
 	this._DOT_INITIAL_Y = haxegon_Gfx.screenheightmid;
 	this._DOT_INITIAL_X = 40;
-	this._TXT_SIZE = 3;
+	this._TXT_SIZE = 2;
 	this._TXT_INITIAL_Y = haxegon_Gfx.screenheightmid;
 	this._TXT_INITIAL_X = 50;
 	this._TXT_PLAY = "PLAY";
@@ -4075,7 +4162,6 @@ MenuScene.prototype = {
 	,_START_GAME_KEYS: null
 	,update: function() {
 		Globals.changeBackgroundColor();
-		this.displayPlayText();
 		this.drawPlayer();
 		this.drawDot();
 		this.checkStartGame();
@@ -4181,15 +4267,19 @@ MenuScene.prototype = {
 			this._lig += this._SAT_LIG_SPEED;
 		}
 		var color = haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,Globals.backgroundSaturation + this._sat,Globals.backgroundLightness + this._lig);
-		var offset = this.player.get_size() + this._HINT_OFFSET + this._offsetExtra;
+		var playerOffset = this.player.get_size() + this._HINT_OFFSET + this._offsetExtra;
+		var dotOffset = this._HINT_OFFSET + this._offsetExtra;
+		var charSize = haxegon_Convert.toint(haxegon_Text.height(">") / 2);
 		haxegon_Text.align(haxegon_Text.CENTER);
+		haxegon_Text.set_size(this._TXT_SIZE);
+		haxegon_Text.display(this._TXT_INITIAL_X + dotOffset,haxegon_Gfx.screenheightmid - charSize,">",color);
 		haxegon_Text.rotation(90,haxegon_Text.CENTER,haxegon_Text.CENTER);
-		haxegon_Text.display(haxegon_Gfx.screenwidthmid + haxegon_Convert.toint(haxegon_Text.height("<") / 2),haxegon_Gfx.screenheightmid - offset,"<",color);
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid + charSize,haxegon_Gfx.screenheightmid - playerOffset,"<",color);
 		haxegon_Text.rotation(90,haxegon_Text.CENTER,haxegon_Convert.toint(haxegon_Text.CENTER / 2));
-		haxegon_Text.display(haxegon_Gfx.screenwidthmid + haxegon_Convert.toint(haxegon_Text.height(">") / 2),haxegon_Gfx.screenheightmid + offset,">",color);
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid + charSize,haxegon_Gfx.screenheightmid + playerOffset,">",color);
 		haxegon_Text.rotation(0);
-		haxegon_Text.display(haxegon_Gfx.screenwidthmid - offset,haxegon_Gfx.screenheightmid - haxegon_Convert.toint(haxegon_Text.height("<") / 2),"<",color);
-		haxegon_Text.display(haxegon_Gfx.screenwidthmid + offset,haxegon_Gfx.screenheightmid - haxegon_Convert.toint(haxegon_Text.height(">") / 2),">",color);
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid - playerOffset,haxegon_Gfx.screenheightmid - charSize,"<",color);
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid + playerOffset,haxegon_Gfx.screenheightmid - charSize,">",color);
 	}
 	,__class__: MenuScene
 };
@@ -40521,7 +40611,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 369529;
+	this.version = 523658;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = ["lime","utils","AssetCache"];
@@ -86409,8 +86499,8 @@ Ball.INITIAL_LIGHTNESS = 0.5;
 Globals.backgroundSaturation = 0.3;
 Globals.backgroundLightness = 0.3;
 Globals.backgroundChangeSpeed = 35;
-Globals.UI_TEXT_SATURATION = 0.1;
-Globals.UI_TEXT_LIGHTNESS = 0.1;
+Globals.UI_TEXT_SATURATION = 0.2;
+Globals.UI_TEXT_LIGHTNESS = 0.2;
 openfl_text_Font.__registeredFonts = [];
 Xml.Element = 0;
 Xml.PCData = 1;
