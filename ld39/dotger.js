@@ -3204,6 +3204,10 @@ var Debris = function(x,y,size,speed,direction,color,alpha) {
 	this._direction = direction * Math.PI / 180;
 	this._color = color;
 	this._alpha = alpha;
+	Debris._MIN_SPEED = Debris._INITIAL_MIN_SPEED;
+	Debris._MAX_SPEED = Debris._INITIAL_MAX_SPEED;
+	Debris._MIN_SIZE = Debris._INITIAL_MIN_SIZE;
+	Debris._MAX_SIZE = Debris._INITIAL_MAX_SIZE;
 	this._isDead = false;
 	this.updateAngle();
 };
@@ -3351,9 +3355,14 @@ EReg.prototype = {
 	,__class__: EReg
 };
 var GameScene = function() {
-	this._DEBRIS_INITIAL_COOLDOWN = 60;
+	this._DEBRIS_INITIAL_COOLDOWN = 45;
 	this._DEBRIS_SPAWN_TUTORIAL = 120;
-	this._DEBRIS_AMOUNTS = [10,20,30,30,30];
+	this._DEBRIS_MAX_DEVIATION = 20;
+	this._DEBRIS_AMOUNTS = [50,100,150,200,500];
+	this._POWERUP_SPAWN_COOLDOWN_REDUCTION = 5;
+	this._POWERUP_INITIAL_COOLDOWN = 200;
+	this._POWERUP_MAX_DEVIATION = 20;
+	this._POWERUP_AMOUNTS = [5,10,15,20,100];
 	this._DEBRIS_DAMAGE = 4;
 	this._PLAYER_SPEED_Y = 10;
 	this._PLAYER_SPEED_X = 10;
@@ -3386,11 +3395,21 @@ GameScene.prototype = {
 	,_isPlayerAlive: null
 	,_playerX: null
 	,_playerY: null
+	,_level: null
+	,_POWERUP_AMOUNTS: null
+	,_POWERUP_MAX_DEVIATION: null
+	,_POWERUP_INITIAL_COOLDOWN: null
+	,_POWERUP_SPAWN_COOLDOWN_REDUCTION: null
+	,_powerUpSpawnCooldown: null
+	,_powerUpActualAmount: null
+	,_nextPowerUp: null
+	,_powerUpPool: null
+	,_spawnedPowerUpPool: null
 	,_DEBRIS_AMOUNTS: null
+	,_DEBRIS_MAX_DEVIATION: null
 	,_DEBRIS_SPAWN_TUTORIAL: null
 	,_DEBRIS_INITIAL_COOLDOWN: null
 	,_debrisSpawnCooldown: null
-	,_level: null
 	,_debrisActualAmount: null
 	,_nextDebris: null
 	,_debrisPool: null
@@ -3400,12 +3419,14 @@ GameScene.prototype = {
 	}
 	,update: function() {
 		Globals.changeBackgroundColor();
-		this.showLevel();
 		this.checkInputs();
 		this.drawPlayer();
 		this.spawnDebris();
+		this.spawnPowerUps();
 		this.drawDebris();
+		this.drawPowerUps();
 		this.debugGame();
+		this.showLevel();
 		if(!this._isPlayerAlive) {
 			this.gameOver();
 		}
@@ -3419,10 +3440,19 @@ GameScene.prototype = {
 		this._isPlayerAlive = true;
 		this._playerX = haxegon_Gfx.screenwidthmid;
 		this._playerY = haxegon_Gfx.screenheightmid;
-		Debris._MIN_SIZE = Globals._MIN_SIZE;
-		Debris._MAX_SIZE = Globals._MAX_SIZE;
-		Debris._MIN_SPEED = Globals._MIN_SPEED;
-		Debris._MAX_SPEED = Globals._MAX_SPEED;
+		PowerUp._MIN_SIZE = PowerUp._INITIAL_MIN_SIZE;
+		PowerUp._MAX_SIZE = PowerUp._INITIAL_MAX_SIZE;
+		PowerUp._MIN_SPEED = PowerUp._INITIAL_MIN_SPEED;
+		PowerUp._MAX_SPEED = PowerUp._INITIAL_MAX_SPEED;
+		this._powerUpSpawnCooldown = this._POWERUP_INITIAL_COOLDOWN;
+		this._powerUpActualAmount = this._POWERUP_AMOUNTS[this._level];
+		this._nextPowerUp = this._POWERUP_INITIAL_COOLDOWN;
+		this._powerUpPool = [];
+		this._spawnedPowerUpPool = [];
+		Debris._MIN_SIZE = Debris._INITIAL_MIN_SIZE;
+		Debris._MAX_SIZE = Debris._INITIAL_MAX_SIZE;
+		Debris._MIN_SPEED = Debris._INITIAL_MIN_SPEED;
+		Debris._MAX_SPEED = Debris._INITIAL_MAX_SPEED;
 		this._debrisSpawnCooldown = this._DEBRIS_INITIAL_COOLDOWN;
 		this._level = 0;
 		this._debrisActualAmount = this._DEBRIS_AMOUNTS[this._level];
@@ -3430,6 +3460,7 @@ GameScene.prototype = {
 		this._debrisPool = [];
 		this._spawnedDebrisPool = [];
 		this.createDebris();
+		this.createPowerUps();
 	}
 	,showLevel: function() {
 		if(this._isPlayerAlive) {
@@ -3492,10 +3523,81 @@ GameScene.prototype = {
 	}
 	,drawPlayer: function() {
 		this.changePlayerColor();
+		this.decreasePlayerSizeBy(this._playerDecreaseSpeed);
 		haxegon_Gfx.fillcircle(this._playerX,this._playerY,this._playerSize,this._playerColor,this._playerAlpha);
 	}
 	,changePlayerColor: function() {
 		this._playerColor = haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,this._playerSaturation,0.5);
+	}
+	,createPowerUps: function() {
+		this._powerUpActualAmount = this._POWERUP_AMOUNTS[this._level];
+		var directions = [0,90,180,270];
+		var _g1 = 1;
+		var _g = this._powerUpActualAmount;
+		while(_g1 < _g) {
+			var index = _g1++;
+			var dir = haxegon_Random.pick(directions);
+			var deviation = haxegon_Random["int"](-this._POWERUP_MAX_DEVIATION,this._POWERUP_MAX_DEVIATION);
+			var size = haxegon_Random["int"](PowerUp._MIN_SIZE,PowerUp._MAX_SIZE);
+			var x = haxegon_Random["int"](size,haxegon_Gfx.screenwidth - size);
+			var y = haxegon_Random["int"](size,haxegon_Gfx.screenheight - size);
+			var speed = haxegon_Random["int"](PowerUp._MIN_SPEED,PowerUp._MAX_SPEED);
+			if(dir == 0) {
+				this._powerUpPool.push(new PowerUp(-size,y,size,speed,dir + deviation));
+			} else if(dir == 90) {
+				this._powerUpPool.push(new PowerUp(x,-size,size,speed,dir + deviation));
+			} else if(dir == 180) {
+				this._powerUpPool.push(new PowerUp(haxegon_Gfx.screenwidth + size,y,size,speed,dir + deviation));
+			} else if(dir == 270) {
+				this._powerUpPool.push(new PowerUp(x,haxegon_Gfx.screenheight + size,size,speed,dir + deviation));
+			}
+		}
+	}
+	,createDebris: function() {
+		this._debrisActualAmount = this._DEBRIS_AMOUNTS[this._level];
+		var directions = [0,90,180,270];
+		var _g1 = 1;
+		var _g = this._debrisActualAmount;
+		while(_g1 < _g) {
+			var index = _g1++;
+			var dir = haxegon_Random.pick(directions);
+			var deviation = haxegon_Random["int"](-this._DEBRIS_MAX_DEVIATION,this._DEBRIS_MAX_DEVIATION);
+			var size = haxegon_Random["int"](Debris._MIN_SIZE,Debris._MAX_SIZE);
+			var x = haxegon_Random["int"](size,haxegon_Gfx.screenwidth - size);
+			var y = haxegon_Random["int"](size,haxegon_Gfx.screenheight - size);
+			var speed = haxegon_Random["int"](Debris._MIN_SPEED,Debris._MAX_SPEED);
+			if(index == 1 && this._level == 0) {
+				this._debrisPool.push(new Debris(haxegon_Gfx.screenwidth + size,haxegon_Gfx.screenheightmid,size,Debris._MIN_SPEED,180));
+			}
+			if(dir == 0) {
+				this._debrisPool.push(new Debris(-size,y,size,speed,dir + deviation));
+			} else if(dir == 90) {
+				this._debrisPool.push(new Debris(x,-size,size,speed,dir + deviation));
+			} else if(dir == 180) {
+				this._debrisPool.push(new Debris(haxegon_Gfx.screenwidth + size,y,size,speed,dir + deviation));
+			} else if(dir == 270) {
+				this._debrisPool.push(new Debris(x,haxegon_Gfx.screenheight + size,size,speed,dir + deviation));
+			}
+		}
+	}
+	,spawnPowerUps: function() {
+		if(this._nextPowerUp == 0 && this._powerUpPool.length > 0) {
+			this._spawnedPowerUpPool.push(this._powerUpPool.shift());
+			this._nextPowerUp = this._powerUpSpawnCooldown;
+		} else {
+			this._nextPowerUp--;
+		}
+		if(this._powerUpPool.length == 0) {
+			if(this._level + 1 < this._POWERUP_AMOUNTS.length) {
+				this._level++;
+				PowerUp._MIN_SIZE += 1;
+				PowerUp._MAX_SIZE += 2;
+				PowerUp._MIN_SPEED += 1;
+				PowerUp._MAX_SPEED += 2;
+				this._powerUpSpawnCooldown -= this._POWERUP_SPAWN_COOLDOWN_REDUCTION;
+			}
+			this.createPowerUps();
+		}
 	}
 	,spawnDebris: function() {
 		if(this._nextDebris == 0 && this._debrisPool.length > 0) {
@@ -3519,32 +3621,6 @@ GameScene.prototype = {
 			this.createDebris();
 		}
 	}
-	,createDebris: function() {
-		this._debrisActualAmount = this._DEBRIS_AMOUNTS[this._level];
-		var directions = [0,90,180,270];
-		var _g1 = 1;
-		var _g = this._debrisActualAmount;
-		while(_g1 < _g) {
-			var index = _g1++;
-			var dir = haxegon_Random.pick(directions);
-			var size = haxegon_Random["int"](Debris._MIN_SIZE,Debris._MAX_SIZE);
-			var x = haxegon_Random["int"](size,haxegon_Gfx.screenwidth - size);
-			var y = haxegon_Random["int"](size,haxegon_Gfx.screenheight - size);
-			var speed = haxegon_Random["int"](Debris._MIN_SPEED,Debris._MAX_SPEED);
-			if(index == 1 && this._level == 0) {
-				this._debrisPool.push(new Debris(haxegon_Gfx.screenwidth + size,haxegon_Gfx.screenheightmid,size,Debris._MIN_SPEED,180));
-			}
-			if(dir == 0) {
-				this._debrisPool.push(new Debris(-size,y,size,speed,dir));
-			} else if(dir == 90) {
-				this._debrisPool.push(new Debris(x,-size,size,speed,dir));
-			} else if(dir == 180) {
-				this._debrisPool.push(new Debris(haxegon_Gfx.screenwidth + size,y,size,speed,dir));
-			} else if(dir == 270) {
-				this._debrisPool.push(new Debris(x,haxegon_Gfx.screenheight + size,size,speed,dir));
-			}
-		}
-	}
 	,checkOutOfBounds: function(x,y,size) {
 		if(!(x + size < 0 || x - size > haxegon_Gfx.screenwidth || y + size < 0)) {
 			return y - size > haxegon_Gfx.screenheight;
@@ -3552,13 +3628,19 @@ GameScene.prototype = {
 			return true;
 		}
 	}
+	,isPowerUpOutOfBounds: function(powerUp) {
+		var dir = powerUp.getDir();
+		var isOutOfBounds = false;
+		isOutOfBounds = this.checkOutOfBounds(powerUp.getX(),powerUp.getY(),powerUp.getSize());
+		return isOutOfBounds;
+	}
 	,isDebrisOutOfBounds: function(debris) {
 		var dir = debris.getDir();
 		var isOutOfBounds = false;
 		isOutOfBounds = this.checkOutOfBounds(debris.getX(),debris.getY(),debris.getSize());
 		return isOutOfBounds;
 	}
-	,checkCollisionDebrisPlayers: function(debris) {
+	,checkCollisionDebrisPlayer: function(debris) {
 		if(!this._isPlayerAlive) {
 			return;
 		}
@@ -3588,6 +3670,28 @@ GameScene.prototype = {
 			HxOverrides.remove(this._spawnedDebrisPool,debris);
 		}
 	}
+	,drawPowerUps: function() {
+		if(!this._isPlayerAlive) {
+			return;
+		}
+		if(this._spawnedPowerUpPool.length == 0) {
+			return;
+		}
+		var _g = 0;
+		var _g1 = this._spawnedPowerUpPool;
+		while(_g < _g1.length) {
+			var powerUp = _g1[_g];
+			++_g;
+			if(this.isPowerUpOutOfBounds(powerUp)) {
+				HxOverrides.remove(this._spawnedPowerUpPool,powerUp);
+				continue;
+			}
+			if(powerUp.isCollidingWithCircle(this._playerX,this._playerY,this._playerSize)) {
+				this.playerCollidedWithPowerUp(powerUp);
+			}
+			powerUp.draw();
+		}
+	}
 	,drawDebris: function() {
 		if(!this._isPlayerAlive) {
 			return;
@@ -3609,6 +3713,11 @@ GameScene.prototype = {
 			}
 			debris.draw();
 		}
+	}
+	,playerCollidedWithPowerUp: function(powerUp) {
+		this.decreasePlayerSizeBy(-powerUp.getSize());
+		powerUp.kill();
+		HxOverrides.remove(this._spawnedPowerUpPool,powerUp);
 	}
 	,playerCollidedWithDebris: function(debris) {
 		this.decreasePlayerSizeBy(this._DEBRIS_DAMAGE);
@@ -3637,9 +3746,9 @@ GameScene.prototype = {
 			this.testFilters();
 			this.testBackgroundColors();
 			haxegon_Debug.clear();
-			haxegon_Debug.log("FPS:               " + haxegon_Convert.tostring(haxegon_Core.get_fps()),{ fileName : "GameScene.hx", lineNumber : 373, className : "GameScene", methodName : "debugGame"});
-			haxegon_Debug.log("bg_sat: " + haxegon_Convert.tostring(Globals.backgroundSaturation),{ fileName : "GameScene.hx", lineNumber : 374, className : "GameScene", methodName : "debugGame"});
-			haxegon_Debug.log("bg_lig: " + haxegon_Convert.tostring(Globals.backgroundLightness),{ fileName : "GameScene.hx", lineNumber : 375, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("FPS:               " + haxegon_Convert.tostring(haxegon_Core.get_fps()),{ fileName : "GameScene.hx", lineNumber : 473, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("bg_sat: " + haxegon_Convert.tostring(Globals.backgroundSaturation),{ fileName : "GameScene.hx", lineNumber : 474, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("bg_lig: " + haxegon_Convert.tostring(Globals.backgroundLightness),{ fileName : "GameScene.hx", lineNumber : 475, className : "GameScene", methodName : "debugGame"});
 		}
 	}
 	,__class__: GameScene
@@ -3827,6 +3936,7 @@ var Main = function() {
 	this.TEXT_BLENDING_SPEED = 0.01;
 	this.GAME_BY = "A game by Nacho 'bazoo' Verdon";
 	this.GAME_NAME = "DOTGER";
+	haxegon_Scene.change(GameScene);
 	haxegon_Core.delaycall($bind(this,this.startBlending),2);
 };
 $hxClasses["Main"] = Main;
@@ -4337,6 +4447,71 @@ MenuScene.prototype = {
 		haxegon_Text.display(haxegon_Gfx.screenwidthmid + playerOffset,haxegon_Gfx.screenheightmid - charSize,">",color);
 	}
 	,__class__: MenuScene
+};
+var PowerUp = function(x,y,size,speed,direction,alpha) {
+	if(alpha == null) {
+		alpha = 1;
+	}
+	if(direction == null) {
+		direction = 0;
+	}
+	this._x = x;
+	this._y = y;
+	this._size = size;
+	this._speed = speed;
+	this._direction = direction * Math.PI / 180;
+	this._alpha = alpha;
+	this._isDead = false;
+	this.updateColor();
+};
+$hxClasses["PowerUp"] = PowerUp;
+PowerUp.__name__ = ["PowerUp"];
+PowerUp.prototype = {
+	_x: null
+	,_y: null
+	,_direction: null
+	,_speed: null
+	,_size: null
+	,_color: null
+	,_alpha: null
+	,_isDead: null
+	,getX: function() {
+		return this._x;
+	}
+	,getY: function() {
+		return this._y;
+	}
+	,getSize: function() {
+		return this._size;
+	}
+	,getDir: function() {
+		return this._direction;
+	}
+	,updateColor: function() {
+		this._color = haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,PowerUp._SATURATION,PowerUp._LIGHTNESS);
+	}
+	,move: function() {
+		this._x += this._speed * Math.cos(this._direction);
+		this._y += this._speed * Math.sin(this._direction);
+	}
+	,draw: function() {
+		if(this._isDead) {
+			return;
+		}
+		this.updateColor();
+		this.move();
+		haxegon_Gfx.fillcircle(this._x,this._y,this._size,this._color,this._alpha);
+	}
+	,kill: function() {
+		this._isDead = true;
+	}
+	,isCollidingWithCircle: function(x,y,radius) {
+		var dx = this._x - x;
+		var dy = this._y - y;
+		var distance = Math.sqrt(dx * dx + dy * dy);
+		return distance < this._size * PowerUp._HITBOX + radius;
+	}
+	,__class__: PowerUp
 };
 var Reflect = function() { };
 $hxClasses["Reflect"] = Reflect;
@@ -40666,7 +40841,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 932262;
+	this.version = 873785;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = ["lime","utils","AssetCache"];
@@ -86551,11 +86726,15 @@ openfl_display_DisplayObject.__broadcastEvents = new haxe_ds_StringMap();
 openfl_display_DisplayObject.__instanceCount = 0;
 Ball.INITIAL_SATURATION = 0.5;
 Ball.INITIAL_LIGHTNESS = 0.5;
+Debris._HITBOX = 0.85;
+Debris._INITIAL_MIN_SPEED = 5;
+Debris._INITIAL_MAX_SPEED = 7;
+Debris._INITIAL_MIN_SIZE = 10;
+Debris._INITIAL_MAX_SIZE = 20;
 Debris._MIN_SPEED = 5;
 Debris._MAX_SPEED = 7;
 Debris._MIN_SIZE = 10;
 Debris._MAX_SIZE = 20;
-Debris._HITBOX = 0.85;
 Globals._MIN_SPEED = 5;
 Globals._MAX_SPEED = 7;
 Globals._MIN_SIZE = 10;
@@ -86566,6 +86745,17 @@ Globals.backgroundChangeSpeed = 35;
 Globals.UI_TEXT_SATURATION = 0.2;
 Globals.UI_TEXT_LIGHTNESS = 0.2;
 openfl_text_Font.__registeredFonts = [];
+PowerUp._HITBOX = 1;
+PowerUp._SATURATION = 0.5;
+PowerUp._LIGHTNESS = 0.5;
+PowerUp._INITIAL_MIN_SPEED = 5;
+PowerUp._INITIAL_MAX_SPEED = 7;
+PowerUp._INITIAL_MIN_SIZE = 10;
+PowerUp._INITIAL_MAX_SIZE = 15;
+PowerUp._MIN_SPEED = 5;
+PowerUp._MAX_SPEED = 7;
+PowerUp._MIN_SIZE = 10;
+PowerUp._MAX_SIZE = 15;
 Xml.Element = 0;
 Xml.PCData = 1;
 Xml.CData = 2;
