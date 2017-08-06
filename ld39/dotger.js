@@ -1019,7 +1019,7 @@ $hxClasses["ApplicationMain"] = ApplicationMain;
 ApplicationMain.__name__ = ["ApplicationMain"];
 ApplicationMain.main = function() {
 	var projectName = "dotger";
-	var config = { build : "8", company : "Nacho 'bazoo' Verdón", file : "dotger", fps : 60, name : "Dotger", orientation : "landscape", packageName : "com.nachoverdon.dotger", version : "1.0.0", windows : [{ allowHighDPI : false, alwaysOnTop : false, antialiasing : 0, background : 1118481, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 480, hidden : null, maximized : null, minimized : null, parameters : { }, resizable : true, stencilBuffer : true, title : "Dotger", vsync : true, width : 768, x : null, y : null}]};
+	var config = { build : "9", company : "Nacho 'bazoo' Verdón", file : "dotger", fps : 60, name : "Dotger", orientation : "landscape", packageName : "com.nachoverdon.dotger", version : "1.0.0", windows : [{ allowHighDPI : false, alwaysOnTop : false, antialiasing : 0, background : 1118481, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 480, hidden : null, maximized : null, minimized : null, parameters : { }, resizable : true, stencilBuffer : true, title : "Dotger", vsync : true, width : 768, x : null, y : null}]};
 	lime_system_System.__registerEntryPoint(projectName,ApplicationMain.create,config);
 };
 ApplicationMain.create = function(config) {
@@ -3204,10 +3204,6 @@ var Debris = function(x,y,size,speed,direction,color,alpha) {
 	this._direction = direction * Math.PI / 180;
 	this._color = color;
 	this._alpha = alpha;
-	Debris._MIN_SPEED = Debris._INITIAL_MIN_SPEED;
-	Debris._MAX_SPEED = Debris._INITIAL_MAX_SPEED;
-	Debris._MIN_SIZE = Debris._INITIAL_MIN_SIZE;
-	Debris._MAX_SIZE = Debris._INITIAL_MAX_SIZE;
 	this._isDead = false;
 	this.updateAngle();
 };
@@ -3355,21 +3351,23 @@ EReg.prototype = {
 	,__class__: EReg
 };
 var GameScene = function() {
-	this._DEBRIS_INITIAL_COOLDOWN = 45;
+	this._DEBRIS_INITIAL_COOLDOWN = 40;
 	this._DEBRIS_SPAWN_TUTORIAL = 120;
+	this._DEBRIS_MIN_DEVIATION = 5;
 	this._DEBRIS_MAX_DEVIATION = 20;
-	this._DEBRIS_AMOUNTS = [50,100,150,200,500];
+	this._DEBRIS_AMOUNTS = [100,150,250,500,750];
 	this._POWERUP_SPAWN_COOLDOWN_REDUCTION = 5;
-	this._POWERUP_INITIAL_COOLDOWN = 200;
-	this._POWERUP_MAX_DEVIATION = 20;
-	this._POWERUP_AMOUNTS = [5,10,15,20,100];
+	this._POWERUP_INITIAL_COOLDOWN = 175;
+	this._POWERUP_MIN_DEVIATION = 0;
+	this._POWERUP_MAX_DEVIATION = 15;
+	this._POWERUP_AMOUNTS = [50,75,125,250,400];
 	this._DEBRIS_DAMAGE = 4;
 	this._PLAYER_SPEED_Y = 10;
 	this._PLAYER_SPEED_X = 10;
 	this._PLAYER_MIN_SIZE = 4;
 	this._PLAYER_INITIAL_SATURATION = 0.5;
 	this._PLAYER_INITIAL_SIZE = 50;
-	this._PLAYER_INITIAL_DECREASE_SPEED = 0.05;
+	this._PLAYER_INITIAL_DECREASE_SPEED = 0.06;
 	this.GAME_OVER = "GAME OVER";
 	this.RESTART = "[R]estart";
 	this.DEBUG_MODE = false;
@@ -3398,6 +3396,7 @@ GameScene.prototype = {
 	,_level: null
 	,_POWERUP_AMOUNTS: null
 	,_POWERUP_MAX_DEVIATION: null
+	,_POWERUP_MIN_DEVIATION: null
 	,_POWERUP_INITIAL_COOLDOWN: null
 	,_POWERUP_SPAWN_COOLDOWN_REDUCTION: null
 	,_powerUpSpawnCooldown: null
@@ -3407,6 +3406,7 @@ GameScene.prototype = {
 	,_spawnedPowerUpPool: null
 	,_DEBRIS_AMOUNTS: null
 	,_DEBRIS_MAX_DEVIATION: null
+	,_DEBRIS_MIN_DEVIATION: null
 	,_DEBRIS_SPAWN_TUTORIAL: null
 	,_DEBRIS_INITIAL_COOLDOWN: null
 	,_debrisSpawnCooldown: null
@@ -3463,6 +3463,15 @@ GameScene.prototype = {
 		this.createPowerUps();
 	}
 	,showLevel: function() {
+		haxegon_Text.set_size(1);
+		haxegon_Text.display(200,10,"d minsize" + haxegon_Convert.tostring(Debris._MIN_SIZE));
+		haxegon_Text.display(200,20,"d maxsize" + haxegon_Convert.tostring(Debris._MAX_SIZE));
+		haxegon_Text.display(200,30,"d minspd" + haxegon_Convert.tostring(Debris._MIN_SPEED));
+		haxegon_Text.display(200,40,"d maxspd" + haxegon_Convert.tostring(Debris._MAX_SPEED));
+		haxegon_Text.display(300,10,"pu minsize" + haxegon_Convert.tostring(PowerUp._MIN_SIZE));
+		haxegon_Text.display(300,20,"pu maxsize" + haxegon_Convert.tostring(PowerUp._MAX_SIZE));
+		haxegon_Text.display(300,30,"pu minspd" + haxegon_Convert.tostring(PowerUp._MIN_SPEED));
+		haxegon_Text.display(300,40,"pu maxspd" + haxegon_Convert.tostring(PowerUp._MAX_SPEED));
 		if(this._isPlayerAlive) {
 			haxegon_Text.set_size(2);
 			haxegon_Text.display(50,50,"LEVEL: " + (this._level + 1));
@@ -3530,53 +3539,116 @@ GameScene.prototype = {
 		this._playerColor = haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,this._playerSaturation,0.5);
 	}
 	,createPowerUps: function() {
+		var _gthis = this;
+		var fixDeviation = function(dir,x,y) {
+			var deviation = 0;
+			if(dir == 0) {
+				if(y > haxegon_Gfx.screenheightmid) {
+					deviation = haxegon_Random["int"](-_gthis._POWERUP_MAX_DEVIATION,_gthis._POWERUP_MIN_DEVIATION);
+				} else if(y < haxegon_Gfx.screenheightmid) {
+					deviation = haxegon_Random["int"](-_gthis._POWERUP_MIN_DEVIATION,_gthis._POWERUP_MAX_DEVIATION);
+				}
+			} else if(dir == 180) {
+				if(y < haxegon_Gfx.screenheightmid) {
+					deviation = haxegon_Random["int"](-_gthis._POWERUP_MAX_DEVIATION,_gthis._POWERUP_MIN_DEVIATION);
+				} else if(y > haxegon_Gfx.screenheightmid) {
+					deviation = haxegon_Random["int"](-_gthis._POWERUP_MIN_DEVIATION,_gthis._POWERUP_MAX_DEVIATION);
+				}
+			}
+			if(dir == 90) {
+				if(x < haxegon_Gfx.screenwidthmid) {
+					deviation = haxegon_Random["int"](-_gthis._POWERUP_MAX_DEVIATION,_gthis._POWERUP_MIN_DEVIATION);
+				} else if(x > haxegon_Gfx.screenwidthmid) {
+					deviation = haxegon_Random["int"](-_gthis._POWERUP_MIN_DEVIATION,_gthis._POWERUP_MAX_DEVIATION);
+				}
+			} else if(dir == 270) {
+				if(x > haxegon_Gfx.screenwidthmid) {
+					deviation = haxegon_Random["int"](-_gthis._POWERUP_MAX_DEVIATION,_gthis._POWERUP_MIN_DEVIATION);
+				} else if(x < haxegon_Gfx.screenwidthmid) {
+					deviation = haxegon_Random["int"](-_gthis._POWERUP_MIN_DEVIATION,_gthis._POWERUP_MAX_DEVIATION);
+				}
+			}
+			return deviation;
+		};
 		this._powerUpActualAmount = this._POWERUP_AMOUNTS[this._level];
 		var directions = [0,90,180,270];
 		var _g1 = 1;
 		var _g = this._powerUpActualAmount;
 		while(_g1 < _g) {
 			var index = _g1++;
-			var dir = haxegon_Random.pick(directions);
-			var deviation = haxegon_Random["int"](-this._POWERUP_MAX_DEVIATION,this._POWERUP_MAX_DEVIATION);
+			var dir1 = haxegon_Random.pick(directions);
 			var size = haxegon_Random["int"](PowerUp._MIN_SIZE,PowerUp._MAX_SIZE);
-			var x = haxegon_Random["int"](size,haxegon_Gfx.screenwidth - size);
-			var y = haxegon_Random["int"](size,haxegon_Gfx.screenheight - size);
+			var x1 = haxegon_Random["int"](size,haxegon_Gfx.screenwidth - size);
+			var y1 = haxegon_Random["int"](size,haxegon_Gfx.screenheight - size);
 			var speed = haxegon_Random["int"](PowerUp._MIN_SPEED,PowerUp._MAX_SPEED);
-			if(dir == 0) {
-				this._powerUpPool.push(new PowerUp(-size,y,size,speed,dir + deviation));
-			} else if(dir == 90) {
-				this._powerUpPool.push(new PowerUp(x,-size,size,speed,dir + deviation));
-			} else if(dir == 180) {
-				this._powerUpPool.push(new PowerUp(haxegon_Gfx.screenwidth + size,y,size,speed,dir + deviation));
-			} else if(dir == 270) {
-				this._powerUpPool.push(new PowerUp(x,haxegon_Gfx.screenheight + size,size,speed,dir + deviation));
+			var deviation1 = fixDeviation(dir1,x1,y1);
+			if(dir1 == 0) {
+				this._powerUpPool.push(new PowerUp(-size,y1,size,speed,dir1 + deviation1));
+			} else if(dir1 == 90) {
+				this._powerUpPool.push(new PowerUp(x1,-size,size,speed,dir1 + deviation1));
+			} else if(dir1 == 180) {
+				this._powerUpPool.push(new PowerUp(haxegon_Gfx.screenwidth + size,y1,size,speed,dir1 + deviation1));
+			} else if(dir1 == 270) {
+				this._powerUpPool.push(new PowerUp(x1,haxegon_Gfx.screenheight + size,size,speed,dir1 + deviation1));
 			}
 		}
 	}
 	,createDebris: function() {
+		var _gthis = this;
+		var fixDeviation = function(dir,x,y) {
+			var deviation = 0;
+			if(dir == 0) {
+				if(y > haxegon_Gfx.screenheightmid) {
+					deviation = haxegon_Random["int"](-_gthis._DEBRIS_MAX_DEVIATION,_gthis._DEBRIS_MIN_DEVIATION);
+				} else if(y < haxegon_Gfx.screenheightmid) {
+					deviation = haxegon_Random["int"](-_gthis._DEBRIS_MIN_DEVIATION,_gthis._DEBRIS_MAX_DEVIATION);
+				}
+			} else if(dir == 180) {
+				if(y < haxegon_Gfx.screenheightmid) {
+					deviation = haxegon_Random["int"](-_gthis._DEBRIS_MAX_DEVIATION,_gthis._DEBRIS_MIN_DEVIATION);
+				} else if(y > haxegon_Gfx.screenheightmid) {
+					deviation = haxegon_Random["int"](-_gthis._DEBRIS_MIN_DEVIATION,_gthis._DEBRIS_MAX_DEVIATION);
+				}
+			}
+			if(dir == 90) {
+				if(x < haxegon_Gfx.screenwidthmid) {
+					deviation = haxegon_Random["int"](-_gthis._DEBRIS_MAX_DEVIATION,_gthis._DEBRIS_MIN_DEVIATION);
+				} else if(x > haxegon_Gfx.screenwidthmid) {
+					deviation = haxegon_Random["int"](-_gthis._DEBRIS_MIN_DEVIATION,_gthis._DEBRIS_MAX_DEVIATION);
+				}
+			} else if(dir == 270) {
+				if(x > haxegon_Gfx.screenwidthmid) {
+					deviation = haxegon_Random["int"](-_gthis._DEBRIS_MAX_DEVIATION,_gthis._DEBRIS_MIN_DEVIATION);
+				} else if(x < haxegon_Gfx.screenwidthmid) {
+					deviation = haxegon_Random["int"](-_gthis._DEBRIS_MIN_DEVIATION,_gthis._DEBRIS_MAX_DEVIATION);
+				}
+			}
+			return deviation;
+		};
 		this._debrisActualAmount = this._DEBRIS_AMOUNTS[this._level];
 		var directions = [0,90,180,270];
 		var _g1 = 1;
 		var _g = this._debrisActualAmount;
 		while(_g1 < _g) {
 			var index = _g1++;
-			var dir = haxegon_Random.pick(directions);
-			var deviation = haxegon_Random["int"](-this._DEBRIS_MAX_DEVIATION,this._DEBRIS_MAX_DEVIATION);
+			var dir1 = haxegon_Random.pick(directions);
+			var deviation1 = haxegon_Random["int"](-this._DEBRIS_MAX_DEVIATION,this._DEBRIS_MAX_DEVIATION);
 			var size = haxegon_Random["int"](Debris._MIN_SIZE,Debris._MAX_SIZE);
-			var x = haxegon_Random["int"](size,haxegon_Gfx.screenwidth - size);
-			var y = haxegon_Random["int"](size,haxegon_Gfx.screenheight - size);
+			var x1 = haxegon_Random["int"](haxegon_Convert.toint(size / 2),haxegon_Gfx.screenwidth - haxegon_Convert.toint(size / 2));
+			var y1 = haxegon_Random["int"](haxegon_Convert.toint(size / 2),haxegon_Gfx.screenheight - haxegon_Convert.toint(size / 2));
 			var speed = haxegon_Random["int"](Debris._MIN_SPEED,Debris._MAX_SPEED);
 			if(index == 1 && this._level == 0) {
 				this._debrisPool.push(new Debris(haxegon_Gfx.screenwidth + size,haxegon_Gfx.screenheightmid,size,Debris._MIN_SPEED,180));
 			}
-			if(dir == 0) {
-				this._debrisPool.push(new Debris(-size,y,size,speed,dir + deviation));
-			} else if(dir == 90) {
-				this._debrisPool.push(new Debris(x,-size,size,speed,dir + deviation));
-			} else if(dir == 180) {
-				this._debrisPool.push(new Debris(haxegon_Gfx.screenwidth + size,y,size,speed,dir + deviation));
-			} else if(dir == 270) {
-				this._debrisPool.push(new Debris(x,haxegon_Gfx.screenheight + size,size,speed,dir + deviation));
+			fixDeviation(dir1,x1,y1);
+			if(dir1 == 0) {
+				this._debrisPool.push(new Debris(-size,y1,size,speed,dir1 + deviation1));
+			} else if(dir1 == 90) {
+				this._debrisPool.push(new Debris(x1,-size,size,speed,dir1 + deviation1));
+			} else if(dir1 == 180) {
+				this._debrisPool.push(new Debris(haxegon_Gfx.screenwidth + size,y1,size,speed,dir1 + deviation1));
+			} else if(dir1 == 270) {
+				this._debrisPool.push(new Debris(x1,haxegon_Gfx.screenheight + size,size,speed,dir1 + deviation1));
 			}
 		}
 	}
@@ -3588,14 +3660,6 @@ GameScene.prototype = {
 			this._nextPowerUp--;
 		}
 		if(this._powerUpPool.length == 0) {
-			if(this._level + 1 < this._POWERUP_AMOUNTS.length) {
-				this._level++;
-				PowerUp._MIN_SIZE += 1;
-				PowerUp._MAX_SIZE += 2;
-				PowerUp._MIN_SPEED += 1;
-				PowerUp._MAX_SPEED += 2;
-				this._powerUpSpawnCooldown -= this._POWERUP_SPAWN_COOLDOWN_REDUCTION;
-			}
 			this.createPowerUps();
 		}
 	}
@@ -3617,6 +3681,13 @@ GameScene.prototype = {
 				Debris._MIN_SPEED += 1;
 				Debris._MAX_SPEED += 2;
 				this._debrisSpawnCooldown -= 8;
+				PowerUp._MIN_SIZE += 1;
+				PowerUp._MAX_SIZE += 2;
+				PowerUp._MIN_SPEED += 1;
+				PowerUp._MAX_SPEED += 2;
+				this._powerUpSpawnCooldown -= this._POWERUP_SPAWN_COOLDOWN_REDUCTION;
+				this._powerUpPool = [];
+				this.createPowerUps();
 			}
 			this.createDebris();
 		}
@@ -3746,9 +3817,9 @@ GameScene.prototype = {
 			this.testFilters();
 			this.testBackgroundColors();
 			haxegon_Debug.clear();
-			haxegon_Debug.log("FPS:               " + haxegon_Convert.tostring(haxegon_Core.get_fps()),{ fileName : "GameScene.hx", lineNumber : 473, className : "GameScene", methodName : "debugGame"});
-			haxegon_Debug.log("bg_sat: " + haxegon_Convert.tostring(Globals.backgroundSaturation),{ fileName : "GameScene.hx", lineNumber : 474, className : "GameScene", methodName : "debugGame"});
-			haxegon_Debug.log("bg_lig: " + haxegon_Convert.tostring(Globals.backgroundLightness),{ fileName : "GameScene.hx", lineNumber : 475, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("FPS:               " + haxegon_Convert.tostring(haxegon_Core.get_fps()),{ fileName : "GameScene.hx", lineNumber : 532, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("bg_sat: " + haxegon_Convert.tostring(Globals.backgroundSaturation),{ fileName : "GameScene.hx", lineNumber : 533, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("bg_lig: " + haxegon_Convert.tostring(Globals.backgroundLightness),{ fileName : "GameScene.hx", lineNumber : 534, className : "GameScene", methodName : "debugGame"});
 		}
 	}
 	,__class__: GameScene
@@ -3936,7 +4007,6 @@ var Main = function() {
 	this.TEXT_BLENDING_SPEED = 0.01;
 	this.GAME_BY = "A game by Nacho 'bazoo' Verdon";
 	this.GAME_NAME = "DOTGER";
-	haxegon_Scene.change(GameScene);
 	haxegon_Core.delaycall($bind(this,this.startBlending),2);
 };
 $hxClasses["Main"] = Main;
@@ -40841,7 +40911,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 873785;
+	this.version = 193181;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = ["lime","utils","AssetCache"];
