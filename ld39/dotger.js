@@ -1019,7 +1019,7 @@ $hxClasses["ApplicationMain"] = ApplicationMain;
 ApplicationMain.__name__ = ["ApplicationMain"];
 ApplicationMain.main = function() {
 	var projectName = "dotger";
-	var config = { build : "9", company : "Nacho 'bazoo' Verdón", file : "dotger", fps : 60, name : "Dotger", orientation : "landscape", packageName : "com.nachoverdon.dotger", version : "1.0.0", windows : [{ allowHighDPI : false, alwaysOnTop : false, antialiasing : 0, background : 1118481, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 480, hidden : null, maximized : null, minimized : null, parameters : { }, resizable : true, stencilBuffer : true, title : "Dotger", vsync : true, width : 768, x : null, y : null}]};
+	var config = { build : "11", company : "Nacho 'bazoo' Verdón", file : "dotger", fps : 60, name : "Dotger", orientation : "landscape", packageName : "com.nachoverdon.dotger", version : "1.0.0", windows : [{ allowHighDPI : false, alwaysOnTop : false, antialiasing : 0, background : 1118481, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 480, hidden : null, maximized : null, minimized : null, parameters : { }, resizable : true, stencilBuffer : true, title : "Dotger", vsync : true, width : 768, x : null, y : null}]};
 	lime_system_System.__registerEntryPoint(projectName,ApplicationMain.create,config);
 };
 ApplicationMain.create = function(config) {
@@ -3361,7 +3361,7 @@ var GameScene = function() {
 	this._POWERUP_MIN_DEVIATION = 0;
 	this._POWERUP_MAX_DEVIATION = 15;
 	this._POWERUP_AMOUNTS = [50,75,125,250,400];
-	this._DEBRIS_DAMAGE = 4;
+	this._DEBRIS_DAMAGE = 6;
 	this._PLAYER_SPEED_Y = 10;
 	this._PLAYER_SPEED_X = 10;
 	this._PLAYER_MIN_SIZE = 4;
@@ -3370,12 +3370,22 @@ var GameScene = function() {
 	this._PLAYER_INITIAL_DECREASE_SPEED = 0.06;
 	this.GAME_OVER = "GAME OVER";
 	this.RESTART = "[R]estart";
+	this._SCORE_NEXT_LEVEL = 50;
+	this._SCORE_PENALTY_DEBRIS = 4;
+	this._SCORE_DEBRIS = 1;
+	this._SCORE_POWERUP = 2;
 	this.DEBUG_MODE = false;
 };
 $hxClasses["GameScene"] = GameScene;
 GameScene.__name__ = ["GameScene"];
 GameScene.prototype = {
 	DEBUG_MODE: null
+	,_highScore: null
+	,_score: null
+	,_SCORE_POWERUP: null
+	,_SCORE_DEBRIS: null
+	,_SCORE_PENALTY_DEBRIS: null
+	,_SCORE_NEXT_LEVEL: null
 	,RESTART: null
 	,GAME_OVER: null
 	,_PLAYER_INITIAL_DECREASE_SPEED: null
@@ -3426,12 +3436,14 @@ GameScene.prototype = {
 		this.drawDebris();
 		this.drawPowerUps();
 		this.debugGame();
-		this.showLevel();
+		this.showScore();
 		if(!this._isPlayerAlive) {
 			this.gameOver();
 		}
 	}
 	,initialize: function() {
+		this._highScore = Globals._HIGH_SCORE;
+		this._score = 0;
 		this._playerSize = this._PLAYER_INITIAL_SIZE;
 		this._playerDecreaseSpeed = this._PLAYER_INITIAL_DECREASE_SPEED;
 		this._playerSaturation = 0.5;
@@ -3462,16 +3474,52 @@ GameScene.prototype = {
 		this.createDebris();
 		this.createPowerUps();
 	}
+	,getUIColor: function() {
+		return haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,Globals.backgroundSaturation + Globals.UI_TEXT_SATURATION,Globals.backgroundLightness + Globals.UI_TEXT_LIGHTNESS);
+	}
+	,checkHighScore: function() {
+		if(this._score > Globals._HIGH_SCORE) {
+			Globals._HIGH_SCORE = this._score;
+		}
+	}
+	,showScore: function() {
+		if(this._score > Globals._HIGH_SCORE) {
+			this._highScore = this._score;
+		}
+		var scoreX;
+		var scoreY;
+		var highScoreX;
+		var highScoreY;
+		var score = haxegon_Convert.tostring(this._score);
+		var highScore = haxegon_Convert.tostring(this._highScore);
+		var highScoreColor = haxegon_Col.WHITE;
+		if(this._isPlayerAlive) {
+			haxegon_Text.align(haxegon_Text.RIGHT);
+			haxegon_Text.set_size(3);
+			scoreX = haxegon_Gfx.screenwidth - 10;
+			scoreY = 60;
+			haxegon_Text.display(scoreX,scoreY,score,this.getUIColor());
+			haxegon_Text.set_size(1);
+			highScoreX = haxegon_Gfx.screenwidth - 10;
+			highScoreY = 30;
+		} else {
+			haxegon_Text.align(haxegon_Text.CENTER);
+			haxegon_Text.set_size(5);
+			scoreX = haxegon_Gfx.screenwidthmid;
+			scoreY = haxegon_Gfx.screenheightmid - 15;
+			haxegon_Text.display(scoreX,scoreY,score,this.getUIColor());
+			haxegon_Text.set_size(3);
+			haxegon_Text.align(haxegon_Text.CENTER);
+			highScoreX = haxegon_Gfx.screenwidthmid;
+			highScoreY = haxegon_Gfx.screenheightmid - 120;
+		}
+		if(this._score == this._highScore) {
+			highScoreColor = this.getUIColor();
+		}
+		haxegon_Text.display(highScoreX,highScoreY,haxegon_Convert.tostring(Globals._HIGH_SCORE),highScoreColor);
+		haxegon_Text.display(highScoreX,highScoreY - haxegon_Text.height("HI-SCORE") - 10,"HI-SCORE",highScoreColor);
+	}
 	,showLevel: function() {
-		haxegon_Text.set_size(1);
-		haxegon_Text.display(200,10,"d minsize" + haxegon_Convert.tostring(Debris._MIN_SIZE));
-		haxegon_Text.display(200,20,"d maxsize" + haxegon_Convert.tostring(Debris._MAX_SIZE));
-		haxegon_Text.display(200,30,"d minspd" + haxegon_Convert.tostring(Debris._MIN_SPEED));
-		haxegon_Text.display(200,40,"d maxspd" + haxegon_Convert.tostring(Debris._MAX_SPEED));
-		haxegon_Text.display(300,10,"pu minsize" + haxegon_Convert.tostring(PowerUp._MIN_SIZE));
-		haxegon_Text.display(300,20,"pu maxsize" + haxegon_Convert.tostring(PowerUp._MAX_SIZE));
-		haxegon_Text.display(300,30,"pu minspd" + haxegon_Convert.tostring(PowerUp._MIN_SPEED));
-		haxegon_Text.display(300,40,"pu maxspd" + haxegon_Convert.tostring(PowerUp._MAX_SPEED));
 		if(this._isPlayerAlive) {
 			haxegon_Text.set_size(2);
 			haxegon_Text.display(50,50,"LEVEL: " + (this._level + 1));
@@ -3480,11 +3528,11 @@ GameScene.prototype = {
 	,gameOver: function() {
 		haxegon_Text.align(haxegon_Text.CENTER);
 		haxegon_Text.set_size(4);
-		haxegon_Text.display(haxegon_Gfx.screenwidthmid,haxegon_Gfx.screenheightmid - 50,this.GAME_OVER);
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid,haxegon_Gfx.screenheightmid - 80,this.GAME_OVER);
 		haxegon_Text.set_size(3);
-		haxegon_Text.display(haxegon_Gfx.screenwidthmid,haxegon_Gfx.screenheightmid + 20,this.RESTART);
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid,haxegon_Gfx.screenheightmid + 50,this.RESTART);
 		haxegon_Text.align(haxegon_Text.LEFT);
-		haxegon_Text.display(haxegon_Gfx.screenwidthmid - Math.floor(haxegon_Text.width(this.RESTART) / 2) + haxegon_Text.width("[") + 3,haxegon_Gfx.screenheightmid + 20,"R",haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,Globals.backgroundSaturation + Globals.UI_TEXT_SATURATION,Globals.backgroundLightness + Globals.UI_TEXT_LIGHTNESS));
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid - Math.floor(haxegon_Text.width(this.RESTART) / 2) + haxegon_Text.width("[") + 3,haxegon_Gfx.screenheightmid + 50,"R",this.getUIColor());
 	}
 	,checkInputs: function() {
 		if(this._isPlayerAlive) {
@@ -3507,6 +3555,7 @@ GameScene.prototype = {
 	,killPlayer: function() {
 		this._playerAlpha = 0;
 		this._isPlayerAlive = false;
+		this.checkHighScore();
 	}
 	,checkPlayerInputs: function() {
 		if(haxegon_Input.pressed(haxegon_Key.LEFT) || haxegon_Input.pressed(haxegon_Key.A)) {
@@ -3632,13 +3681,14 @@ GameScene.prototype = {
 		while(_g1 < _g) {
 			var index = _g1++;
 			var dir1 = haxegon_Random.pick(directions);
-			var deviation1 = haxegon_Random["int"](-this._DEBRIS_MAX_DEVIATION,this._DEBRIS_MAX_DEVIATION);
 			var size = haxegon_Random["int"](Debris._MIN_SIZE,Debris._MAX_SIZE);
 			var x1 = haxegon_Random["int"](haxegon_Convert.toint(size / 2),haxegon_Gfx.screenwidth - haxegon_Convert.toint(size / 2));
 			var y1 = haxegon_Random["int"](haxegon_Convert.toint(size / 2),haxegon_Gfx.screenheight - haxegon_Convert.toint(size / 2));
 			var speed = haxegon_Random["int"](Debris._MIN_SPEED,Debris._MAX_SPEED);
-			if(index == 1 && this._level == 0) {
+			var deviation1 = fixDeviation(dir1,x1,y1);
+			if(index == 1 && this._level == 0 && Globals._HIGH_SCORE == 0) {
 				this._debrisPool.push(new Debris(haxegon_Gfx.screenwidth + size,haxegon_Gfx.screenheightmid,size,Debris._MIN_SPEED,180));
+				continue;
 			}
 			fixDeviation(dir1,x1,y1);
 			if(dir1 == 0) {
@@ -3653,6 +3703,9 @@ GameScene.prototype = {
 		}
 	}
 	,spawnPowerUps: function() {
+		if(!this._isPlayerAlive) {
+			return;
+		}
 		if(this._nextPowerUp == 0 && this._powerUpPool.length > 0) {
 			this._spawnedPowerUpPool.push(this._powerUpPool.shift());
 			this._nextPowerUp = this._powerUpSpawnCooldown;
@@ -3664,6 +3717,9 @@ GameScene.prototype = {
 		}
 	}
 	,spawnDebris: function() {
+		if(!this._isPlayerAlive) {
+			return;
+		}
 		if(this._nextDebris == 0 && this._debrisPool.length > 0) {
 			this._spawnedDebrisPool.push(this._debrisPool.shift());
 			this._nextDebris = this._debrisSpawnCooldown;
@@ -3689,6 +3745,7 @@ GameScene.prototype = {
 				this._powerUpPool = [];
 				this.createPowerUps();
 			}
+			this._score += this._SCORE_NEXT_LEVEL * (this._level + 1);
 			this.createDebris();
 		}
 	}
@@ -3710,36 +3767,6 @@ GameScene.prototype = {
 		var isOutOfBounds = false;
 		isOutOfBounds = this.checkOutOfBounds(debris.getX(),debris.getY(),debris.getSize());
 		return isOutOfBounds;
-	}
-	,checkCollisionDebrisPlayer: function(debris) {
-		if(!this._isPlayerAlive) {
-			return;
-		}
-		var debrisHitbox = 1.5;
-		var playerHitbox = 1.5;
-		var playerSize = this._playerSize * playerHitbox;
-		var debrisSize = debris.getSize() * debrisHitbox;
-		var player_y;
-		var player_x;
-		var player_w;
-		var player_h;
-		player_x = this._playerX - playerSize / 2;
-		player_y = this._playerY - playerSize / 2;
-		player_w = playerSize;
-		player_h = playerSize;
-		var deb_y;
-		var deb_x;
-		var deb_w;
-		var deb_h;
-		deb_x = debris.getX() - debrisSize / 2;
-		deb_y = debris.getY() - debrisSize / 2;
-		deb_w = debrisSize;
-		deb_h = debrisSize;
-		var isOverlaping = haxegon_Geom.overlap(player_x,player_y,player_w,player_h,deb_x,deb_y,deb_w,deb_h);
-		if(isOverlaping) {
-			debris.kill();
-			HxOverrides.remove(this._spawnedDebrisPool,debris);
-		}
 	}
 	,drawPowerUps: function() {
 		if(!this._isPlayerAlive) {
@@ -3776,6 +3803,7 @@ GameScene.prototype = {
 			var debris = _g1[_g];
 			++_g;
 			if(this.isDebrisOutOfBounds(debris)) {
+				this._score += this._SCORE_DEBRIS;
 				HxOverrides.remove(this._spawnedDebrisPool,debris);
 				continue;
 			}
@@ -3787,6 +3815,7 @@ GameScene.prototype = {
 	}
 	,playerCollidedWithPowerUp: function(powerUp) {
 		this.decreasePlayerSizeBy(-powerUp.getSize());
+		this._score += this._SCORE_POWERUP;
 		powerUp.kill();
 		HxOverrides.remove(this._spawnedPowerUpPool,powerUp);
 	}
@@ -3794,6 +3823,11 @@ GameScene.prototype = {
 		this.decreasePlayerSizeBy(this._DEBRIS_DAMAGE);
 		debris.kill();
 		HxOverrides.remove(this._spawnedDebrisPool,debris);
+		if(this._score > this._SCORE_PENALTY_DEBRIS) {
+			this._score -= this._SCORE_PENALTY_DEBRIS;
+		} else {
+			this._score = 0;
+		}
 	}
 	,testBackgroundColors: function() {
 	}
@@ -3817,9 +3851,9 @@ GameScene.prototype = {
 			this.testFilters();
 			this.testBackgroundColors();
 			haxegon_Debug.clear();
-			haxegon_Debug.log("FPS:               " + haxegon_Convert.tostring(haxegon_Core.get_fps()),{ fileName : "GameScene.hx", lineNumber : 532, className : "GameScene", methodName : "debugGame"});
-			haxegon_Debug.log("bg_sat: " + haxegon_Convert.tostring(Globals.backgroundSaturation),{ fileName : "GameScene.hx", lineNumber : 533, className : "GameScene", methodName : "debugGame"});
-			haxegon_Debug.log("bg_lig: " + haxegon_Convert.tostring(Globals.backgroundLightness),{ fileName : "GameScene.hx", lineNumber : 534, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("FPS:               " + haxegon_Convert.tostring(haxegon_Core.get_fps()),{ fileName : "GameScene.hx", lineNumber : 589, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("bg_sat: " + haxegon_Convert.tostring(Globals.backgroundSaturation),{ fileName : "GameScene.hx", lineNumber : 590, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("bg_lig: " + haxegon_Convert.tostring(Globals.backgroundLightness),{ fileName : "GameScene.hx", lineNumber : 591, className : "GameScene", methodName : "debugGame"});
 		}
 	}
 	,__class__: GameScene
@@ -40911,7 +40945,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 193181;
+	this.version = 312969;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = ["lime","utils","AssetCache"];
@@ -86805,6 +86839,7 @@ Debris._MIN_SPEED = 5;
 Debris._MAX_SPEED = 7;
 Debris._MIN_SIZE = 10;
 Debris._MAX_SIZE = 20;
+Globals._HIGH_SCORE = 0;
 Globals._MIN_SPEED = 5;
 Globals._MAX_SPEED = 7;
 Globals._MIN_SIZE = 10;
