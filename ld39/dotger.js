@@ -3374,12 +3374,18 @@ var GameScene = function() {
 	this._SCORE_PENALTY_DEBRIS = 4;
 	this._SCORE_DEBRIS = 1;
 	this._SCORE_POWERUP = 2;
+	this._VOLUME_POWERUP = 0.4;
+	this._VOLUME_DEBRIS = 0.5;
 	this.DEBUG_MODE = false;
 };
 $hxClasses["GameScene"] = GameScene;
 GameScene.__name__ = ["GameScene"];
 GameScene.prototype = {
 	DEBUG_MODE: null
+	,_songPlaying: null
+	,_actualSong: null
+	,_VOLUME_DEBRIS: null
+	,_VOLUME_POWERUP: null
 	,_highScore: null
 	,_score: null
 	,_SCORE_POWERUP: null
@@ -3442,6 +3448,10 @@ GameScene.prototype = {
 		}
 	}
 	,initialize: function() {
+		this._songPlaying = false;
+		this._level = 0;
+		this.updateMusic();
+		haxegon_Music.playsound("playerHitPowerUp",this._VOLUME_POWERUP);
 		this._highScore = Globals._HIGH_SCORE;
 		this._score = 0;
 		this._playerSize = this._PLAYER_INITIAL_SIZE;
@@ -3466,13 +3476,41 @@ GameScene.prototype = {
 		Debris._MIN_SPEED = Debris._INITIAL_MIN_SPEED;
 		Debris._MAX_SPEED = Debris._INITIAL_MAX_SPEED;
 		this._debrisSpawnCooldown = this._DEBRIS_INITIAL_COOLDOWN;
-		this._level = 0;
 		this._debrisActualAmount = this._DEBRIS_AMOUNTS[this._level];
 		this._nextDebris = 0;
 		this._debrisPool = [];
 		this._spawnedDebrisPool = [];
 		this.createDebris();
 		this.createPowerUps();
+	}
+	,updateMusic: function() {
+		var delay = 0.1;
+		haxegon_Music.fadeout();
+		var _g = this._level;
+		switch(_g) {
+		case 0:
+			delay = 0.4;
+			this._actualSong = "dotger100bpm";
+			break;
+		case 1:
+			this._actualSong = "dotger110bpm";
+			break;
+		case 2:
+			this._actualSong = "dotger120bpm";
+			break;
+		case 3:
+			this._actualSong = "dotger130bpm";
+			break;
+		case 4:
+			this._actualSong = "dotger140bpm";
+			break;
+		}
+		if(this._songPlaying) {
+			haxegon_Core.delaycall($bind(this,this.playSong),delay);
+		}
+	}
+	,playSong: function() {
+		haxegon_Music.playsong("music/" + this._actualSong);
 	}
 	,getUIColor: function() {
 		return haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,Globals.backgroundSaturation + Globals.UI_TEXT_SATURATION,Globals.backgroundLightness + Globals.UI_TEXT_LIGHTNESS);
@@ -3526,6 +3564,7 @@ GameScene.prototype = {
 		}
 	}
 	,gameOver: function() {
+		haxegon_Music.fadeout();
 		haxegon_Text.align(haxegon_Text.CENTER);
 		haxegon_Text.set_size(4);
 		haxegon_Text.display(haxegon_Gfx.screenwidthmid,haxegon_Gfx.screenheightmid - 80,this.GAME_OVER);
@@ -3537,6 +3576,15 @@ GameScene.prototype = {
 	,checkInputs: function() {
 		if(this._isPlayerAlive) {
 			this.checkPlayerInputs();
+		}
+		if(haxegon_Input.justpressed(haxegon_Key.M)) {
+			if(this._songPlaying) {
+				haxegon_Music.stopsong();
+				this._songPlaying = false;
+			} else {
+				this.playSong();
+				this._songPlaying = true;
+			}
 		}
 		if(!this._isPlayerAlive) {
 			if(haxegon_Input.justpressed(haxegon_Key.R)) {
@@ -3747,6 +3795,7 @@ GameScene.prototype = {
 			}
 			this._score += this._SCORE_NEXT_LEVEL * (this._level + 1);
 			this.createDebris();
+			this.updateMusic();
 		}
 	}
 	,checkOutOfBounds: function(x,y,size) {
@@ -3816,11 +3865,13 @@ GameScene.prototype = {
 	,playerCollidedWithPowerUp: function(powerUp) {
 		this.decreasePlayerSizeBy(-powerUp.getSize());
 		this._score += this._SCORE_POWERUP;
+		haxegon_Music.playsound("playerHitPowerUp",this._VOLUME_POWERUP);
 		powerUp.kill();
 		HxOverrides.remove(this._spawnedPowerUpPool,powerUp);
 	}
 	,playerCollidedWithDebris: function(debris) {
 		this.decreasePlayerSizeBy(this._DEBRIS_DAMAGE);
+		haxegon_Music.playsound("playerHitDebris",this._VOLUME_DEBRIS);
 		debris.kill();
 		HxOverrides.remove(this._spawnedDebrisPool,debris);
 		if(this._score > this._SCORE_PENALTY_DEBRIS) {
@@ -3851,9 +3902,9 @@ GameScene.prototype = {
 			this.testFilters();
 			this.testBackgroundColors();
 			haxegon_Debug.clear();
-			haxegon_Debug.log("FPS:               " + haxegon_Convert.tostring(haxegon_Core.get_fps()),{ fileName : "GameScene.hx", lineNumber : 589, className : "GameScene", methodName : "debugGame"});
-			haxegon_Debug.log("bg_sat: " + haxegon_Convert.tostring(Globals.backgroundSaturation),{ fileName : "GameScene.hx", lineNumber : 590, className : "GameScene", methodName : "debugGame"});
-			haxegon_Debug.log("bg_lig: " + haxegon_Convert.tostring(Globals.backgroundLightness),{ fileName : "GameScene.hx", lineNumber : 591, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("FPS:               " + haxegon_Convert.tostring(haxegon_Core.get_fps()),{ fileName : "GameScene.hx", lineNumber : 638, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("bg_sat: " + haxegon_Convert.tostring(Globals.backgroundSaturation),{ fileName : "GameScene.hx", lineNumber : 639, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("bg_lig: " + haxegon_Convert.tostring(Globals.backgroundLightness),{ fileName : "GameScene.hx", lineNumber : 640, className : "GameScene", methodName : "debugGame"});
 		}
 	}
 	,__class__: GameScene
@@ -4041,6 +4092,13 @@ var Main = function() {
 	this.TEXT_BLENDING_SPEED = 0.01;
 	this.GAME_BY = "A game by Nacho 'bazoo' Verdon";
 	this.GAME_NAME = "DOTGER";
+	haxegon_Music.loadsong("music/dotger100bpm");
+	haxegon_Music.loadsong("music/dotger110bpm");
+	haxegon_Music.loadsong("music/dotger120bpm");
+	haxegon_Music.loadsong("music/dotger130bpm");
+	haxegon_Music.loadsong("music/dotger140bpm");
+	haxegon_Music.loadsound("playerHitDebris",0.8);
+	haxegon_Music.loadsound("playerHitPowerUp",0.4);
 	haxegon_Core.delaycall($bind(this,this.startBlending),2);
 };
 $hxClasses["Main"] = Main;
@@ -4115,7 +4173,7 @@ ManifestResources.init = function(config) {
 	var data;
 	var manifest;
 	var library;
-	data = "{\"name\":null,\"assets\":\"aoy4:pathy47:data%2Fgraphics%2Ffonts%2Fdefault%2Fdefault.fnty4:sizei11283y4:typey4:TEXTy2:idR1y7:preloadtgoR0y49:data%2Fgraphics%2Ffonts%2Fdefault%2Fdefault_0.pngR2i1178R3y5:IMAGER5R7R6tgoR0y49:data%2Fgraphics%2Ffonts%2Fopensans%2Fopensans.eotR2i217534R3y6:BINARYR5R9R6tgoR2i217360R3y4:FONTy9:classNamey50:__ASSET__data_graphics_fonts_opensans_opensans_ttfR5y49:data%2Fgraphics%2Ffonts%2Fopensans%2Fopensans.ttfR6tgoR0y50:data%2Fgraphics%2Ffonts%2Fopensans%2Fopensans.woffR2i112572R3R10R5R15R6tgoR0y51:data%2Fgraphics%2Ffonts%2Fopensans%2Fopensans.woff2R2i18780R3R10R5R16R6tgh\",\"version\":2,\"libraryArgs\":[],\"libraryType\":null}";
+	data = "{\"name\":null,\"assets\":\"aoy4:sizei86551y4:typey5:SOUNDy2:idy40:data%2Fsounds%2Fmusic%2Fdotger100bpm.oggy9:pathGroupaR4hy7:preloadtgoR0i80505R1R2R3y40:data%2Fsounds%2Fmusic%2Fdotger110bpm.oggR5aR7hR6tgoR0i75613R1R2R3y40:data%2Fsounds%2Fmusic%2Fdotger120bpm.oggR5aR8hR6tgoR0i70825R1R2R3y40:data%2Fsounds%2Fmusic%2Fdotger130bpm.oggR5aR9hR6tgoR0i64943R1R2R3y40:data%2Fsounds%2Fmusic%2Fdotger140bpm.oggR5aR10hR6tgoR0i9569R1R2R3y35:data%2Fsounds%2FplayerHitDebris.oggR5aR11hR6tgoR0i6746R1R2R3y36:data%2Fsounds%2FplayerHitPowerUp.oggR5aR12hR6tgoy4:pathy47:data%2Fgraphics%2Ffonts%2Fdefault%2Fdefault.fntR0i11283R1y4:TEXTR3R14R6tgoR13y49:data%2Fgraphics%2Ffonts%2Fdefault%2Fdefault_0.pngR0i1178R1y5:IMAGER3R16R6tgoR13y49:data%2Fgraphics%2Ffonts%2Fopensans%2Fopensans.eotR0i217534R1y6:BINARYR3R18R6tgoR0i217360R1y4:FONTy9:classNamey50:__ASSET__data_graphics_fonts_opensans_opensans_ttfR3y49:data%2Fgraphics%2Ffonts%2Fopensans%2Fopensans.ttfR6tgoR13y50:data%2Fgraphics%2Ffonts%2Fopensans%2Fopensans.woffR0i112572R1R19R3R24R6tgoR13y51:data%2Fgraphics%2Ffonts%2Fopensans%2Fopensans.woff2R0i18780R1R19R3R25R6tgh\",\"version\":2,\"libraryArgs\":[],\"libraryType\":null}";
 	manifest = lime_utils_AssetManifest.parse(data,rootPath);
 	library = lime_utils_AssetLibrary.fromManifest(manifest);
 	lime_utils_Assets.registerLibrary("default",library);
@@ -40945,7 +41003,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 312969;
+	this.version = 508886;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = ["lime","utils","AssetCache"];
