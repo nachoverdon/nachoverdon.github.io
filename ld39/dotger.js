@@ -1019,7 +1019,7 @@ $hxClasses["ApplicationMain"] = ApplicationMain;
 ApplicationMain.__name__ = ["ApplicationMain"];
 ApplicationMain.main = function() {
 	var projectName = "dotger";
-	var config = { build : "12", company : "Nacho 'bazoo' Verdón", file : "dotger", fps : 60, name : "Dotger", orientation : "landscape", packageName : "com.nachoverdon.dotger", version : "1.0.0", windows : [{ allowHighDPI : false, alwaysOnTop : false, antialiasing : 0, background : 1118481, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 480, hidden : null, maximized : null, minimized : null, parameters : { }, resizable : true, stencilBuffer : true, title : "Dotger", vsync : true, width : 768, x : null, y : null}]};
+	var config = { build : "13", company : "Nacho 'bazoo' Verdón", file : "dotger", fps : 60, name : "Dotger", orientation : "landscape", packageName : "com.nachoverdon.dotger", version : "1.0.0", windows : [{ allowHighDPI : false, alwaysOnTop : false, antialiasing : 0, background : 1118481, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 480, hidden : null, maximized : null, minimized : null, parameters : { }, resizable : true, stencilBuffer : true, title : "Dotger", vsync : true, width : 768, x : null, y : null}]};
 	lime_system_System.__registerEntryPoint(projectName,ApplicationMain.create,config);
 };
 ApplicationMain.create = function(config) {
@@ -3382,7 +3382,6 @@ $hxClasses["GameScene"] = GameScene;
 GameScene.__name__ = ["GameScene"];
 GameScene.prototype = {
 	DEBUG_MODE: null
-	,_songPlaying: null
 	,_actualSong: null
 	,_VOLUME_DEBRIS: null
 	,_VOLUME_POWERUP: null
@@ -3409,7 +3408,6 @@ GameScene.prototype = {
 	,_isPlayerAlive: null
 	,_playerX: null
 	,_playerY: null
-	,_level: null
 	,_POWERUP_AMOUNTS: null
 	,_POWERUP_MAX_DEVIATION: null
 	,_POWERUP_MIN_DEVIATION: null
@@ -3448,8 +3446,7 @@ GameScene.prototype = {
 		}
 	}
 	,initialize: function() {
-		this._songPlaying = true;
-		this._level = 0;
+		Globals.level = 0;
 		this.updateMusic();
 		haxegon_Music.playsound("playerHitPowerUp",this._VOLUME_POWERUP);
 		this._highScore = Globals._HIGH_SCORE;
@@ -3467,7 +3464,7 @@ GameScene.prototype = {
 		PowerUp._MIN_SPEED = PowerUp._INITIAL_MIN_SPEED;
 		PowerUp._MAX_SPEED = PowerUp._INITIAL_MAX_SPEED;
 		this._powerUpSpawnCooldown = this._POWERUP_INITIAL_COOLDOWN;
-		this._powerUpActualAmount = this._POWERUP_AMOUNTS[this._level];
+		this._powerUpActualAmount = this._POWERUP_AMOUNTS[Globals.level];
 		this._nextPowerUp = this._POWERUP_INITIAL_COOLDOWN;
 		this._powerUpPool = [];
 		this._spawnedPowerUpPool = [];
@@ -3476,7 +3473,7 @@ GameScene.prototype = {
 		Debris._MIN_SPEED = Debris._INITIAL_MIN_SPEED;
 		Debris._MAX_SPEED = Debris._INITIAL_MAX_SPEED;
 		this._debrisSpawnCooldown = this._DEBRIS_INITIAL_COOLDOWN;
-		this._debrisActualAmount = this._DEBRIS_AMOUNTS[this._level];
+		this._debrisActualAmount = this._DEBRIS_AMOUNTS[Globals.level];
 		this._nextDebris = 0;
 		this._debrisPool = [];
 		this._spawnedDebrisPool = [];
@@ -3485,8 +3482,7 @@ GameScene.prototype = {
 	}
 	,updateMusic: function() {
 		var delay = 0.1;
-		haxegon_Music.fadeout();
-		var _g = this._level;
+		var _g = Globals.level;
 		switch(_g) {
 		case 0:
 			delay = 0.4;
@@ -3505,7 +3501,8 @@ GameScene.prototype = {
 			this._actualSong = "dotger140bpm";
 			break;
 		}
-		if(this._songPlaying) {
+		if(Globals._songPlaying) {
+			haxegon_Music.fadeout();
 			haxegon_Core.delaycall($bind(this,this.playSong),delay);
 		}
 	}
@@ -3560,7 +3557,7 @@ GameScene.prototype = {
 	,showLevel: function() {
 		if(this._isPlayerAlive) {
 			haxegon_Text.set_size(2);
-			haxegon_Text.display(50,50,"LEVEL: " + (this._level + 1));
+			haxegon_Text.display(50,50,"LEVEL: " + (Globals.level + 1));
 		}
 	}
 	,gameOver: function() {
@@ -3577,13 +3574,14 @@ GameScene.prototype = {
 		if(this._isPlayerAlive) {
 			this.checkPlayerInputs();
 		}
+		Globals.checkToggleBackgroundCircles();
 		if(haxegon_Input.justpressed(haxegon_Key.M)) {
-			if(this._songPlaying) {
+			if(Globals._songPlaying) {
 				haxegon_Music.stopsong();
-				this._songPlaying = false;
+				Globals._songPlaying = false;
 			} else {
 				this.playSong();
-				this._songPlaying = true;
+				Globals._songPlaying = true;
 			}
 		}
 		if(!this._isPlayerAlive) {
@@ -3671,7 +3669,7 @@ GameScene.prototype = {
 			}
 			return deviation;
 		};
-		this._powerUpActualAmount = this._POWERUP_AMOUNTS[this._level];
+		this._powerUpActualAmount = this._POWERUP_AMOUNTS[Globals.level];
 		var directions = [0,90,180,270];
 		var _g1 = 1;
 		var _g = this._powerUpActualAmount;
@@ -3726,7 +3724,7 @@ GameScene.prototype = {
 			}
 			return deviation;
 		};
-		this._debrisActualAmount = this._DEBRIS_AMOUNTS[this._level];
+		this._debrisActualAmount = this._DEBRIS_AMOUNTS[Globals.level];
 		var directions = [0,90,180,270];
 		var _g1 = 1;
 		var _g = this._debrisActualAmount;
@@ -3738,7 +3736,7 @@ GameScene.prototype = {
 			var y1 = haxegon_Random["int"](haxegon_Convert.toint(size / 2),haxegon_Gfx.screenheight - haxegon_Convert.toint(size / 2));
 			var speed = haxegon_Random["int"](Debris._MIN_SPEED,Debris._MAX_SPEED);
 			var deviation1 = fixDeviation(dir1,x1,y1);
-			if(index == 1 && this._level == 0 && Globals._HIGH_SCORE == 0) {
+			if(index == 1 && Globals.level == 0 && Globals._HIGH_SCORE == 0) {
 				this._debrisPool.push(new Debris(haxegon_Gfx.screenwidth + size,haxegon_Gfx.screenheightmid,size,Debris._MIN_SPEED,180));
 				continue;
 			}
@@ -3782,8 +3780,8 @@ GameScene.prototype = {
 			this._nextDebris--;
 		}
 		if(this._debrisPool.length == 0) {
-			if(this._level + 1 < this._DEBRIS_AMOUNTS.length) {
-				this._level++;
+			if(Globals.level + 1 < this._DEBRIS_AMOUNTS.length) {
+				Globals.level++;
 				Debris._MIN_SIZE += 1;
 				Debris._MAX_SIZE += 2;
 				Debris._MIN_SPEED += 1;
@@ -3797,7 +3795,7 @@ GameScene.prototype = {
 				this._powerUpPool = [];
 				this.createPowerUps();
 			}
-			this._score += this._SCORE_NEXT_LEVEL * (this._level + 1);
+			this._score += this._SCORE_NEXT_LEVEL * (Globals.level + 1);
 			this.createDebris();
 			this.updateMusic();
 		}
@@ -3906,19 +3904,5753 @@ GameScene.prototype = {
 			this.testFilters();
 			this.testBackgroundColors();
 			haxegon_Debug.clear();
-			haxegon_Debug.log("FPS:               " + haxegon_Convert.tostring(haxegon_Core.get_fps()),{ fileName : "GameScene.hx", lineNumber : 639, className : "GameScene", methodName : "debugGame"});
-			haxegon_Debug.log("bg_sat: " + haxegon_Convert.tostring(Globals.backgroundSaturation),{ fileName : "GameScene.hx", lineNumber : 640, className : "GameScene", methodName : "debugGame"});
-			haxegon_Debug.log("bg_lig: " + haxegon_Convert.tostring(Globals.backgroundLightness),{ fileName : "GameScene.hx", lineNumber : 641, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("FPS:               " + haxegon_Convert.tostring(haxegon_Core.get_fps()),{ fileName : "GameScene.hx", lineNumber : 641, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("bg_sat: " + haxegon_Convert.tostring(Globals.backgroundSaturation),{ fileName : "GameScene.hx", lineNumber : 642, className : "GameScene", methodName : "debugGame"});
+			haxegon_Debug.log("bg_lig: " + haxegon_Convert.tostring(Globals.backgroundLightness),{ fileName : "GameScene.hx", lineNumber : 643, className : "GameScene", methodName : "debugGame"});
 		}
 	}
 	,__class__: GameScene
+};
+var lime_math_Matrix3 = function(a,b,c,d,tx,ty) {
+	if(ty == null) {
+		ty = 0;
+	}
+	if(tx == null) {
+		tx = 0;
+	}
+	if(d == null) {
+		d = 1;
+	}
+	if(c == null) {
+		c = 0;
+	}
+	if(b == null) {
+		b = 0;
+	}
+	if(a == null) {
+		a = 1;
+	}
+	this.a = a;
+	this.b = b;
+	this.c = c;
+	this.d = d;
+	this.tx = tx;
+	this.ty = ty;
+};
+$hxClasses["lime.math.Matrix3"] = lime_math_Matrix3;
+lime_math_Matrix3.__name__ = ["lime","math","Matrix3"];
+lime_math_Matrix3.prototype = {
+	a: null
+	,b: null
+	,c: null
+	,d: null
+	,tx: null
+	,ty: null
+	,clone: function() {
+		return new lime_math_Matrix3(this.a,this.b,this.c,this.d,this.tx,this.ty);
+	}
+	,concat: function(m) {
+		var a1 = this.a * m.a + this.b * m.c;
+		this.b = this.a * m.b + this.b * m.d;
+		this.a = a1;
+		var c1 = this.c * m.a + this.d * m.c;
+		this.d = this.c * m.b + this.d * m.d;
+		this.c = c1;
+		var tx1 = this.tx * m.a + this.ty * m.c + m.tx;
+		this.ty = this.tx * m.b + this.ty * m.d + m.ty;
+		this.tx = tx1;
+	}
+	,copyColumnFrom: function(column,vector4) {
+		if(column > 2) {
+			throw new js__$Boot_HaxeError("Column " + column + " out of bounds (2)");
+		} else if(column == 0) {
+			this.a = vector4.x;
+			this.c = vector4.y;
+		} else if(column == 1) {
+			this.b = vector4.x;
+			this.d = vector4.y;
+		} else {
+			this.tx = vector4.x;
+			this.ty = vector4.y;
+		}
+	}
+	,copyColumnTo: function(column,vector4) {
+		if(column > 2) {
+			throw new js__$Boot_HaxeError("Column " + column + " out of bounds (2)");
+		} else if(column == 0) {
+			vector4.x = this.a;
+			vector4.y = this.c;
+			vector4.z = 0;
+		} else if(column == 1) {
+			vector4.x = this.b;
+			vector4.y = this.d;
+			vector4.z = 0;
+		} else {
+			vector4.x = this.tx;
+			vector4.y = this.ty;
+			vector4.z = 1;
+		}
+	}
+	,copyFrom: function(sourceMatrix3) {
+		this.a = sourceMatrix3.a;
+		this.b = sourceMatrix3.b;
+		this.c = sourceMatrix3.c;
+		this.d = sourceMatrix3.d;
+		this.tx = sourceMatrix3.tx;
+		this.ty = sourceMatrix3.ty;
+	}
+	,copyRowFrom: function(row,vector4) {
+		if(row > 2) {
+			throw new js__$Boot_HaxeError("Row " + row + " out of bounds (2)");
+		} else if(row == 0) {
+			this.a = vector4.x;
+			this.c = vector4.y;
+		} else if(row == 1) {
+			this.b = vector4.x;
+			this.d = vector4.y;
+		} else {
+			this.tx = vector4.x;
+			this.ty = vector4.y;
+		}
+	}
+	,copyRowTo: function(row,vector4) {
+		if(row > 2) {
+			throw new js__$Boot_HaxeError("Row " + row + " out of bounds (2)");
+		} else if(row == 0) {
+			vector4.x = this.a;
+			vector4.y = this.b;
+			vector4.z = this.tx;
+		} else if(row == 1) {
+			vector4.x = this.c;
+			vector4.y = this.d;
+			vector4.z = this.ty;
+		} else {
+			vector4.x = 0;
+			vector4.y = 0;
+			vector4.z = 1;
+		}
+	}
+	,createBox: function(scaleX,scaleY,rotation,tx,ty) {
+		if(ty == null) {
+			ty = 0;
+		}
+		if(tx == null) {
+			tx = 0;
+		}
+		if(rotation == null) {
+			rotation = 0;
+		}
+		this.a = scaleX;
+		this.d = scaleY;
+		this.b = rotation;
+		this.tx = tx;
+		this.ty = ty;
+	}
+	,createGradientBox: function(width,height,rotation,tx,ty) {
+		if(ty == null) {
+			ty = 0;
+		}
+		if(tx == null) {
+			tx = 0;
+		}
+		if(rotation == null) {
+			rotation = 0;
+		}
+		this.a = width / 1638.4;
+		this.d = height / 1638.4;
+		if(rotation != 0) {
+			var cos = Math.cos(rotation);
+			var sin = Math.sin(rotation);
+			this.b = sin * this.d;
+			this.c = -sin * this.a;
+			this.a *= cos;
+			this.d *= cos;
+		} else {
+			this.b = 0;
+			this.c = 0;
+		}
+		this.tx = tx + width / 2;
+		this.ty = ty + height / 2;
+	}
+	,equals: function(Matrix3) {
+		if(Matrix3 != null && this.tx == Matrix3.tx && this.ty == Matrix3.ty && this.a == Matrix3.a && this.b == Matrix3.b && this.c == Matrix3.c) {
+			return this.d == Matrix3.d;
+		} else {
+			return false;
+		}
+	}
+	,deltaTransformVector2: function(Vector2) {
+		return new lime_math_Vector2(Vector2.x * this.a + Vector2.y * this.c,Vector2.x * this.b + Vector2.y * this.d);
+	}
+	,identity: function() {
+		this.a = 1;
+		this.b = 0;
+		this.c = 0;
+		this.d = 1;
+		this.tx = 0;
+		this.ty = 0;
+	}
+	,invert: function() {
+		var norm = this.a * this.d - this.b * this.c;
+		if(norm == 0) {
+			this.a = this.b = this.c = this.d = 0;
+			this.tx = -this.tx;
+			this.ty = -this.ty;
+		} else {
+			norm = 1.0 / norm;
+			var a1 = this.d * norm;
+			this.d = this.a * norm;
+			this.a = a1;
+			this.b *= -norm;
+			this.c *= -norm;
+			var tx1 = -this.a * this.tx - this.c * this.ty;
+			this.ty = -this.b * this.tx - this.d * this.ty;
+			this.tx = tx1;
+		}
+		return this;
+	}
+	,mult: function(m) {
+		var result = new lime_math_Matrix3(this.a,this.b,this.c,this.d,this.tx,this.ty);
+		result.concat(m);
+		return result;
+	}
+	,rotate: function(theta) {
+		var cos = Math.cos(theta);
+		var sin = Math.sin(theta);
+		var a1 = this.a * cos - this.b * sin;
+		this.b = this.a * sin + this.b * cos;
+		this.a = a1;
+		var c1 = this.c * cos - this.d * sin;
+		this.d = this.c * sin + this.d * cos;
+		this.c = c1;
+		var tx1 = this.tx * cos - this.ty * sin;
+		this.ty = this.tx * sin + this.ty * cos;
+		this.tx = tx1;
+	}
+	,scale: function(sx,sy) {
+		this.a *= sx;
+		this.b *= sy;
+		this.c *= sx;
+		this.d *= sy;
+		this.tx *= sx;
+		this.ty *= sy;
+	}
+	,setRotation: function(theta,scale) {
+		if(scale == null) {
+			scale = 1;
+		}
+		this.a = Math.cos(theta) * scale;
+		this.c = Math.sin(theta) * scale;
+		this.b = -this.c;
+		this.d = this.a;
+	}
+	,setTo: function(a,b,c,d,tx,ty) {
+		this.a = a;
+		this.b = b;
+		this.c = c;
+		this.d = d;
+		this.tx = tx;
+		this.ty = ty;
+	}
+	,to3DString: function(roundPixels) {
+		if(roundPixels == null) {
+			roundPixels = false;
+		}
+		if(roundPixels) {
+			return "Matrix33d(" + this.a + ", " + this.b + ", " + "0, 0, " + this.c + ", " + this.d + ", " + "0, 0, 0, 0, 1, 0, " + (this.tx | 0) + ", " + (this.ty | 0) + ", 0, 1)";
+		} else {
+			return "Matrix33d(" + this.a + ", " + this.b + ", " + "0, 0, " + this.c + ", " + this.d + ", " + "0, 0, 0, 0, 1, 0, " + this.tx + ", " + this.ty + ", 0, 1)";
+		}
+	}
+	,toMozString: function() {
+		return "Matrix3(" + this.a + ", " + this.b + ", " + this.c + ", " + this.d + ", " + this.tx + "px, " + this.ty + "px)";
+	}
+	,toString: function() {
+		return "Matrix3(" + this.a + ", " + this.b + ", " + this.c + ", " + this.d + ", " + this.tx + ", " + this.ty + ")";
+	}
+	,transformVector2: function(pos) {
+		return new lime_math_Vector2(pos.x * this.a + pos.y * this.c + this.tx,pos.x * this.b + pos.y * this.d + this.ty);
+	}
+	,translate: function(dx,dy) {
+		this.tx += dx;
+		this.ty += dy;
+	}
+	,__cleanValues: function() {
+		this.a = Math.round(this.a * 1000) / 1000;
+		this.b = Math.round(this.b * 1000) / 1000;
+		this.c = Math.round(this.c * 1000) / 1000;
+		this.d = Math.round(this.d * 1000) / 1000;
+		this.tx = Math.round(this.tx * 10) / 10;
+		this.ty = Math.round(this.ty * 10) / 10;
+	}
+	,__transformX: function(pos) {
+		return pos.x * this.a + pos.y * this.c + this.tx;
+	}
+	,__transformY: function(pos) {
+		return pos.x * this.b + pos.y * this.d + this.ty;
+	}
+	,__translateTransformed: function(pos) {
+		this.tx = pos.x * this.a + pos.y * this.c + this.tx;
+		this.ty = pos.x * this.b + pos.y * this.d + this.ty;
+	}
+	,__class__: lime_math_Matrix3
+};
+var lime_utils_ObjectPool_$openfl_$geom_$Matrix = function(create,clean,size) {
+	if(create != null) {
+		this.create = create;
+	}
+	if(clean != null) {
+		this.clean = clean;
+	}
+	if(size != null) {
+		this.set_size(size);
+	}
+	this.__pool = new haxe_ds_ObjectMap();
+	this.activeObjects = 0;
+	this.inactiveObjects = 0;
+	this.__inactiveObject0 = null;
+	this.__inactiveObject1 = null;
+	this.__inactiveObjectList = new List();
+};
+$hxClasses["lime.utils.ObjectPool_openfl_geom_Matrix"] = lime_utils_ObjectPool_$openfl_$geom_$Matrix;
+lime_utils_ObjectPool_$openfl_$geom_$Matrix.__name__ = ["lime","utils","ObjectPool_openfl_geom_Matrix"];
+lime_utils_ObjectPool_$openfl_$geom_$Matrix.prototype = {
+	activeObjects: null
+	,inactiveObjects: null
+	,__inactiveObject0: null
+	,__inactiveObject1: null
+	,__inactiveObjectList: null
+	,__pool: null
+	,__size: null
+	,add: function(object) {
+		if(!this.__pool.exists(object)) {
+			this.__pool.set(object,false);
+			this.clean(object);
+			if(this.__inactiveObject0 == null) {
+				this.__inactiveObject0 = object;
+			} else if(this.__inactiveObject1 == null) {
+				this.__inactiveObject1 = object;
+			} else {
+				this.__inactiveObjectList.add(object);
+			}
+			this.inactiveObjects++;
+		}
+	}
+	,clean: function(object) {
+	}
+	,clear: function() {
+		this.__pool = new haxe_ds_ObjectMap();
+		this.activeObjects = 0;
+		this.inactiveObjects = 0;
+		this.__inactiveObject0 = null;
+		this.__inactiveObject1 = null;
+		this.__inactiveObjectList.clear();
+	}
+	,create: function() {
+		return null;
+	}
+	,get: function() {
+		var object = null;
+		if(this.inactiveObjects > 0) {
+			var object1 = null;
+			if(this.__inactiveObject0 != null) {
+				object1 = this.__inactiveObject0;
+				this.__inactiveObject0 = null;
+			} else if(this.__inactiveObject1 != null) {
+				object1 = this.__inactiveObject1;
+				this.__inactiveObject1 = null;
+			} else {
+				object1 = this.__inactiveObjectList.pop();
+				if(this.__inactiveObjectList.length > 0) {
+					this.__inactiveObject0 = this.__inactiveObjectList.pop();
+				}
+				if(this.__inactiveObjectList.length > 0) {
+					this.__inactiveObject1 = this.__inactiveObjectList.pop();
+				}
+			}
+			this.inactiveObjects--;
+			this.activeObjects++;
+			object = object1;
+		} else if(this.__size == null || this.activeObjects < this.__size) {
+			object = this.create();
+			if(object != null) {
+				this.__pool.set(object,true);
+				this.activeObjects++;
+			}
+		}
+		return object;
+	}
+	,release: function(object) {
+		this.activeObjects--;
+		if(this.__size == null || this.activeObjects + this.inactiveObjects < this.__size) {
+			this.clean(object);
+			if(this.__inactiveObject0 == null) {
+				this.__inactiveObject0 = object;
+			} else if(this.__inactiveObject1 == null) {
+				this.__inactiveObject1 = object;
+			} else {
+				this.__inactiveObjectList.add(object);
+			}
+			this.inactiveObjects++;
+		} else {
+			this.__pool.remove(object);
+		}
+	}
+	,__addInactive: function(object) {
+		if(this.__inactiveObject0 == null) {
+			this.__inactiveObject0 = object;
+		} else if(this.__inactiveObject1 == null) {
+			this.__inactiveObject1 = object;
+		} else {
+			this.__inactiveObjectList.add(object);
+		}
+		this.inactiveObjects++;
+	}
+	,__getInactive: function() {
+		var object = null;
+		if(this.__inactiveObject0 != null) {
+			object = this.__inactiveObject0;
+			this.__inactiveObject0 = null;
+		} else if(this.__inactiveObject1 != null) {
+			object = this.__inactiveObject1;
+			this.__inactiveObject1 = null;
+		} else {
+			object = this.__inactiveObjectList.pop();
+			if(this.__inactiveObjectList.length > 0) {
+				this.__inactiveObject0 = this.__inactiveObjectList.pop();
+			}
+			if(this.__inactiveObjectList.length > 0) {
+				this.__inactiveObject1 = this.__inactiveObjectList.pop();
+			}
+		}
+		this.inactiveObjects--;
+		this.activeObjects++;
+		return object;
+	}
+	,__removeInactive: function(count) {
+		if(count <= 0 || this.inactiveObjects == 0) {
+			return;
+		}
+		if(this.__inactiveObject0 != null) {
+			this.__pool.remove(this.__inactiveObject0);
+			this.__inactiveObject0 = null;
+			this.inactiveObjects--;
+			--count;
+		}
+		if(count == 0 || this.inactiveObjects == 0) {
+			return;
+		}
+		if(this.__inactiveObject1 != null) {
+			this.__pool.remove(this.__inactiveObject1);
+			this.__inactiveObject1 = null;
+			this.inactiveObjects--;
+			--count;
+		}
+		if(count == 0 || this.inactiveObjects == 0) {
+			return;
+		}
+		var _g_head = this.__inactiveObjectList.h;
+		while(_g_head != null) {
+			var val = _g_head.item;
+			_g_head = _g_head.next;
+			var object = val;
+			this.__pool.remove(object);
+			this.__inactiveObjectList.remove(object);
+			this.inactiveObjects--;
+			--count;
+			if(count == 0 || this.inactiveObjects == 0) {
+				return;
+			}
+		}
+	}
+	,get_size: function() {
+		return this.__size;
+	}
+	,set_size: function(value) {
+		if(value == null) {
+			this.__size = null;
+		} else {
+			var current = this.inactiveObjects + this.activeObjects;
+			this.__size = value;
+			if(current > value) {
+				this.__removeInactive(current - value);
+			} else if(value > current) {
+				var object;
+				var _g1 = 0;
+				var _g = value - current;
+				while(_g1 < _g) {
+					var i = _g1++;
+					object = this.create();
+					if(object != null) {
+						this.__pool.set(object,false);
+						this.__inactiveObjectList.add(object);
+						this.inactiveObjects++;
+					} else {
+						break;
+					}
+				}
+			}
+		}
+		return value;
+	}
+	,__class__: lime_utils_ObjectPool_$openfl_$geom_$Matrix
+	,__properties__: {set_size:"set_size",get_size:"get_size"}
+};
+var List = function() {
+	this.length = 0;
+};
+$hxClasses["List"] = List;
+List.__name__ = ["List"];
+List.prototype = {
+	h: null
+	,q: null
+	,length: null
+	,add: function(item) {
+		var x = new _$List_ListNode(item,null);
+		if(this.h == null) {
+			this.h = x;
+		} else {
+			this.q.next = x;
+		}
+		this.q = x;
+		this.length++;
+	}
+	,pop: function() {
+		if(this.h == null) {
+			return null;
+		}
+		var x = this.h.item;
+		this.h = this.h.next;
+		if(this.h == null) {
+			this.q = null;
+		}
+		this.length--;
+		return x;
+	}
+	,clear: function() {
+		this.h = null;
+		this.q = null;
+		this.length = 0;
+	}
+	,remove: function(v) {
+		var prev = null;
+		var l = this.h;
+		while(l != null) {
+			if(l.item == v) {
+				if(prev == null) {
+					this.h = l.next;
+				} else {
+					prev.next = l.next;
+				}
+				if(this.q == l) {
+					this.q = prev;
+				}
+				this.length--;
+				return true;
+			}
+			prev = l;
+			l = l.next;
+		}
+		return false;
+	}
+	,iterator: function() {
+		return new _$List_ListIterator(this.h);
+	}
+	,__class__: List
+};
+var openfl_geom_Matrix = function(a,b,c,d,tx,ty) {
+	if(ty == null) {
+		ty = 0;
+	}
+	if(tx == null) {
+		tx = 0;
+	}
+	if(d == null) {
+		d = 1;
+	}
+	if(c == null) {
+		c = 0;
+	}
+	if(b == null) {
+		b = 0;
+	}
+	if(a == null) {
+		a = 1;
+	}
+	this.a = a;
+	this.b = b;
+	this.c = c;
+	this.d = d;
+	this.tx = tx;
+	this.ty = ty;
+};
+$hxClasses["openfl.geom.Matrix"] = openfl_geom_Matrix;
+openfl_geom_Matrix.__name__ = ["openfl","geom","Matrix"];
+openfl_geom_Matrix.prototype = {
+	a: null
+	,b: null
+	,c: null
+	,d: null
+	,tx: null
+	,ty: null
+	,__array: null
+	,clone: function() {
+		return new openfl_geom_Matrix(this.a,this.b,this.c,this.d,this.tx,this.ty);
+	}
+	,concat: function(m) {
+		var a1 = this.a * m.a + this.b * m.c;
+		this.b = this.a * m.b + this.b * m.d;
+		this.a = a1;
+		var c1 = this.c * m.a + this.d * m.c;
+		this.d = this.c * m.b + this.d * m.d;
+		this.c = c1;
+		var tx1 = this.tx * m.a + this.ty * m.c + m.tx;
+		this.ty = this.tx * m.b + this.ty * m.d + m.ty;
+		this.tx = tx1;
+	}
+	,copyColumnFrom: function(column,vector3D) {
+		if(column > 2) {
+			throw new js__$Boot_HaxeError("Column " + column + " out of bounds (2)");
+		} else if(column == 0) {
+			this.a = vector3D.x;
+			this.c = vector3D.y;
+		} else if(column == 1) {
+			this.b = vector3D.x;
+			this.d = vector3D.y;
+		} else {
+			this.tx = vector3D.x;
+			this.ty = vector3D.y;
+		}
+	}
+	,copyColumnTo: function(column,vector3D) {
+		if(column > 2) {
+			throw new js__$Boot_HaxeError("Column " + column + " out of bounds (2)");
+		} else if(column == 0) {
+			vector3D.x = this.a;
+			vector3D.y = this.c;
+			vector3D.z = 0;
+		} else if(column == 1) {
+			vector3D.x = this.b;
+			vector3D.y = this.d;
+			vector3D.z = 0;
+		} else {
+			vector3D.x = this.tx;
+			vector3D.y = this.ty;
+			vector3D.z = 1;
+		}
+	}
+	,copyFrom: function(sourceMatrix) {
+		this.a = sourceMatrix.a;
+		this.b = sourceMatrix.b;
+		this.c = sourceMatrix.c;
+		this.d = sourceMatrix.d;
+		this.tx = sourceMatrix.tx;
+		this.ty = sourceMatrix.ty;
+	}
+	,copyRowFrom: function(row,vector3D) {
+		if(row > 2) {
+			throw new js__$Boot_HaxeError("Row " + row + " out of bounds (2)");
+		} else if(row == 0) {
+			this.a = vector3D.x;
+			this.c = vector3D.y;
+		} else if(row == 1) {
+			this.b = vector3D.x;
+			this.d = vector3D.y;
+		} else {
+			this.tx = vector3D.x;
+			this.ty = vector3D.y;
+		}
+	}
+	,copyRowTo: function(row,vector3D) {
+		if(row > 2) {
+			throw new js__$Boot_HaxeError("Row " + row + " out of bounds (2)");
+		} else if(row == 0) {
+			vector3D.x = this.a;
+			vector3D.y = this.b;
+			vector3D.z = this.tx;
+		} else if(row == 1) {
+			vector3D.x = this.c;
+			vector3D.y = this.d;
+			vector3D.z = this.ty;
+		} else {
+			vector3D.setTo(0,0,1);
+		}
+	}
+	,createBox: function(scaleX,scaleY,rotation,tx,ty) {
+		if(ty == null) {
+			ty = 0;
+		}
+		if(tx == null) {
+			tx = 0;
+		}
+		if(rotation == null) {
+			rotation = 0;
+		}
+		if(rotation != 0) {
+			var cos = Math.cos(rotation);
+			var sin = Math.sin(rotation);
+			this.a = cos * scaleX;
+			this.b = sin * scaleY;
+			this.c = -sin * scaleX;
+			this.d = cos * scaleY;
+		} else {
+			this.a = scaleX;
+			this.b = 0;
+			this.c = 0;
+			this.d = scaleY;
+		}
+		this.tx = tx;
+		this.ty = ty;
+	}
+	,createGradientBox: function(width,height,rotation,tx,ty) {
+		if(ty == null) {
+			ty = 0;
+		}
+		if(tx == null) {
+			tx = 0;
+		}
+		if(rotation == null) {
+			rotation = 0;
+		}
+		this.a = width / 1638.4;
+		this.d = height / 1638.4;
+		if(rotation != 0) {
+			var cos = Math.cos(rotation);
+			var sin = Math.sin(rotation);
+			this.b = sin * this.d;
+			this.c = -sin * this.a;
+			this.a *= cos;
+			this.d *= cos;
+		} else {
+			this.b = 0;
+			this.c = 0;
+		}
+		this.tx = tx + width / 2;
+		this.ty = ty + height / 2;
+	}
+	,deltaTransformPoint: function(point) {
+		return new openfl_geom_Point(point.x * this.a + point.y * this.c,point.x * this.b + point.y * this.d);
+	}
+	,equals: function(matrix) {
+		if(matrix != null && this.tx == matrix.tx && this.ty == matrix.ty && this.a == matrix.a && this.b == matrix.b && this.c == matrix.c) {
+			return this.d == matrix.d;
+		} else {
+			return false;
+		}
+	}
+	,identity: function() {
+		this.a = 1;
+		this.b = 0;
+		this.c = 0;
+		this.d = 1;
+		this.tx = 0;
+		this.ty = 0;
+	}
+	,invert: function() {
+		var norm = this.a * this.d - this.b * this.c;
+		if(norm == 0) {
+			this.a = this.b = this.c = this.d = 0;
+			this.tx = -this.tx;
+			this.ty = -this.ty;
+		} else {
+			norm = 1.0 / norm;
+			var a1 = this.d * norm;
+			this.d = this.a * norm;
+			this.a = a1;
+			this.b *= -norm;
+			this.c *= -norm;
+			var tx1 = -this.a * this.tx - this.c * this.ty;
+			this.ty = -this.b * this.tx - this.d * this.ty;
+			this.tx = tx1;
+		}
+		return this;
+	}
+	,rotate: function(theta) {
+		var cos = Math.cos(theta);
+		var sin = Math.sin(theta);
+		var a1 = this.a * cos - this.b * sin;
+		this.b = this.a * sin + this.b * cos;
+		this.a = a1;
+		var c1 = this.c * cos - this.d * sin;
+		this.d = this.c * sin + this.d * cos;
+		this.c = c1;
+		var tx1 = this.tx * cos - this.ty * sin;
+		this.ty = this.tx * sin + this.ty * cos;
+		this.tx = tx1;
+	}
+	,scale: function(sx,sy) {
+		this.a *= sx;
+		this.b *= sy;
+		this.c *= sx;
+		this.d *= sy;
+		this.tx *= sx;
+		this.ty *= sy;
+	}
+	,setRotation: function(theta,scale) {
+		if(scale == null) {
+			scale = 1;
+		}
+		this.a = Math.cos(theta) * scale;
+		this.c = Math.sin(theta) * scale;
+		this.b = -this.c;
+		this.d = this.a;
+	}
+	,setTo: function(a,b,c,d,tx,ty) {
+		this.a = a;
+		this.b = b;
+		this.c = c;
+		this.d = d;
+		this.tx = tx;
+		this.ty = ty;
+	}
+	,to3DString: function(roundPixels) {
+		if(roundPixels == null) {
+			roundPixels = false;
+		}
+		if(roundPixels) {
+			return "matrix3d(" + this.a + ", " + this.b + ", 0, 0, " + this.c + ", " + this.d + ", 0, 0, 0, 0, 1, 0, " + (this.tx | 0) + ", " + (this.ty | 0) + ", 0, 1)";
+		} else {
+			return "matrix3d(" + this.a + ", " + this.b + ", 0, 0, " + this.c + ", " + this.d + ", 0, 0, 0, 0, 1, 0, " + this.tx + ", " + this.ty + ", 0, 1)";
+		}
+	}
+	,toMozString: function() {
+		return "matrix(" + this.a + ", " + this.b + ", " + this.c + ", " + this.d + ", " + this.tx + "px, " + this.ty + "px)";
+	}
+	,toString: function() {
+		return "matrix(" + this.a + ", " + this.b + ", " + this.c + ", " + this.d + ", " + this.tx + ", " + this.ty + ")";
+	}
+	,transformPoint: function(pos) {
+		return new openfl_geom_Point(pos.x * this.a + pos.y * this.c + this.tx,pos.x * this.b + pos.y * this.d + this.ty);
+	}
+	,translate: function(dx,dy) {
+		this.tx += dx;
+		this.ty += dy;
+	}
+	,toArray: function(transpose) {
+		if(transpose == null) {
+			transpose = false;
+		}
+		if(this.__array == null) {
+			var this1 = new Float32Array(9);
+			this.__array = this1;
+		}
+		if(transpose) {
+			this.__array[0] = this.a;
+			this.__array[1] = this.b;
+			this.__array[2] = 0;
+			this.__array[3] = this.c;
+			this.__array[4] = this.d;
+			this.__array[5] = 0;
+			this.__array[6] = this.tx;
+			this.__array[7] = this.ty;
+			this.__array[8] = 1;
+		} else {
+			this.__array[0] = this.a;
+			this.__array[1] = this.c;
+			this.__array[2] = this.tx;
+			this.__array[3] = this.b;
+			this.__array[4] = this.d;
+			this.__array[5] = this.ty;
+			this.__array[6] = 0;
+			this.__array[7] = 0;
+			this.__array[8] = 1;
+		}
+		return this.__array;
+	}
+	,__cleanValues: function() {
+		this.a = Math.round(this.a * 1000) / 1000;
+		this.b = Math.round(this.b * 1000) / 1000;
+		this.c = Math.round(this.c * 1000) / 1000;
+		this.d = Math.round(this.d * 1000) / 1000;
+		this.tx = Math.round(this.tx * 10) / 10;
+		this.ty = Math.round(this.ty * 10) / 10;
+	}
+	,__toMatrix3: function() {
+		openfl_geom_Matrix.__matrix3.setTo(this.a,this.b,this.c,this.d,this.tx,this.ty);
+		return openfl_geom_Matrix.__matrix3;
+	}
+	,__transformInversePoint: function(point) {
+		var norm = this.a * this.d - this.b * this.c;
+		if(norm == 0) {
+			point.x = -this.tx;
+			point.y = -this.ty;
+		} else {
+			var px = 1.0 / norm * (this.c * (this.ty - point.y) + this.d * (point.x - this.tx));
+			point.y = 1.0 / norm * (this.a * (point.y - this.ty) + this.b * (this.tx - point.x));
+			point.x = px;
+		}
+	}
+	,__transformInverseX: function(px,py) {
+		var norm = this.a * this.d - this.b * this.c;
+		if(norm == 0) {
+			return -this.tx;
+		} else {
+			return 1.0 / norm * (this.c * (this.ty - py) + this.d * (px - this.tx));
+		}
+	}
+	,__transformInverseY: function(px,py) {
+		var norm = this.a * this.d - this.b * this.c;
+		if(norm == 0) {
+			return -this.ty;
+		} else {
+			return 1.0 / norm * (this.a * (py - this.ty) + this.b * (this.tx - px));
+		}
+	}
+	,__transformPoint: function(point) {
+		var px = point.x;
+		var py = point.y;
+		point.x = px * this.a + py * this.c + this.tx;
+		point.y = px * this.b + py * this.d + this.ty;
+	}
+	,__transformX: function(px,py) {
+		return px * this.a + py * this.c + this.tx;
+	}
+	,__transformY: function(px,py) {
+		return px * this.b + py * this.d + this.ty;
+	}
+	,__translateTransformed: function(px,py) {
+		this.tx = px * this.a + py * this.c + this.tx;
+		this.ty = px * this.b + py * this.d + this.ty;
+	}
+	,__class__: openfl_geom_Matrix
+};
+var starling_events_EventDispatcher = function() {
+};
+$hxClasses["starling.events.EventDispatcher"] = starling_events_EventDispatcher;
+starling_events_EventDispatcher.__name__ = ["starling","events","EventDispatcher"];
+starling_events_EventDispatcher.prototype = {
+	mEventListeners: null
+	,addEventListener: function(type,listener) {
+		if(this.mEventListeners == null) {
+			this.mEventListeners = new haxe_ds_StringMap();
+		}
+		var _this = this.mEventListeners;
+		var listeners = __map_reserved[type] != null ? _this.getReserved(type) : _this.h[type];
+		if(listeners == null) {
+			var this1 = this.mEventListeners;
+			var v = openfl__$Vector_Vector_$Impl_$.toFunctionVector(null);
+			var _this1 = this1;
+			if(__map_reserved[type] != null) {
+				_this1.setReserved(type,v);
+			} else {
+				_this1.h[type] = v;
+			}
+			var _this2 = this.mEventListeners;
+			(__map_reserved[type] != null ? _this2.getReserved(type) : _this2.h[type]).push(listener);
+		} else {
+			var _g1 = 0;
+			var _g = listeners.get_length();
+			while(_g1 < _g) {
+				var i = _g1++;
+				if(Reflect.compareMethods(listeners.get(i),listener)) {
+					return;
+				}
+			}
+			listeners.set(listeners.get_length(),listener);
+		}
+	}
+	,removeEventListener: function(type,listener) {
+		if(this.mEventListeners != null) {
+			var _this = this.mEventListeners;
+			var listeners = __map_reserved[type] != null ? _this.getReserved(type) : _this.h[type];
+			var numListeners = listeners != null ? listeners.get_length() : 0;
+			if(numListeners > 0) {
+				var index = listeners.indexOf(listener,0);
+				if(index != -1) {
+					var restListeners = listeners.slice(0,index);
+					var _g1 = index + 1;
+					var _g = numListeners;
+					while(_g1 < _g) {
+						var i = _g1++;
+						restListeners.set(i - 1,listeners.get(i));
+					}
+					var _this1 = this.mEventListeners;
+					if(__map_reserved[type] != null) {
+						_this1.setReserved(type,restListeners);
+					} else {
+						_this1.h[type] = restListeners;
+					}
+				}
+			}
+		}
+	}
+	,removeEventListeners: function(type) {
+		if(type != null && this.mEventListeners != null) {
+			this.mEventListeners.remove(type);
+		} else {
+			this.mEventListeners = null;
+		}
+	}
+	,dispatchEvent: function(event) {
+		var bubbles = event.bubbles;
+		var tmp;
+		if(!bubbles) {
+			if(this.mEventListeners != null) {
+				var key = event.type;
+				var _this = this.mEventListeners;
+				tmp = !(__map_reserved[key] != null ? _this.existsReserved(key) : _this.h.hasOwnProperty(key));
+			} else {
+				tmp = true;
+			}
+		} else {
+			tmp = false;
+		}
+		if(tmp) {
+			return;
+		}
+		var previousTarget = event.target;
+		event.setTarget(this);
+		if(bubbles && js_Boot.__instanceof(this,starling_display_DisplayObject)) {
+			this.bubbleEvent(event);
+		} else {
+			this.invokeEvent(event);
+		}
+		if(previousTarget != null) {
+			event.setTarget(previousTarget);
+		}
+	}
+	,invokeEvent: function(event) {
+		var listeners;
+		if(this.mEventListeners != null) {
+			var key = event.type;
+			var _this = this.mEventListeners;
+			if(__map_reserved[key] != null) {
+				listeners = _this.getReserved(key);
+			} else {
+				listeners = _this.h[key];
+			}
+		} else {
+			listeners = null;
+		}
+		var numListeners = listeners == null ? 0 : listeners.get_length();
+		if(numListeners != 0) {
+			event.setCurrentTarget(this);
+			var _g1 = 0;
+			var _g = numListeners;
+			while(_g1 < _g) {
+				var i = _g1++;
+				var listener = listeners.get(i);
+				if(listener == null) {
+					continue;
+				}
+				var numArgs = 2;
+				if(numArgs == 0) {
+					listener();
+				} else if(numArgs == 1) {
+					listener(event);
+				} else {
+					listener(event,event.data);
+				}
+				if(event.stopsImmediatePropagation) {
+					return true;
+				}
+			}
+			return event.stopsPropagation;
+		} else {
+			return false;
+		}
+	}
+	,bubbleEvent: function(event) {
+		var chain;
+		var element = js_Boot.__cast(this , starling_display_DisplayObject);
+		var length = 1;
+		if(starling_events_EventDispatcher.sBubbleChains.length > 0) {
+			chain = starling_events_EventDispatcher.sBubbleChains.pop();
+			chain.set(0,element);
+		} else {
+			var a = [element];
+			var vector = openfl__$Vector_Vector_$Impl_$.toObjectVector(null);
+			var _g1 = 0;
+			var _g = a.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				vector.set(i,a[i]);
+			}
+			chain = vector;
+		}
+		while(true) {
+			element = element.get_parent();
+			if(!(element != null)) {
+				break;
+			}
+			chain.set(length++,element);
+		}
+		var _g11 = 0;
+		var _g2 = length;
+		while(_g11 < _g2) {
+			var i1 = _g11++;
+			if(chain.get(i1) == null) {
+				continue;
+			}
+			var stopPropagation = chain.get(i1).invokeEvent(event);
+			if(stopPropagation) {
+				break;
+			}
+		}
+		chain.set_length(0);
+		starling_events_EventDispatcher.sBubbleChains[starling_events_EventDispatcher.sBubbleChains.length] = chain;
+	}
+	,dispatchEventWith: function(type,bubbles,data) {
+		if(bubbles == null) {
+			bubbles = false;
+		}
+		if(bubbles || this.hasEventListener(type)) {
+			var event = starling_events_Event.fromPool(type,bubbles,data);
+			this.dispatchEvent(event);
+			starling_events_Event.toPool(event);
+		}
+	}
+	,hasEventListener: function(type) {
+		var listeners;
+		if(this.mEventListeners != null) {
+			var _this = this.mEventListeners;
+			if(__map_reserved[type] != null) {
+				listeners = _this.getReserved(type);
+			} else {
+				listeners = _this.h[type];
+			}
+		} else {
+			listeners = null;
+		}
+		if(listeners != null) {
+			return listeners.get_length() != 0;
+		} else {
+			return false;
+		}
+	}
+	,__class__: starling_events_EventDispatcher
+};
+var openfl__$Vector_Vector_$Impl_$ = {};
+$hxClasses["openfl._Vector.Vector_Impl_"] = openfl__$Vector_Vector_$Impl_$;
+openfl__$Vector_Vector_$Impl_$.__name__ = ["openfl","_Vector","Vector_Impl_"];
+openfl__$Vector_Vector_$Impl_$.__properties__ = {set_length:"set_length",get_length:"get_length",set_fixed:"set_fixed",get_fixed:"get_fixed"};
+openfl__$Vector_Vector_$Impl_$.concat = function(this1,a) {
+	return this1.concat(a);
+};
+openfl__$Vector_Vector_$Impl_$.copy = function(this1) {
+	return this1.copy();
+};
+openfl__$Vector_Vector_$Impl_$.get = function(this1,index) {
+	return this1.get(index);
+};
+openfl__$Vector_Vector_$Impl_$.indexOf = function(this1,x,from) {
+	if(from == null) {
+		from = 0;
+	}
+	return this1.indexOf(x,from);
+};
+openfl__$Vector_Vector_$Impl_$.insertAt = function(this1,index,element) {
+	this1.insertAt(index,element);
+};
+openfl__$Vector_Vector_$Impl_$.iterator = function(this1) {
+	return this1.iterator();
+};
+openfl__$Vector_Vector_$Impl_$.join = function(this1,sep) {
+	return this1.join(sep);
+};
+openfl__$Vector_Vector_$Impl_$.lastIndexOf = function(this1,x,from) {
+	if(from == null) {
+		from = 0;
+	}
+	return this1.lastIndexOf(x,from);
+};
+openfl__$Vector_Vector_$Impl_$.pop = function(this1) {
+	return this1.pop();
+};
+openfl__$Vector_Vector_$Impl_$.push = function(this1,x) {
+	return this1.push(x);
+};
+openfl__$Vector_Vector_$Impl_$.reverse = function(this1) {
+	return this1.reverse();
+};
+openfl__$Vector_Vector_$Impl_$.set = function(this1,index,value) {
+	return this1.set(index,value);
+};
+openfl__$Vector_Vector_$Impl_$.shift = function(this1) {
+	return this1.shift();
+};
+openfl__$Vector_Vector_$Impl_$.slice = function(this1,pos,end) {
+	return this1.slice(pos,end);
+};
+openfl__$Vector_Vector_$Impl_$.sort = function(this1,f) {
+	this1.sort(f);
+};
+openfl__$Vector_Vector_$Impl_$.splice = function(this1,pos,len) {
+	return this1.splice(pos,len);
+};
+openfl__$Vector_Vector_$Impl_$.toString = function(this1) {
+	if(this1 != null) {
+		return this1.toString();
+	} else {
+		return null;
+	}
+};
+openfl__$Vector_Vector_$Impl_$.unshift = function(this1,x) {
+	this1.unshift(x);
+};
+openfl__$Vector_Vector_$Impl_$.ofArray = function(a) {
+	var vector = openfl__$Vector_Vector_$Impl_$.toObjectVector(null);
+	var _g1 = 0;
+	var _g = a.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		vector.set(i,a[i]);
+	}
+	return vector;
+};
+openfl__$Vector_Vector_$Impl_$.convert = function(v) {
+	return v;
+};
+openfl__$Vector_Vector_$Impl_$.toBoolVector = function(t,length,fixed) {
+	return new openfl__$Vector_BoolVector(length,fixed);
+};
+openfl__$Vector_Vector_$Impl_$.toIntVector = function(t,length,fixed) {
+	return new openfl__$Vector_IntVector(length,fixed);
+};
+openfl__$Vector_Vector_$Impl_$.toFloatVector = function(t,length,fixed) {
+	return new openfl__$Vector_FloatVector(length,fixed);
+};
+openfl__$Vector_Vector_$Impl_$.toFunctionVector = function(t,length,fixed) {
+	return new openfl__$Vector_FunctionVector(length,fixed);
+};
+openfl__$Vector_Vector_$Impl_$.toObjectVector = function(t,length,fixed) {
+	return new openfl__$Vector_ObjectVector(length,fixed);
+};
+openfl__$Vector_Vector_$Impl_$.fromBoolVector = function(vector) {
+	return vector;
+};
+openfl__$Vector_Vector_$Impl_$.fromIntVector = function(vector) {
+	return vector;
+};
+openfl__$Vector_Vector_$Impl_$.fromFloatVector = function(vector) {
+	return vector;
+};
+openfl__$Vector_Vector_$Impl_$.fromFunctionVector = function(vector) {
+	return vector;
+};
+openfl__$Vector_Vector_$Impl_$.fromObjectVector = function(vector) {
+	return vector;
+};
+openfl__$Vector_Vector_$Impl_$.get_fixed = function(this1) {
+	return this1.fixed;
+};
+openfl__$Vector_Vector_$Impl_$.set_fixed = function(this1,value) {
+	return this1.fixed = value;
+};
+openfl__$Vector_Vector_$Impl_$.get_length = function(this1) {
+	return this1.get_length();
+};
+openfl__$Vector_Vector_$Impl_$.set_length = function(this1,value) {
+	return this1.set_length(value);
+};
+var openfl_geom_Matrix3D = function(v) {
+	if(v != null && v.get_length() == 16) {
+		this.rawData = v.concat(null);
+	} else {
+		var a = [1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0];
+		var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
+		var _g1 = 0;
+		var _g = a.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			vector.set(i,a[i]);
+		}
+		this.rawData = vector;
+	}
+};
+$hxClasses["openfl.geom.Matrix3D"] = openfl_geom_Matrix3D;
+openfl_geom_Matrix3D.__name__ = ["openfl","geom","Matrix3D"];
+openfl_geom_Matrix3D.create2D = function(x,y,scale,rotation) {
+	if(rotation == null) {
+		rotation = 0;
+	}
+	if(scale == null) {
+		scale = 1;
+	}
+	var theta = rotation * Math.PI / 180.0;
+	var c = Math.cos(theta);
+	var s = Math.sin(theta);
+	var a = [c * scale,-s * scale,0,0,s * scale,c * scale,0,0,0,0,1,0,x,y,0,1];
+	var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
+	var _g1 = 0;
+	var _g = a.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		vector.set(i,a[i]);
+	}
+	return new openfl_geom_Matrix3D(vector);
+};
+openfl_geom_Matrix3D.createABCD = function(a,b,c,d,tx,ty) {
+	var a1 = [a,b,0,0,c,d,0,0,0,0,1,0,tx,ty,0,1];
+	var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
+	var _g1 = 0;
+	var _g = a1.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		vector.set(i,a1[i]);
+	}
+	return new openfl_geom_Matrix3D(vector);
+};
+openfl_geom_Matrix3D.createOrtho = function(x0,x1,y0,y1,zNear,zFar) {
+	var sx = 1.0 / (x1 - x0);
+	var sy = 1.0 / (y1 - y0);
+	var sz = 1.0 / (zFar - zNear);
+	var a = [2.0 * sx,0,0,0,0,2.0 * sy,0,0,0,0,-2.0 * sz,0,-(x0 + x1) * sx,-(y0 + y1) * sy,-(zNear + zFar) * sz,1];
+	var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
+	var _g1 = 0;
+	var _g = a.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		vector.set(i,a[i]);
+	}
+	return new openfl_geom_Matrix3D(vector);
+};
+openfl_geom_Matrix3D.interpolate = function(thisMat,toMat,percent) {
+	var m = new openfl_geom_Matrix3D();
+	var _g = 0;
+	while(_g < 16) {
+		var i = _g++;
+		m.rawData.set(i,thisMat.rawData.get(i) + (toMat.rawData.get(i) - thisMat.rawData.get(i)) * percent);
+	}
+	return m;
+};
+openfl_geom_Matrix3D.__getAxisRotation = function(x,y,z,degrees) {
+	var m = new openfl_geom_Matrix3D();
+	var a1 = new openfl_geom_Vector3D(x,y,z);
+	var rad = -degrees * (Math.PI / 180);
+	var c = Math.cos(rad);
+	var s = Math.sin(rad);
+	var t = 1.0 - c;
+	m.rawData.set(0,c + a1.x * a1.x * t);
+	m.rawData.set(5,c + a1.y * a1.y * t);
+	m.rawData.set(10,c + a1.z * a1.z * t);
+	var tmp1 = a1.x * a1.y * t;
+	var tmp2 = a1.z * s;
+	m.rawData.set(4,tmp1 + tmp2);
+	m.rawData.set(1,tmp1 - tmp2);
+	tmp1 = a1.x * a1.z * t;
+	tmp2 = a1.y * s;
+	m.rawData.set(8,tmp1 - tmp2);
+	m.rawData.set(2,tmp1 + tmp2);
+	tmp1 = a1.y * a1.z * t;
+	tmp2 = a1.x * s;
+	m.rawData.set(9,tmp1 + tmp2);
+	m.rawData.set(6,tmp1 - tmp2);
+	return m;
+};
+openfl_geom_Matrix3D.prototype = {
+	rawData: null
+	,append: function(lhs) {
+		var m111 = this.rawData.get(0);
+		var m121 = this.rawData.get(4);
+		var m131 = this.rawData.get(8);
+		var m141 = this.rawData.get(12);
+		var m112 = this.rawData.get(1);
+		var m122 = this.rawData.get(5);
+		var m132 = this.rawData.get(9);
+		var m142 = this.rawData.get(13);
+		var m113 = this.rawData.get(2);
+		var m123 = this.rawData.get(6);
+		var m133 = this.rawData.get(10);
+		var m143 = this.rawData.get(14);
+		var m114 = this.rawData.get(3);
+		var m124 = this.rawData.get(7);
+		var m134 = this.rawData.get(11);
+		var m144 = this.rawData.get(15);
+		var m211 = lhs.rawData.get(0);
+		var m221 = lhs.rawData.get(4);
+		var m231 = lhs.rawData.get(8);
+		var m241 = lhs.rawData.get(12);
+		var m212 = lhs.rawData.get(1);
+		var m222 = lhs.rawData.get(5);
+		var m232 = lhs.rawData.get(9);
+		var m242 = lhs.rawData.get(13);
+		var m213 = lhs.rawData.get(2);
+		var m223 = lhs.rawData.get(6);
+		var m233 = lhs.rawData.get(10);
+		var m243 = lhs.rawData.get(14);
+		var m214 = lhs.rawData.get(3);
+		var m224 = lhs.rawData.get(7);
+		var m234 = lhs.rawData.get(11);
+		var m244 = lhs.rawData.get(15);
+		this.rawData.set(0,m111 * m211 + m112 * m221 + m113 * m231 + m114 * m241);
+		this.rawData.set(1,m111 * m212 + m112 * m222 + m113 * m232 + m114 * m242);
+		this.rawData.set(2,m111 * m213 + m112 * m223 + m113 * m233 + m114 * m243);
+		this.rawData.set(3,m111 * m214 + m112 * m224 + m113 * m234 + m114 * m244);
+		this.rawData.set(4,m121 * m211 + m122 * m221 + m123 * m231 + m124 * m241);
+		this.rawData.set(5,m121 * m212 + m122 * m222 + m123 * m232 + m124 * m242);
+		this.rawData.set(6,m121 * m213 + m122 * m223 + m123 * m233 + m124 * m243);
+		this.rawData.set(7,m121 * m214 + m122 * m224 + m123 * m234 + m124 * m244);
+		this.rawData.set(8,m131 * m211 + m132 * m221 + m133 * m231 + m134 * m241);
+		this.rawData.set(9,m131 * m212 + m132 * m222 + m133 * m232 + m134 * m242);
+		this.rawData.set(10,m131 * m213 + m132 * m223 + m133 * m233 + m134 * m243);
+		this.rawData.set(11,m131 * m214 + m132 * m224 + m133 * m234 + m134 * m244);
+		this.rawData.set(12,m141 * m211 + m142 * m221 + m143 * m231 + m144 * m241);
+		this.rawData.set(13,m141 * m212 + m142 * m222 + m143 * m232 + m144 * m242);
+		this.rawData.set(14,m141 * m213 + m142 * m223 + m143 * m233 + m144 * m243);
+		this.rawData.set(15,m141 * m214 + m142 * m224 + m143 * m234 + m144 * m244);
+	}
+	,appendRotation: function(degrees,axis,pivotPoint) {
+		var tx;
+		var ty;
+		var tz = 0;
+		ty = tz;
+		tx = ty;
+		if(pivotPoint != null) {
+			tx = pivotPoint.x;
+			ty = pivotPoint.y;
+			tz = pivotPoint.z;
+		}
+		var radian = degrees * Math.PI / 180;
+		var cos = Math.cos(radian);
+		var sin = Math.sin(radian);
+		var x = axis.x;
+		var y = axis.y;
+		var z = axis.z;
+		var x2 = x * x;
+		var y2 = y * y;
+		var z2 = z * z;
+		var ls = x2 + y2 + z2;
+		if(ls != 0) {
+			var l = Math.sqrt(ls);
+			x /= l;
+			y /= l;
+			z /= l;
+			x2 /= ls;
+			y2 /= ls;
+			z2 /= ls;
+		}
+		var ccos = 1 - cos;
+		var m = new openfl_geom_Matrix3D();
+		var d = m.rawData;
+		d.set(0,x2 + (y2 + z2) * cos);
+		d.set(1,x * y * ccos + z * sin);
+		d.set(2,x * z * ccos - y * sin);
+		d.set(4,x * y * ccos - z * sin);
+		d.set(5,y2 + (x2 + z2) * cos);
+		d.set(6,y * z * ccos + x * sin);
+		d.set(8,x * z * ccos + y * sin);
+		d.set(9,y * z * ccos - x * sin);
+		d.set(10,z2 + (x2 + y2) * cos);
+		d.set(12,(tx * (y2 + z2) - x * (ty * y + tz * z)) * ccos + (ty * z - tz * y) * sin);
+		d.set(13,(ty * (x2 + z2) - y * (tx * x + tz * z)) * ccos + (tz * x - tx * z) * sin);
+		d.set(14,(tz * (x2 + y2) - z * (tx * x + ty * y)) * ccos + (tx * y - ty * x) * sin);
+		this.append(m);
+	}
+	,appendScale: function(xScale,yScale,zScale) {
+		var a = [xScale,0.0,0.0,0.0,0.0,yScale,0.0,0.0,0.0,0.0,zScale,0.0,0.0,0.0,0.0,1.0];
+		var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
+		var _g1 = 0;
+		var _g = a.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			vector.set(i,a[i]);
+		}
+		this.append(new openfl_geom_Matrix3D(vector));
+	}
+	,appendTranslation: function(x,y,z) {
+		var _g = this.rawData;
+		_g.set(12,_g.get(12) + x);
+		var _g1 = this.rawData;
+		_g1.set(13,_g1.get(13) + y);
+		var _g2 = this.rawData;
+		_g2.set(14,_g2.get(14) + z);
+	}
+	,clone: function() {
+		return new openfl_geom_Matrix3D(this.rawData.copy());
+	}
+	,copyColumnFrom: function(column,vector3D) {
+		switch(column) {
+		case 0:
+			this.rawData.set(0,vector3D.x);
+			this.rawData.set(1,vector3D.y);
+			this.rawData.set(2,vector3D.z);
+			this.rawData.set(3,vector3D.w);
+			break;
+		case 1:
+			this.rawData.set(4,vector3D.x);
+			this.rawData.set(5,vector3D.y);
+			this.rawData.set(6,vector3D.z);
+			this.rawData.set(7,vector3D.w);
+			break;
+		case 2:
+			this.rawData.set(8,vector3D.x);
+			this.rawData.set(9,vector3D.y);
+			this.rawData.set(10,vector3D.z);
+			this.rawData.set(11,vector3D.w);
+			break;
+		case 3:
+			this.rawData.set(12,vector3D.x);
+			this.rawData.set(13,vector3D.y);
+			this.rawData.set(14,vector3D.z);
+			this.rawData.set(15,vector3D.w);
+			break;
+		default:
+		}
+	}
+	,copyColumnTo: function(column,vector3D) {
+		switch(column) {
+		case 0:
+			vector3D.x = this.rawData.get(0);
+			vector3D.y = this.rawData.get(1);
+			vector3D.z = this.rawData.get(2);
+			vector3D.w = this.rawData.get(3);
+			break;
+		case 1:
+			vector3D.x = this.rawData.get(4);
+			vector3D.y = this.rawData.get(5);
+			vector3D.z = this.rawData.get(6);
+			vector3D.w = this.rawData.get(7);
+			break;
+		case 2:
+			vector3D.x = this.rawData.get(8);
+			vector3D.y = this.rawData.get(9);
+			vector3D.z = this.rawData.get(10);
+			vector3D.w = this.rawData.get(11);
+			break;
+		case 3:
+			vector3D.x = this.rawData.get(12);
+			vector3D.y = this.rawData.get(13);
+			vector3D.z = this.rawData.get(14);
+			vector3D.w = this.rawData.get(15);
+			break;
+		default:
+		}
+	}
+	,copyFrom: function(other) {
+		this.rawData = other.rawData.copy();
+	}
+	,copyRawDataFrom: function(vector,index,transpose) {
+		if(transpose == null) {
+			transpose = false;
+		}
+		if(index == null) {
+			index = 0;
+		}
+		if(transpose) {
+			this.transpose();
+		}
+		var length = vector.get_length() - index;
+		var _g1 = 0;
+		var _g = length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			this.rawData.set(i,vector.get(i + index));
+		}
+		if(transpose) {
+			this.transpose();
+		}
+	}
+	,copyRawDataTo: function(vector,index,transpose) {
+		if(transpose == null) {
+			transpose = false;
+		}
+		if(index == null) {
+			index = 0;
+		}
+		if(transpose) {
+			this.transpose();
+		}
+		var _g1 = 0;
+		var _g = this.rawData.get_length();
+		while(_g1 < _g) {
+			var i = _g1++;
+			vector.set(i + index,this.rawData.get(i));
+		}
+		if(transpose) {
+			this.transpose();
+		}
+	}
+	,copyRowFrom: function(row,vector3D) {
+		switch(row) {
+		case 0:
+			this.rawData.set(0,vector3D.x);
+			this.rawData.set(4,vector3D.y);
+			this.rawData.set(8,vector3D.z);
+			this.rawData.set(12,vector3D.w);
+			break;
+		case 1:
+			this.rawData.set(1,vector3D.x);
+			this.rawData.set(5,vector3D.y);
+			this.rawData.set(9,vector3D.z);
+			this.rawData.set(13,vector3D.w);
+			break;
+		case 2:
+			this.rawData.set(2,vector3D.x);
+			this.rawData.set(6,vector3D.y);
+			this.rawData.set(10,vector3D.z);
+			this.rawData.set(14,vector3D.w);
+			break;
+		case 3:
+			this.rawData.set(3,vector3D.x);
+			this.rawData.set(7,vector3D.y);
+			this.rawData.set(11,vector3D.z);
+			this.rawData.set(15,vector3D.w);
+			break;
+		default:
+		}
+	}
+	,copyRowTo: function(row,vector3D) {
+		switch(row) {
+		case 0:
+			vector3D.x = this.rawData.get(0);
+			vector3D.y = this.rawData.get(4);
+			vector3D.z = this.rawData.get(8);
+			vector3D.w = this.rawData.get(12);
+			break;
+		case 1:
+			vector3D.x = this.rawData.get(1);
+			vector3D.y = this.rawData.get(5);
+			vector3D.z = this.rawData.get(9);
+			vector3D.w = this.rawData.get(13);
+			break;
+		case 2:
+			vector3D.x = this.rawData.get(2);
+			vector3D.y = this.rawData.get(6);
+			vector3D.z = this.rawData.get(10);
+			vector3D.w = this.rawData.get(14);
+			break;
+		case 3:
+			vector3D.x = this.rawData.get(3);
+			vector3D.y = this.rawData.get(7);
+			vector3D.z = this.rawData.get(11);
+			vector3D.w = this.rawData.get(15);
+			break;
+		default:
+		}
+	}
+	,copyToMatrix3D: function(other) {
+		other.rawData = this.rawData.copy();
+	}
+	,decompose: function(orientationStyle) {
+		if(orientationStyle == null) {
+			orientationStyle = 1;
+		}
+		var vec = openfl__$Vector_Vector_$Impl_$.toObjectVector(null);
+		var m = this.clone();
+		var mr = m.rawData.copy();
+		var pos = new openfl_geom_Vector3D(mr.get(12),mr.get(13),mr.get(14));
+		mr.set(12,0);
+		mr.set(13,0);
+		mr.set(14,0);
+		var scale = new openfl_geom_Vector3D();
+		scale.x = Math.sqrt(mr.get(0) * mr.get(0) + mr.get(1) * mr.get(1) + mr.get(2) * mr.get(2));
+		scale.y = Math.sqrt(mr.get(4) * mr.get(4) + mr.get(5) * mr.get(5) + mr.get(6) * mr.get(6));
+		scale.z = Math.sqrt(mr.get(8) * mr.get(8) + mr.get(9) * mr.get(9) + mr.get(10) * mr.get(10));
+		if(mr.get(0) * (mr.get(5) * mr.get(10) - mr.get(6) * mr.get(9)) - mr.get(1) * (mr.get(4) * mr.get(10) - mr.get(6) * mr.get(8)) + mr.get(2) * (mr.get(4) * mr.get(9) - mr.get(5) * mr.get(8)) < 0) {
+			scale.z = -scale.z;
+		}
+		var _g = mr;
+		_g.set(0,_g.get(0) / scale.x);
+		var _g1 = mr;
+		_g1.set(1,_g1.get(1) / scale.x);
+		var _g2 = mr;
+		_g2.set(2,_g2.get(2) / scale.x);
+		var _g3 = mr;
+		_g3.set(4,_g3.get(4) / scale.y);
+		var _g4 = mr;
+		_g4.set(5,_g4.get(5) / scale.y);
+		var _g5 = mr;
+		_g5.set(6,_g5.get(6) / scale.y);
+		var _g6 = mr;
+		_g6.set(8,_g6.get(8) / scale.z);
+		var _g7 = mr;
+		_g7.set(9,_g7.get(9) / scale.z);
+		var _g8 = mr;
+		_g8.set(10,_g8.get(10) / scale.z);
+		var rot = new openfl_geom_Vector3D();
+		switch(orientationStyle) {
+		case 0:
+			rot.w = Math.acos((mr.get(0) + mr.get(5) + mr.get(10) - 1) / 2);
+			var len = Math.sqrt((mr.get(6) - mr.get(9)) * (mr.get(6) - mr.get(9)) + (mr.get(8) - mr.get(2)) * (mr.get(8) - mr.get(2)) + (mr.get(1) - mr.get(4)) * (mr.get(1) - mr.get(4)));
+			if(len != 0) {
+				rot.x = (mr.get(6) - mr.get(9)) / len;
+				rot.y = (mr.get(8) - mr.get(2)) / len;
+				rot.z = (mr.get(1) - mr.get(4)) / len;
+			} else {
+				rot.x = rot.y = rot.z = 0;
+			}
+			break;
+		case 1:
+			rot.y = Math.asin(-mr.get(2));
+			if(mr.get(2) != 1 && mr.get(2) != -1) {
+				rot.x = Math.atan2(mr.get(6),mr.get(10));
+				rot.z = Math.atan2(mr.get(1),mr.get(0));
+			} else {
+				rot.z = 0;
+				rot.x = Math.atan2(mr.get(4),mr.get(5));
+			}
+			break;
+		case 2:
+			var tr = mr.get(0) + mr.get(5) + mr.get(10);
+			if(tr > 0) {
+				rot.w = Math.sqrt(1 + tr) / 2;
+				rot.x = (mr.get(6) - mr.get(9)) / (4 * rot.w);
+				rot.y = (mr.get(8) - mr.get(2)) / (4 * rot.w);
+				rot.z = (mr.get(1) - mr.get(4)) / (4 * rot.w);
+			} else if(mr.get(0) > mr.get(5) && mr.get(0) > mr.get(10)) {
+				rot.x = Math.sqrt(1 + mr.get(0) - mr.get(5) - mr.get(10)) / 2;
+				rot.w = (mr.get(6) - mr.get(9)) / (4 * rot.x);
+				rot.y = (mr.get(1) + mr.get(4)) / (4 * rot.x);
+				rot.z = (mr.get(8) + mr.get(2)) / (4 * rot.x);
+			} else if(mr.get(5) > mr.get(10)) {
+				rot.y = Math.sqrt(1 + mr.get(5) - mr.get(0) - mr.get(10)) / 2;
+				rot.x = (mr.get(1) + mr.get(4)) / (4 * rot.y);
+				rot.w = (mr.get(8) - mr.get(2)) / (4 * rot.y);
+				rot.z = (mr.get(6) + mr.get(9)) / (4 * rot.y);
+			} else {
+				rot.z = Math.sqrt(1 + mr.get(10) - mr.get(0) - mr.get(5)) / 2;
+				rot.x = (mr.get(8) + mr.get(2)) / (4 * rot.z);
+				rot.y = (mr.get(6) + mr.get(9)) / (4 * rot.z);
+				rot.w = (mr.get(1) - mr.get(4)) / (4 * rot.z);
+			}
+			break;
+		}
+		vec.push(pos);
+		vec.push(rot);
+		vec.push(scale);
+		return vec;
+	}
+	,deltaTransformVector: function(v) {
+		var x = v.x;
+		var y = v.y;
+		var z = v.z;
+		return new openfl_geom_Vector3D(x * this.rawData.get(0) + y * this.rawData.get(4) + z * this.rawData.get(8) + this.rawData.get(3),x * this.rawData.get(1) + y * this.rawData.get(5) + z * this.rawData.get(9) + this.rawData.get(7),x * this.rawData.get(2) + y * this.rawData.get(6) + z * this.rawData.get(10) + this.rawData.get(11),0);
+	}
+	,identity: function() {
+		var a = [1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0];
+		var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
+		var _g1 = 0;
+		var _g = a.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			vector.set(i,a[i]);
+		}
+		this.rawData = vector;
+	}
+	,interpolateTo: function(toMat,percent) {
+		var _g = 0;
+		while(_g < 16) {
+			var i = _g++;
+			this.rawData.set(i,this.rawData.get(i) + (toMat.rawData.get(i) - this.rawData.get(i)) * percent);
+		}
+	}
+	,invert: function() {
+		var d = this.get_determinant();
+		var invertable = Math.abs(d) > 0.00000000001;
+		if(invertable) {
+			d = 1 / d;
+			var m11 = this.rawData.get(0);
+			var m21 = this.rawData.get(4);
+			var m31 = this.rawData.get(8);
+			var m41 = this.rawData.get(12);
+			var m12 = this.rawData.get(1);
+			var m22 = this.rawData.get(5);
+			var m32 = this.rawData.get(9);
+			var m42 = this.rawData.get(13);
+			var m13 = this.rawData.get(2);
+			var m23 = this.rawData.get(6);
+			var m33 = this.rawData.get(10);
+			var m43 = this.rawData.get(14);
+			var m14 = this.rawData.get(3);
+			var m24 = this.rawData.get(7);
+			var m34 = this.rawData.get(11);
+			var m44 = this.rawData.get(15);
+			this.rawData.set(0,d * (m22 * (m33 * m44 - m43 * m34) - m32 * (m23 * m44 - m43 * m24) + m42 * (m23 * m34 - m33 * m24)));
+			this.rawData.set(1,-d * (m12 * (m33 * m44 - m43 * m34) - m32 * (m13 * m44 - m43 * m14) + m42 * (m13 * m34 - m33 * m14)));
+			this.rawData.set(2,d * (m12 * (m23 * m44 - m43 * m24) - m22 * (m13 * m44 - m43 * m14) + m42 * (m13 * m24 - m23 * m14)));
+			this.rawData.set(3,-d * (m12 * (m23 * m34 - m33 * m24) - m22 * (m13 * m34 - m33 * m14) + m32 * (m13 * m24 - m23 * m14)));
+			this.rawData.set(4,-d * (m21 * (m33 * m44 - m43 * m34) - m31 * (m23 * m44 - m43 * m24) + m41 * (m23 * m34 - m33 * m24)));
+			this.rawData.set(5,d * (m11 * (m33 * m44 - m43 * m34) - m31 * (m13 * m44 - m43 * m14) + m41 * (m13 * m34 - m33 * m14)));
+			this.rawData.set(6,-d * (m11 * (m23 * m44 - m43 * m24) - m21 * (m13 * m44 - m43 * m14) + m41 * (m13 * m24 - m23 * m14)));
+			this.rawData.set(7,d * (m11 * (m23 * m34 - m33 * m24) - m21 * (m13 * m34 - m33 * m14) + m31 * (m13 * m24 - m23 * m14)));
+			this.rawData.set(8,d * (m21 * (m32 * m44 - m42 * m34) - m31 * (m22 * m44 - m42 * m24) + m41 * (m22 * m34 - m32 * m24)));
+			this.rawData.set(9,-d * (m11 * (m32 * m44 - m42 * m34) - m31 * (m12 * m44 - m42 * m14) + m41 * (m12 * m34 - m32 * m14)));
+			this.rawData.set(10,d * (m11 * (m22 * m44 - m42 * m24) - m21 * (m12 * m44 - m42 * m14) + m41 * (m12 * m24 - m22 * m14)));
+			this.rawData.set(11,-d * (m11 * (m22 * m34 - m32 * m24) - m21 * (m12 * m34 - m32 * m14) + m31 * (m12 * m24 - m22 * m14)));
+			this.rawData.set(12,-d * (m21 * (m32 * m43 - m42 * m33) - m31 * (m22 * m43 - m42 * m23) + m41 * (m22 * m33 - m32 * m23)));
+			this.rawData.set(13,d * (m11 * (m32 * m43 - m42 * m33) - m31 * (m12 * m43 - m42 * m13) + m41 * (m12 * m33 - m32 * m13)));
+			this.rawData.set(14,-d * (m11 * (m22 * m43 - m42 * m23) - m21 * (m12 * m43 - m42 * m13) + m41 * (m12 * m23 - m22 * m13)));
+			this.rawData.set(15,d * (m11 * (m22 * m33 - m32 * m23) - m21 * (m12 * m33 - m32 * m13) + m31 * (m12 * m23 - m22 * m13)));
+		}
+		return invertable;
+	}
+	,pointAt: function(pos,at,up) {
+		if(at == null) {
+			at = new openfl_geom_Vector3D(0,0,-1);
+		}
+		if(up == null) {
+			up = new openfl_geom_Vector3D(0,-1,0);
+		}
+		var dir = at.subtract(pos);
+		var vup = up.clone();
+		var right;
+		dir.normalize();
+		vup.normalize();
+		var dir2 = dir.clone();
+		dir2.scaleBy(vup.dotProduct(dir));
+		vup = vup.subtract(dir2);
+		if(vup.get_length() > 0) {
+			vup.normalize();
+		} else if(dir.x != 0) {
+			vup = new openfl_geom_Vector3D(-dir.y,dir.x,0);
+		} else {
+			vup = new openfl_geom_Vector3D(1,0,0);
+		}
+		right = vup.crossProduct(dir);
+		right.normalize();
+		this.rawData.set(0,right.x);
+		this.rawData.set(4,right.y);
+		this.rawData.set(8,right.z);
+		this.rawData.set(12,0.0);
+		this.rawData.set(1,vup.x);
+		this.rawData.set(5,vup.y);
+		this.rawData.set(9,vup.z);
+		this.rawData.set(13,0.0);
+		this.rawData.set(2,dir.x);
+		this.rawData.set(6,dir.y);
+		this.rawData.set(10,dir.z);
+		this.rawData.set(14,0.0);
+		this.rawData.set(3,pos.x);
+		this.rawData.set(7,pos.y);
+		this.rawData.set(11,pos.z);
+		this.rawData.set(15,1.0);
+	}
+	,prepend: function(rhs) {
+		var m111 = rhs.rawData.get(0);
+		var m121 = rhs.rawData.get(4);
+		var m131 = rhs.rawData.get(8);
+		var m141 = rhs.rawData.get(12);
+		var m112 = rhs.rawData.get(1);
+		var m122 = rhs.rawData.get(5);
+		var m132 = rhs.rawData.get(9);
+		var m142 = rhs.rawData.get(13);
+		var m113 = rhs.rawData.get(2);
+		var m123 = rhs.rawData.get(6);
+		var m133 = rhs.rawData.get(10);
+		var m143 = rhs.rawData.get(14);
+		var m114 = rhs.rawData.get(3);
+		var m124 = rhs.rawData.get(7);
+		var m134 = rhs.rawData.get(11);
+		var m144 = rhs.rawData.get(15);
+		var m211 = this.rawData.get(0);
+		var m221 = this.rawData.get(4);
+		var m231 = this.rawData.get(8);
+		var m241 = this.rawData.get(12);
+		var m212 = this.rawData.get(1);
+		var m222 = this.rawData.get(5);
+		var m232 = this.rawData.get(9);
+		var m242 = this.rawData.get(13);
+		var m213 = this.rawData.get(2);
+		var m223 = this.rawData.get(6);
+		var m233 = this.rawData.get(10);
+		var m243 = this.rawData.get(14);
+		var m214 = this.rawData.get(3);
+		var m224 = this.rawData.get(7);
+		var m234 = this.rawData.get(11);
+		var m244 = this.rawData.get(15);
+		this.rawData.set(0,m111 * m211 + m112 * m221 + m113 * m231 + m114 * m241);
+		this.rawData.set(1,m111 * m212 + m112 * m222 + m113 * m232 + m114 * m242);
+		this.rawData.set(2,m111 * m213 + m112 * m223 + m113 * m233 + m114 * m243);
+		this.rawData.set(3,m111 * m214 + m112 * m224 + m113 * m234 + m114 * m244);
+		this.rawData.set(4,m121 * m211 + m122 * m221 + m123 * m231 + m124 * m241);
+		this.rawData.set(5,m121 * m212 + m122 * m222 + m123 * m232 + m124 * m242);
+		this.rawData.set(6,m121 * m213 + m122 * m223 + m123 * m233 + m124 * m243);
+		this.rawData.set(7,m121 * m214 + m122 * m224 + m123 * m234 + m124 * m244);
+		this.rawData.set(8,m131 * m211 + m132 * m221 + m133 * m231 + m134 * m241);
+		this.rawData.set(9,m131 * m212 + m132 * m222 + m133 * m232 + m134 * m242);
+		this.rawData.set(10,m131 * m213 + m132 * m223 + m133 * m233 + m134 * m243);
+		this.rawData.set(11,m131 * m214 + m132 * m224 + m133 * m234 + m134 * m244);
+		this.rawData.set(12,m141 * m211 + m142 * m221 + m143 * m231 + m144 * m241);
+		this.rawData.set(13,m141 * m212 + m142 * m222 + m143 * m232 + m144 * m242);
+		this.rawData.set(14,m141 * m213 + m142 * m223 + m143 * m233 + m144 * m243);
+		this.rawData.set(15,m141 * m214 + m142 * m224 + m143 * m234 + m144 * m244);
+	}
+	,prependRotation: function(degrees,axis,pivotPoint) {
+		var tx;
+		var ty;
+		var tz = 0;
+		ty = tz;
+		tx = ty;
+		if(pivotPoint != null) {
+			tx = pivotPoint.x;
+			ty = pivotPoint.y;
+			tz = pivotPoint.z;
+		}
+		var radian = degrees * Math.PI / 180;
+		var cos = Math.cos(radian);
+		var sin = Math.sin(radian);
+		var x = axis.x;
+		var y = axis.y;
+		var z = axis.z;
+		var x2 = x * x;
+		var y2 = y * y;
+		var z2 = z * z;
+		var ls = x2 + y2 + z2;
+		if(ls != 0) {
+			var l = Math.sqrt(ls);
+			x /= l;
+			y /= l;
+			z /= l;
+			x2 /= ls;
+			y2 /= ls;
+			z2 /= ls;
+		}
+		var ccos = 1 - cos;
+		var m = new openfl_geom_Matrix3D();
+		var d = m.rawData;
+		d.set(0,x2 + (y2 + z2) * cos);
+		d.set(1,x * y * ccos + z * sin);
+		d.set(2,x * z * ccos - y * sin);
+		d.set(4,x * y * ccos - z * sin);
+		d.set(5,y2 + (x2 + z2) * cos);
+		d.set(6,y * z * ccos + x * sin);
+		d.set(8,x * z * ccos + y * sin);
+		d.set(9,y * z * ccos - x * sin);
+		d.set(10,z2 + (x2 + y2) * cos);
+		d.set(12,(tx * (y2 + z2) - x * (ty * y + tz * z)) * ccos + (ty * z - tz * y) * sin);
+		d.set(13,(ty * (x2 + z2) - y * (tx * x + tz * z)) * ccos + (tz * x - tx * z) * sin);
+		d.set(14,(tz * (x2 + y2) - z * (tx * x + ty * y)) * ccos + (tx * y - ty * x) * sin);
+		this.prepend(m);
+	}
+	,prependScale: function(xScale,yScale,zScale) {
+		var a = [xScale,0.0,0.0,0.0,0.0,yScale,0.0,0.0,0.0,0.0,zScale,0.0,0.0,0.0,0.0,1.0];
+		var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
+		var _g1 = 0;
+		var _g = a.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			vector.set(i,a[i]);
+		}
+		this.prepend(new openfl_geom_Matrix3D(vector));
+	}
+	,prependTranslation: function(x,y,z) {
+		var m = new openfl_geom_Matrix3D();
+		m.set_position(new openfl_geom_Vector3D(x,y,z));
+		this.prepend(m);
+	}
+	,recompose: function(components,orientationStyle) {
+		if(components.get_length() < 3 || components.get(2).x == 0 || components.get(2).y == 0 || components.get(2).z == 0) {
+			return false;
+		}
+		if(orientationStyle == null) {
+			orientationStyle = 1;
+		}
+		this.identity();
+		var scale = [];
+		scale[0] = scale[1] = scale[2] = components.get(2).x;
+		scale[4] = scale[5] = scale[6] = components.get(2).y;
+		scale[8] = scale[9] = scale[10] = components.get(2).z;
+		if(orientationStyle == null) {
+			var x = components.get(1).x;
+			var y = components.get(1).y;
+			var z = components.get(1).z;
+			var w = components.get(1).w;
+			if(orientationStyle == 0) {
+				x *= Math.sin(w / 2);
+				y *= Math.sin(w / 2);
+				z *= Math.sin(w / 2);
+				w = Math.cos(w / 2);
+			}
+			this.rawData.set(0,(1 - 2 * y * y - 2 * z * z) * scale[0]);
+			this.rawData.set(1,(2 * x * y + 2 * w * z) * scale[1]);
+			this.rawData.set(2,(2 * x * z - 2 * w * y) * scale[2]);
+			this.rawData.set(3,0);
+			this.rawData.set(4,(2 * x * y - 2 * w * z) * scale[4]);
+			this.rawData.set(5,(1 - 2 * x * x - 2 * z * z) * scale[5]);
+			this.rawData.set(6,(2 * y * z + 2 * w * x) * scale[6]);
+			this.rawData.set(7,0);
+			this.rawData.set(8,(2 * x * z + 2 * w * y) * scale[8]);
+			this.rawData.set(9,(2 * y * z - 2 * w * x) * scale[9]);
+			this.rawData.set(10,(1 - 2 * x * x - 2 * y * y) * scale[10]);
+			this.rawData.set(11,0);
+			this.rawData.set(12,components.get(0).x);
+			this.rawData.set(13,components.get(0).y);
+			this.rawData.set(14,components.get(0).z);
+			this.rawData.set(15,1);
+		} else if(orientationStyle == 1) {
+			var cx = Math.cos(components.get(1).x);
+			var cy = Math.cos(components.get(1).y);
+			var cz = Math.cos(components.get(1).z);
+			var sx = Math.sin(components.get(1).x);
+			var sy = Math.sin(components.get(1).y);
+			var sz = Math.sin(components.get(1).z);
+			this.rawData.set(0,cy * cz * scale[0]);
+			this.rawData.set(1,cy * sz * scale[1]);
+			this.rawData.set(2,-sy * scale[2]);
+			this.rawData.set(3,0);
+			this.rawData.set(4,(sx * sy * cz - cx * sz) * scale[4]);
+			this.rawData.set(5,(sx * sy * sz + cx * cz) * scale[5]);
+			this.rawData.set(6,sx * cy * scale[6]);
+			this.rawData.set(7,0);
+			this.rawData.set(8,(cx * sy * cz + sx * sz) * scale[8]);
+			this.rawData.set(9,(cx * sy * sz - sx * cz) * scale[9]);
+			this.rawData.set(10,cx * cy * scale[10]);
+			this.rawData.set(11,0);
+			this.rawData.set(12,components.get(0).x);
+			this.rawData.set(13,components.get(0).y);
+			this.rawData.set(14,components.get(0).z);
+			this.rawData.set(15,1);
+		} else {
+			var x1 = components.get(1).x;
+			var y1 = components.get(1).y;
+			var z1 = components.get(1).z;
+			var w1 = components.get(1).w;
+			if(orientationStyle == 0) {
+				x1 *= Math.sin(w1 / 2);
+				y1 *= Math.sin(w1 / 2);
+				z1 *= Math.sin(w1 / 2);
+				w1 = Math.cos(w1 / 2);
+			}
+			this.rawData.set(0,(1 - 2 * y1 * y1 - 2 * z1 * z1) * scale[0]);
+			this.rawData.set(1,(2 * x1 * y1 + 2 * w1 * z1) * scale[1]);
+			this.rawData.set(2,(2 * x1 * z1 - 2 * w1 * y1) * scale[2]);
+			this.rawData.set(3,0);
+			this.rawData.set(4,(2 * x1 * y1 - 2 * w1 * z1) * scale[4]);
+			this.rawData.set(5,(1 - 2 * x1 * x1 - 2 * z1 * z1) * scale[5]);
+			this.rawData.set(6,(2 * y1 * z1 + 2 * w1 * x1) * scale[6]);
+			this.rawData.set(7,0);
+			this.rawData.set(8,(2 * x1 * z1 + 2 * w1 * y1) * scale[8]);
+			this.rawData.set(9,(2 * y1 * z1 - 2 * w1 * x1) * scale[9]);
+			this.rawData.set(10,(1 - 2 * x1 * x1 - 2 * y1 * y1) * scale[10]);
+			this.rawData.set(11,0);
+			this.rawData.set(12,components.get(0).x);
+			this.rawData.set(13,components.get(0).y);
+			this.rawData.set(14,components.get(0).z);
+			this.rawData.set(15,1);
+		}
+		if(components.get(2).x == 0) {
+			this.rawData.set(0,1e-15);
+		}
+		if(components.get(2).y == 0) {
+			this.rawData.set(5,1e-15);
+		}
+		if(components.get(2).z == 0) {
+			this.rawData.set(10,1e-15);
+		}
+		return !(components.get(2).x == 0 || components.get(2).y == 0 || components.get(2).y == 0);
+	}
+	,transformVector: function(v) {
+		var x = v.x;
+		var y = v.y;
+		var z = v.z;
+		return new openfl_geom_Vector3D(x * this.rawData.get(0) + y * this.rawData.get(4) + z * this.rawData.get(8) + this.rawData.get(12),x * this.rawData.get(1) + y * this.rawData.get(5) + z * this.rawData.get(9) + this.rawData.get(13),x * this.rawData.get(2) + y * this.rawData.get(6) + z * this.rawData.get(10) + this.rawData.get(14),x * this.rawData.get(3) + y * this.rawData.get(7) + z * this.rawData.get(11) + this.rawData.get(15));
+	}
+	,transformVectors: function(vin,vout) {
+		var i = 0;
+		var x;
+		var y;
+		var z;
+		while(i + 3 <= vin.get_length()) {
+			x = vin.get(i);
+			y = vin.get(i + 1);
+			z = vin.get(i + 2);
+			vout.set(i,x * this.rawData.get(0) + y * this.rawData.get(4) + z * this.rawData.get(8) + this.rawData.get(12));
+			vout.set(i + 1,x * this.rawData.get(1) + y * this.rawData.get(5) + z * this.rawData.get(9) + this.rawData.get(13));
+			vout.set(i + 2,x * this.rawData.get(2) + y * this.rawData.get(6) + z * this.rawData.get(10) + this.rawData.get(14));
+			i += 3;
+		}
+	}
+	,transpose: function() {
+		var oRawData = this.rawData.copy();
+		this.rawData.set(1,oRawData.get(4));
+		this.rawData.set(2,oRawData.get(8));
+		this.rawData.set(3,oRawData.get(12));
+		this.rawData.set(4,oRawData.get(1));
+		this.rawData.set(6,oRawData.get(9));
+		this.rawData.set(7,oRawData.get(13));
+		this.rawData.set(8,oRawData.get(2));
+		this.rawData.set(9,oRawData.get(6));
+		this.rawData.set(11,oRawData.get(14));
+		this.rawData.set(12,oRawData.get(3));
+		this.rawData.set(13,oRawData.get(7));
+		this.rawData.set(14,oRawData.get(11));
+	}
+	,get_determinant: function() {
+		return (this.rawData.get(0) * this.rawData.get(5) - this.rawData.get(4) * this.rawData.get(1)) * (this.rawData.get(10) * this.rawData.get(15) - this.rawData.get(14) * this.rawData.get(11)) - (this.rawData.get(0) * this.rawData.get(9) - this.rawData.get(8) * this.rawData.get(1)) * (this.rawData.get(6) * this.rawData.get(15) - this.rawData.get(14) * this.rawData.get(7)) + (this.rawData.get(0) * this.rawData.get(13) - this.rawData.get(12) * this.rawData.get(1)) * (this.rawData.get(6) * this.rawData.get(11) - this.rawData.get(10) * this.rawData.get(7)) + (this.rawData.get(4) * this.rawData.get(9) - this.rawData.get(8) * this.rawData.get(5)) * (this.rawData.get(2) * this.rawData.get(15) - this.rawData.get(14) * this.rawData.get(3)) - (this.rawData.get(4) * this.rawData.get(13) - this.rawData.get(12) * this.rawData.get(5)) * (this.rawData.get(2) * this.rawData.get(11) - this.rawData.get(10) * this.rawData.get(3)) + (this.rawData.get(8) * this.rawData.get(13) - this.rawData.get(12) * this.rawData.get(9)) * (this.rawData.get(2) * this.rawData.get(7) - this.rawData.get(6) * this.rawData.get(3));
+	}
+	,get_position: function() {
+		return new openfl_geom_Vector3D(this.rawData.get(12),this.rawData.get(13),this.rawData.get(14));
+	}
+	,set_position: function(val) {
+		this.rawData.set(12,val.x);
+		this.rawData.set(13,val.y);
+		this.rawData.set(14,val.z);
+		return val;
+	}
+	,__class__: openfl_geom_Matrix3D
+	,__properties__: {set_position:"set_position",get_position:"get_position",get_determinant:"get_determinant"}
+};
+var lime_utils_ObjectPool_$openfl_$geom_$Point = function(create,clean,size) {
+	if(create != null) {
+		this.create = create;
+	}
+	if(clean != null) {
+		this.clean = clean;
+	}
+	if(size != null) {
+		this.set_size(size);
+	}
+	this.__pool = new haxe_ds_ObjectMap();
+	this.activeObjects = 0;
+	this.inactiveObjects = 0;
+	this.__inactiveObject0 = null;
+	this.__inactiveObject1 = null;
+	this.__inactiveObjectList = new List();
+};
+$hxClasses["lime.utils.ObjectPool_openfl_geom_Point"] = lime_utils_ObjectPool_$openfl_$geom_$Point;
+lime_utils_ObjectPool_$openfl_$geom_$Point.__name__ = ["lime","utils","ObjectPool_openfl_geom_Point"];
+lime_utils_ObjectPool_$openfl_$geom_$Point.prototype = {
+	activeObjects: null
+	,inactiveObjects: null
+	,__inactiveObject0: null
+	,__inactiveObject1: null
+	,__inactiveObjectList: null
+	,__pool: null
+	,__size: null
+	,add: function(object) {
+		if(!this.__pool.exists(object)) {
+			this.__pool.set(object,false);
+			this.clean(object);
+			if(this.__inactiveObject0 == null) {
+				this.__inactiveObject0 = object;
+			} else if(this.__inactiveObject1 == null) {
+				this.__inactiveObject1 = object;
+			} else {
+				this.__inactiveObjectList.add(object);
+			}
+			this.inactiveObjects++;
+		}
+	}
+	,clean: function(object) {
+	}
+	,clear: function() {
+		this.__pool = new haxe_ds_ObjectMap();
+		this.activeObjects = 0;
+		this.inactiveObjects = 0;
+		this.__inactiveObject0 = null;
+		this.__inactiveObject1 = null;
+		this.__inactiveObjectList.clear();
+	}
+	,create: function() {
+		return null;
+	}
+	,get: function() {
+		var object = null;
+		if(this.inactiveObjects > 0) {
+			var object1 = null;
+			if(this.__inactiveObject0 != null) {
+				object1 = this.__inactiveObject0;
+				this.__inactiveObject0 = null;
+			} else if(this.__inactiveObject1 != null) {
+				object1 = this.__inactiveObject1;
+				this.__inactiveObject1 = null;
+			} else {
+				object1 = this.__inactiveObjectList.pop();
+				if(this.__inactiveObjectList.length > 0) {
+					this.__inactiveObject0 = this.__inactiveObjectList.pop();
+				}
+				if(this.__inactiveObjectList.length > 0) {
+					this.__inactiveObject1 = this.__inactiveObjectList.pop();
+				}
+			}
+			this.inactiveObjects--;
+			this.activeObjects++;
+			object = object1;
+		} else if(this.__size == null || this.activeObjects < this.__size) {
+			object = this.create();
+			if(object != null) {
+				this.__pool.set(object,true);
+				this.activeObjects++;
+			}
+		}
+		return object;
+	}
+	,release: function(object) {
+		this.activeObjects--;
+		if(this.__size == null || this.activeObjects + this.inactiveObjects < this.__size) {
+			this.clean(object);
+			if(this.__inactiveObject0 == null) {
+				this.__inactiveObject0 = object;
+			} else if(this.__inactiveObject1 == null) {
+				this.__inactiveObject1 = object;
+			} else {
+				this.__inactiveObjectList.add(object);
+			}
+			this.inactiveObjects++;
+		} else {
+			this.__pool.remove(object);
+		}
+	}
+	,__addInactive: function(object) {
+		if(this.__inactiveObject0 == null) {
+			this.__inactiveObject0 = object;
+		} else if(this.__inactiveObject1 == null) {
+			this.__inactiveObject1 = object;
+		} else {
+			this.__inactiveObjectList.add(object);
+		}
+		this.inactiveObjects++;
+	}
+	,__getInactive: function() {
+		var object = null;
+		if(this.__inactiveObject0 != null) {
+			object = this.__inactiveObject0;
+			this.__inactiveObject0 = null;
+		} else if(this.__inactiveObject1 != null) {
+			object = this.__inactiveObject1;
+			this.__inactiveObject1 = null;
+		} else {
+			object = this.__inactiveObjectList.pop();
+			if(this.__inactiveObjectList.length > 0) {
+				this.__inactiveObject0 = this.__inactiveObjectList.pop();
+			}
+			if(this.__inactiveObjectList.length > 0) {
+				this.__inactiveObject1 = this.__inactiveObjectList.pop();
+			}
+		}
+		this.inactiveObjects--;
+		this.activeObjects++;
+		return object;
+	}
+	,__removeInactive: function(count) {
+		if(count <= 0 || this.inactiveObjects == 0) {
+			return;
+		}
+		if(this.__inactiveObject0 != null) {
+			this.__pool.remove(this.__inactiveObject0);
+			this.__inactiveObject0 = null;
+			this.inactiveObjects--;
+			--count;
+		}
+		if(count == 0 || this.inactiveObjects == 0) {
+			return;
+		}
+		if(this.__inactiveObject1 != null) {
+			this.__pool.remove(this.__inactiveObject1);
+			this.__inactiveObject1 = null;
+			this.inactiveObjects--;
+			--count;
+		}
+		if(count == 0 || this.inactiveObjects == 0) {
+			return;
+		}
+		var _g_head = this.__inactiveObjectList.h;
+		while(_g_head != null) {
+			var val = _g_head.item;
+			_g_head = _g_head.next;
+			var object = val;
+			this.__pool.remove(object);
+			this.__inactiveObjectList.remove(object);
+			this.inactiveObjects--;
+			--count;
+			if(count == 0 || this.inactiveObjects == 0) {
+				return;
+			}
+		}
+	}
+	,get_size: function() {
+		return this.__size;
+	}
+	,set_size: function(value) {
+		if(value == null) {
+			this.__size = null;
+		} else {
+			var current = this.inactiveObjects + this.activeObjects;
+			this.__size = value;
+			if(current > value) {
+				this.__removeInactive(current - value);
+			} else if(value > current) {
+				var object;
+				var _g1 = 0;
+				var _g = value - current;
+				while(_g1 < _g) {
+					var i = _g1++;
+					object = this.create();
+					if(object != null) {
+						this.__pool.set(object,false);
+						this.__inactiveObjectList.add(object);
+						this.inactiveObjects++;
+					} else {
+						break;
+					}
+				}
+			}
+		}
+		return value;
+	}
+	,__class__: lime_utils_ObjectPool_$openfl_$geom_$Point
+	,__properties__: {set_size:"set_size",get_size:"get_size"}
+};
+var openfl_geom_Point = function(x,y) {
+	if(y == null) {
+		y = 0;
+	}
+	if(x == null) {
+		x = 0;
+	}
+	this.x = x;
+	this.y = y;
+};
+$hxClasses["openfl.geom.Point"] = openfl_geom_Point;
+openfl_geom_Point.__name__ = ["openfl","geom","Point"];
+openfl_geom_Point.distance = function(pt1,pt2) {
+	var dx = pt1.x - pt2.x;
+	var dy = pt1.y - pt2.y;
+	return Math.sqrt(dx * dx + dy * dy);
+};
+openfl_geom_Point.interpolate = function(pt1,pt2,f) {
+	return new openfl_geom_Point(pt2.x + f * (pt1.x - pt2.x),pt2.y + f * (pt1.y - pt2.y));
+};
+openfl_geom_Point.polar = function(len,angle) {
+	return new openfl_geom_Point(len * Math.cos(angle),len * Math.sin(angle));
+};
+openfl_geom_Point.prototype = {
+	x: null
+	,y: null
+	,add: function(v) {
+		return new openfl_geom_Point(v.x + this.x,v.y + this.y);
+	}
+	,clone: function() {
+		return new openfl_geom_Point(this.x,this.y);
+	}
+	,copyFrom: function(sourcePoint) {
+		this.x = sourcePoint.x;
+		this.y = sourcePoint.y;
+	}
+	,equals: function(toCompare) {
+		if(toCompare != null && toCompare.x == this.x) {
+			return toCompare.y == this.y;
+		} else {
+			return false;
+		}
+	}
+	,normalize: function(thickness) {
+		if(this.x == 0 && this.y == 0) {
+			return;
+		} else {
+			var norm = thickness / Math.sqrt(this.x * this.x + this.y * this.y);
+			this.x *= norm;
+			this.y *= norm;
+		}
+	}
+	,offset: function(dx,dy) {
+		this.x += dx;
+		this.y += dy;
+	}
+	,setTo: function(xa,ya) {
+		this.x = xa;
+		this.y = ya;
+	}
+	,subtract: function(v) {
+		return new openfl_geom_Point(this.x - v.x,this.y - v.y);
+	}
+	,toString: function() {
+		return "(x=" + this.x + ", y=" + this.y + ")";
+	}
+	,__toLimeVector2: function() {
+		if(openfl_geom_Point.__limeVector2 == null) {
+			openfl_geom_Point.__limeVector2 = new lime_math_Vector2();
+		}
+		var _this = openfl_geom_Point.__limeVector2;
+		_this.x = this.x;
+		_this.y = this.y;
+		return openfl_geom_Point.__limeVector2;
+	}
+	,get_length: function() {
+		return Math.sqrt(this.x * this.x + this.y * this.y);
+	}
+	,__class__: openfl_geom_Point
+	,__properties__: {get_length:"get_length"}
+};
+var openfl_geom_Vector3D = function(x,y,z,w) {
+	if(w == null) {
+		w = 0;
+	}
+	if(z == null) {
+		z = 0;
+	}
+	if(y == null) {
+		y = 0;
+	}
+	if(x == null) {
+		x = 0;
+	}
+	this.w = w;
+	this.x = x;
+	this.y = y;
+	this.z = z;
+};
+$hxClasses["openfl.geom.Vector3D"] = openfl_geom_Vector3D;
+openfl_geom_Vector3D.__name__ = ["openfl","geom","Vector3D"];
+openfl_geom_Vector3D.__properties__ = {get_Z_AXIS:"get_Z_AXIS",get_Y_AXIS:"get_Y_AXIS",get_X_AXIS:"get_X_AXIS"};
+openfl_geom_Vector3D.angleBetween = function(a,b) {
+	var la = a.get_length();
+	var lb = b.get_length();
+	var dot = a.dotProduct(b);
+	if(la != 0) {
+		dot /= la;
+	}
+	if(lb != 0) {
+		dot /= lb;
+	}
+	return Math.acos(dot);
+};
+openfl_geom_Vector3D.distance = function(pt1,pt2) {
+	var x = pt2.x - pt1.x;
+	var y = pt2.y - pt1.y;
+	var z = pt2.z - pt1.z;
+	return Math.sqrt(x * x + y * y + z * z);
+};
+openfl_geom_Vector3D.get_X_AXIS = function() {
+	return new openfl_geom_Vector3D(1,0,0);
+};
+openfl_geom_Vector3D.get_Y_AXIS = function() {
+	return new openfl_geom_Vector3D(0,1,0);
+};
+openfl_geom_Vector3D.get_Z_AXIS = function() {
+	return new openfl_geom_Vector3D(0,0,1);
+};
+openfl_geom_Vector3D.prototype = {
+	w: null
+	,x: null
+	,y: null
+	,z: null
+	,add: function(a) {
+		return new openfl_geom_Vector3D(this.x + a.x,this.y + a.y,this.z + a.z);
+	}
+	,clone: function() {
+		return new openfl_geom_Vector3D(this.x,this.y,this.z,this.w);
+	}
+	,copyFrom: function(sourceVector3D) {
+		this.x = sourceVector3D.x;
+		this.y = sourceVector3D.y;
+		this.z = sourceVector3D.z;
+	}
+	,crossProduct: function(a) {
+		return new openfl_geom_Vector3D(this.y * a.z - this.z * a.y,this.z * a.x - this.x * a.z,this.x * a.y - this.y * a.x,1);
+	}
+	,decrementBy: function(a) {
+		this.x -= a.x;
+		this.y -= a.y;
+		this.z -= a.z;
+	}
+	,dotProduct: function(a) {
+		return this.x * a.x + this.y * a.y + this.z * a.z;
+	}
+	,equals: function(toCompare,allFour) {
+		if(allFour == null) {
+			allFour = false;
+		}
+		if(this.x == toCompare.x && this.y == toCompare.y && this.z == toCompare.z) {
+			if(!(!allFour)) {
+				return this.w == toCompare.w;
+			} else {
+				return true;
+			}
+		} else {
+			return false;
+		}
+	}
+	,incrementBy: function(a) {
+		this.x += a.x;
+		this.y += a.y;
+		this.z += a.z;
+	}
+	,nearEquals: function(toCompare,tolerance,allFour) {
+		if(allFour == null) {
+			allFour = false;
+		}
+		if(Math.abs(this.x - toCompare.x) < tolerance && Math.abs(this.y - toCompare.y) < tolerance && Math.abs(this.z - toCompare.z) < tolerance) {
+			if(!(!allFour)) {
+				return Math.abs(this.w - toCompare.w) < tolerance;
+			} else {
+				return true;
+			}
+		} else {
+			return false;
+		}
+	}
+	,negate: function() {
+		this.x *= -1;
+		this.y *= -1;
+		this.z *= -1;
+	}
+	,normalize: function() {
+		var l = this.get_length();
+		if(l != 0) {
+			this.x /= l;
+			this.y /= l;
+			this.z /= l;
+		}
+		return l;
+	}
+	,project: function() {
+		this.x /= this.w;
+		this.y /= this.w;
+		this.z /= this.w;
+	}
+	,scaleBy: function(s) {
+		this.x *= s;
+		this.y *= s;
+		this.z *= s;
+	}
+	,setTo: function(xa,ya,za) {
+		this.x = xa;
+		this.y = ya;
+		this.z = za;
+	}
+	,subtract: function(a) {
+		return new openfl_geom_Vector3D(this.x - a.x,this.y - a.y,this.z - a.z);
+	}
+	,toString: function() {
+		return "Vector3D(" + this.x + ", " + this.y + ", " + this.z + ")";
+	}
+	,get_length: function() {
+		return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+	}
+	,get_lengthSquared: function() {
+		return this.x * this.x + this.y * this.y + this.z * this.z;
+	}
+	,__class__: openfl_geom_Vector3D
+	,__properties__: {get_lengthSquared:"get_lengthSquared",get_length:"get_length"}
+};
+var lime_utils_ObjectPool_$openfl_$geom_$Rectangle = function(create,clean,size) {
+	if(create != null) {
+		this.create = create;
+	}
+	if(clean != null) {
+		this.clean = clean;
+	}
+	if(size != null) {
+		this.set_size(size);
+	}
+	this.__pool = new haxe_ds_ObjectMap();
+	this.activeObjects = 0;
+	this.inactiveObjects = 0;
+	this.__inactiveObject0 = null;
+	this.__inactiveObject1 = null;
+	this.__inactiveObjectList = new List();
+};
+$hxClasses["lime.utils.ObjectPool_openfl_geom_Rectangle"] = lime_utils_ObjectPool_$openfl_$geom_$Rectangle;
+lime_utils_ObjectPool_$openfl_$geom_$Rectangle.__name__ = ["lime","utils","ObjectPool_openfl_geom_Rectangle"];
+lime_utils_ObjectPool_$openfl_$geom_$Rectangle.prototype = {
+	activeObjects: null
+	,inactiveObjects: null
+	,__inactiveObject0: null
+	,__inactiveObject1: null
+	,__inactiveObjectList: null
+	,__pool: null
+	,__size: null
+	,add: function(object) {
+		if(!this.__pool.exists(object)) {
+			this.__pool.set(object,false);
+			this.clean(object);
+			if(this.__inactiveObject0 == null) {
+				this.__inactiveObject0 = object;
+			} else if(this.__inactiveObject1 == null) {
+				this.__inactiveObject1 = object;
+			} else {
+				this.__inactiveObjectList.add(object);
+			}
+			this.inactiveObjects++;
+		}
+	}
+	,clean: function(object) {
+	}
+	,clear: function() {
+		this.__pool = new haxe_ds_ObjectMap();
+		this.activeObjects = 0;
+		this.inactiveObjects = 0;
+		this.__inactiveObject0 = null;
+		this.__inactiveObject1 = null;
+		this.__inactiveObjectList.clear();
+	}
+	,create: function() {
+		return null;
+	}
+	,get: function() {
+		var object = null;
+		if(this.inactiveObjects > 0) {
+			var object1 = null;
+			if(this.__inactiveObject0 != null) {
+				object1 = this.__inactiveObject0;
+				this.__inactiveObject0 = null;
+			} else if(this.__inactiveObject1 != null) {
+				object1 = this.__inactiveObject1;
+				this.__inactiveObject1 = null;
+			} else {
+				object1 = this.__inactiveObjectList.pop();
+				if(this.__inactiveObjectList.length > 0) {
+					this.__inactiveObject0 = this.__inactiveObjectList.pop();
+				}
+				if(this.__inactiveObjectList.length > 0) {
+					this.__inactiveObject1 = this.__inactiveObjectList.pop();
+				}
+			}
+			this.inactiveObjects--;
+			this.activeObjects++;
+			object = object1;
+		} else if(this.__size == null || this.activeObjects < this.__size) {
+			object = this.create();
+			if(object != null) {
+				this.__pool.set(object,true);
+				this.activeObjects++;
+			}
+		}
+		return object;
+	}
+	,release: function(object) {
+		this.activeObjects--;
+		if(this.__size == null || this.activeObjects + this.inactiveObjects < this.__size) {
+			this.clean(object);
+			if(this.__inactiveObject0 == null) {
+				this.__inactiveObject0 = object;
+			} else if(this.__inactiveObject1 == null) {
+				this.__inactiveObject1 = object;
+			} else {
+				this.__inactiveObjectList.add(object);
+			}
+			this.inactiveObjects++;
+		} else {
+			this.__pool.remove(object);
+		}
+	}
+	,__addInactive: function(object) {
+		if(this.__inactiveObject0 == null) {
+			this.__inactiveObject0 = object;
+		} else if(this.__inactiveObject1 == null) {
+			this.__inactiveObject1 = object;
+		} else {
+			this.__inactiveObjectList.add(object);
+		}
+		this.inactiveObjects++;
+	}
+	,__getInactive: function() {
+		var object = null;
+		if(this.__inactiveObject0 != null) {
+			object = this.__inactiveObject0;
+			this.__inactiveObject0 = null;
+		} else if(this.__inactiveObject1 != null) {
+			object = this.__inactiveObject1;
+			this.__inactiveObject1 = null;
+		} else {
+			object = this.__inactiveObjectList.pop();
+			if(this.__inactiveObjectList.length > 0) {
+				this.__inactiveObject0 = this.__inactiveObjectList.pop();
+			}
+			if(this.__inactiveObjectList.length > 0) {
+				this.__inactiveObject1 = this.__inactiveObjectList.pop();
+			}
+		}
+		this.inactiveObjects--;
+		this.activeObjects++;
+		return object;
+	}
+	,__removeInactive: function(count) {
+		if(count <= 0 || this.inactiveObjects == 0) {
+			return;
+		}
+		if(this.__inactiveObject0 != null) {
+			this.__pool.remove(this.__inactiveObject0);
+			this.__inactiveObject0 = null;
+			this.inactiveObjects--;
+			--count;
+		}
+		if(count == 0 || this.inactiveObjects == 0) {
+			return;
+		}
+		if(this.__inactiveObject1 != null) {
+			this.__pool.remove(this.__inactiveObject1);
+			this.__inactiveObject1 = null;
+			this.inactiveObjects--;
+			--count;
+		}
+		if(count == 0 || this.inactiveObjects == 0) {
+			return;
+		}
+		var _g_head = this.__inactiveObjectList.h;
+		while(_g_head != null) {
+			var val = _g_head.item;
+			_g_head = _g_head.next;
+			var object = val;
+			this.__pool.remove(object);
+			this.__inactiveObjectList.remove(object);
+			this.inactiveObjects--;
+			--count;
+			if(count == 0 || this.inactiveObjects == 0) {
+				return;
+			}
+		}
+	}
+	,get_size: function() {
+		return this.__size;
+	}
+	,set_size: function(value) {
+		if(value == null) {
+			this.__size = null;
+		} else {
+			var current = this.inactiveObjects + this.activeObjects;
+			this.__size = value;
+			if(current > value) {
+				this.__removeInactive(current - value);
+			} else if(value > current) {
+				var object;
+				var _g1 = 0;
+				var _g = value - current;
+				while(_g1 < _g) {
+					var i = _g1++;
+					object = this.create();
+					if(object != null) {
+						this.__pool.set(object,false);
+						this.__inactiveObjectList.add(object);
+						this.inactiveObjects++;
+					} else {
+						break;
+					}
+				}
+			}
+		}
+		return value;
+	}
+	,__class__: lime_utils_ObjectPool_$openfl_$geom_$Rectangle
+	,__properties__: {set_size:"set_size",get_size:"get_size"}
+};
+var openfl_geom_Rectangle = function(x,y,width,height) {
+	if(height == null) {
+		height = 0;
+	}
+	if(width == null) {
+		width = 0;
+	}
+	if(y == null) {
+		y = 0;
+	}
+	if(x == null) {
+		x = 0;
+	}
+	this.x = x;
+	this.y = y;
+	this.width = width;
+	this.height = height;
+};
+$hxClasses["openfl.geom.Rectangle"] = openfl_geom_Rectangle;
+openfl_geom_Rectangle.__name__ = ["openfl","geom","Rectangle"];
+openfl_geom_Rectangle.prototype = {
+	height: null
+	,width: null
+	,x: null
+	,y: null
+	,clone: function() {
+		return new openfl_geom_Rectangle(this.x,this.y,this.width,this.height);
+	}
+	,contains: function(x,y) {
+		if(x >= this.x && y >= this.y && x < this.get_right()) {
+			return y < this.get_bottom();
+		} else {
+			return false;
+		}
+	}
+	,containsPoint: function(point) {
+		return this.contains(point.x,point.y);
+	}
+	,containsRect: function(rect) {
+		if(rect.width <= 0 || rect.height <= 0) {
+			if(rect.x > this.x && rect.y > this.y && rect.get_right() < this.get_right()) {
+				return rect.get_bottom() < this.get_bottom();
+			} else {
+				return false;
+			}
+		} else if(rect.x >= this.x && rect.y >= this.y && rect.get_right() <= this.get_right()) {
+			return rect.get_bottom() <= this.get_bottom();
+		} else {
+			return false;
+		}
+	}
+	,copyFrom: function(sourceRect) {
+		this.x = sourceRect.x;
+		this.y = sourceRect.y;
+		this.width = sourceRect.width;
+		this.height = sourceRect.height;
+	}
+	,equals: function(toCompare) {
+		if(toCompare == this) {
+			return true;
+		} else if(toCompare != null && this.x == toCompare.x && this.y == toCompare.y && this.width == toCompare.width) {
+			return this.height == toCompare.height;
+		} else {
+			return false;
+		}
+	}
+	,inflate: function(dx,dy) {
+		this.x -= dx;
+		this.width += dx * 2;
+		this.y -= dy;
+		this.height += dy * 2;
+	}
+	,inflatePoint: function(point) {
+		this.inflate(point.x,point.y);
+	}
+	,intersection: function(toIntersect) {
+		var x0 = this.x < toIntersect.x ? toIntersect.x : this.x;
+		var x1 = this.get_right() > toIntersect.get_right() ? toIntersect.get_right() : this.get_right();
+		if(x1 <= x0) {
+			return new openfl_geom_Rectangle();
+		}
+		var y0 = this.y < toIntersect.y ? toIntersect.y : this.y;
+		var y1 = this.get_bottom() > toIntersect.get_bottom() ? toIntersect.get_bottom() : this.get_bottom();
+		if(y1 <= y0) {
+			return new openfl_geom_Rectangle();
+		}
+		return new openfl_geom_Rectangle(x0,y0,x1 - x0,y1 - y0);
+	}
+	,intersects: function(toIntersect) {
+		var x0 = this.x < toIntersect.x ? toIntersect.x : this.x;
+		var x1 = this.get_right() > toIntersect.get_right() ? toIntersect.get_right() : this.get_right();
+		if(x1 <= x0) {
+			return false;
+		}
+		var y0 = this.y < toIntersect.y ? toIntersect.y : this.y;
+		var y1 = this.get_bottom() > toIntersect.get_bottom() ? toIntersect.get_bottom() : this.get_bottom();
+		return y1 > y0;
+	}
+	,isEmpty: function() {
+		if(!(this.width <= 0)) {
+			return this.height <= 0;
+		} else {
+			return true;
+		}
+	}
+	,offset: function(dx,dy) {
+		this.x += dx;
+		this.y += dy;
+	}
+	,offsetPoint: function(point) {
+		this.x += point.x;
+		this.y += point.y;
+	}
+	,setEmpty: function() {
+		this.x = this.y = this.width = this.height = 0;
+	}
+	,setTo: function(xa,ya,widtha,heighta) {
+		this.x = xa;
+		this.y = ya;
+		this.width = widtha;
+		this.height = heighta;
+	}
+	,toString: function() {
+		return "(x=" + this.x + ", y=" + this.y + ", width=" + this.width + ", height=" + this.height + ")";
+	}
+	,union: function(toUnion) {
+		if(this.width == 0 || this.height == 0) {
+			return toUnion.clone();
+		} else if(toUnion.width == 0 || toUnion.height == 0) {
+			return this.clone();
+		}
+		var x0 = this.x > toUnion.x ? toUnion.x : this.x;
+		var x1 = this.get_right() < toUnion.get_right() ? toUnion.get_right() : this.get_right();
+		var y0 = this.y > toUnion.y ? toUnion.y : this.y;
+		var y1 = this.get_bottom() < toUnion.get_bottom() ? toUnion.get_bottom() : this.get_bottom();
+		return new openfl_geom_Rectangle(x0,y0,x1 - x0,y1 - y0);
+	}
+	,__contract: function(x,y,width,height) {
+		if(this.width == 0 && this.height == 0) {
+			return;
+		}
+		var offsetX = 0.0;
+		var offsetY = 0.0;
+		var offsetRight = 0.0;
+		var offsetBottom = 0.0;
+		if(this.x < x) {
+			offsetX = x - this.x;
+		}
+		if(this.y < y) {
+			offsetY = y - this.y;
+		}
+		if(this.get_right() > x + width) {
+			offsetRight = x + width - this.get_right();
+		}
+		if(this.get_bottom() > y + height) {
+			offsetBottom = y + height - this.get_bottom();
+		}
+		this.x += offsetX;
+		this.y += offsetY;
+		this.width += offsetRight - offsetX;
+		this.height += offsetBottom - offsetY;
+	}
+	,__expand: function(x,y,width,height) {
+		if(this.width == 0 && this.height == 0) {
+			this.x = x;
+			this.y = y;
+			this.width = width;
+			this.height = height;
+			return;
+		}
+		var cacheRight = this.get_right();
+		var cacheBottom = this.get_bottom();
+		if(this.x > x) {
+			this.x = x;
+			this.width = cacheRight - x;
+		}
+		if(this.y > y) {
+			this.y = y;
+			this.height = cacheBottom - y;
+		}
+		if(cacheRight < x + width) {
+			this.width = x + width - this.x;
+		}
+		if(cacheBottom < y + height) {
+			this.height = y + height - this.y;
+		}
+	}
+	,__toLimeRectangle: function() {
+		if(openfl_geom_Rectangle.__limeRectangle == null) {
+			openfl_geom_Rectangle.__limeRectangle = new lime_math_Rectangle();
+		}
+		openfl_geom_Rectangle.__limeRectangle.setTo(this.x,this.y,this.width,this.height);
+		return openfl_geom_Rectangle.__limeRectangle;
+	}
+	,__transform: function(rect,m) {
+		var tx0 = m.a * this.x + m.c * this.y;
+		var tx1 = tx0;
+		var ty0 = m.b * this.x + m.d * this.y;
+		var ty1 = ty0;
+		var tx = m.a * (this.x + this.width) + m.c * this.y;
+		var ty = m.b * (this.x + this.width) + m.d * this.y;
+		if(tx < tx0) {
+			tx0 = tx;
+		}
+		if(ty < ty0) {
+			ty0 = ty;
+		}
+		if(tx > tx1) {
+			tx1 = tx;
+		}
+		if(ty > ty1) {
+			ty1 = ty;
+		}
+		tx = m.a * (this.x + this.width) + m.c * (this.y + this.height);
+		ty = m.b * (this.x + this.width) + m.d * (this.y + this.height);
+		if(tx < tx0) {
+			tx0 = tx;
+		}
+		if(ty < ty0) {
+			ty0 = ty;
+		}
+		if(tx > tx1) {
+			tx1 = tx;
+		}
+		if(ty > ty1) {
+			ty1 = ty;
+		}
+		tx = m.a * this.x + m.c * (this.y + this.height);
+		ty = m.b * this.x + m.d * (this.y + this.height);
+		if(tx < tx0) {
+			tx0 = tx;
+		}
+		if(ty < ty0) {
+			ty0 = ty;
+		}
+		if(tx > tx1) {
+			tx1 = tx;
+		}
+		if(ty > ty1) {
+			ty1 = ty;
+		}
+		rect.setTo(tx0 + m.tx,ty0 + m.ty,tx1 - tx0,ty1 - ty0);
+	}
+	,get_bottom: function() {
+		return this.y + this.height;
+	}
+	,set_bottom: function(b) {
+		this.height = b - this.y;
+		return b;
+	}
+	,get_bottomRight: function() {
+		return new openfl_geom_Point(this.x + this.width,this.y + this.height);
+	}
+	,set_bottomRight: function(p) {
+		this.width = p.x - this.x;
+		this.height = p.y - this.y;
+		return p.clone();
+	}
+	,get_left: function() {
+		return this.x;
+	}
+	,set_left: function(l) {
+		this.width -= l - this.x;
+		this.x = l;
+		return l;
+	}
+	,get_right: function() {
+		return this.x + this.width;
+	}
+	,set_right: function(r) {
+		this.width = r - this.x;
+		return r;
+	}
+	,get_size: function() {
+		return new openfl_geom_Point(this.width,this.height);
+	}
+	,set_size: function(p) {
+		this.width = p.x;
+		this.height = p.y;
+		return p.clone();
+	}
+	,get_top: function() {
+		return this.y;
+	}
+	,set_top: function(t) {
+		this.height -= t - this.y;
+		this.y = t;
+		return t;
+	}
+	,get_topLeft: function() {
+		return new openfl_geom_Point(this.x,this.y);
+	}
+	,set_topLeft: function(p) {
+		this.x = p.x;
+		this.y = p.y;
+		return p.clone();
+	}
+	,__class__: openfl_geom_Rectangle
+	,__properties__: {set_topLeft:"set_topLeft",get_topLeft:"get_topLeft",set_top:"set_top",get_top:"get_top",set_size:"set_size",get_size:"get_size",set_right:"set_right",get_right:"get_right",set_left:"set_left",get_left:"get_left",set_bottomRight:"set_bottomRight",get_bottomRight:"get_bottomRight",set_bottom:"set_bottom",get_bottom:"get_bottom"}
+};
+var starling_display_DisplayObject = function() {
+	starling_events_EventDispatcher.call(this);
+	this.mX = this.mY = this.mPivotX = this.mPivotY = this.mRotation = this.mSkewX = this.mSkewY = 0.0;
+	this.mScaleX = this.mScaleY = this.mAlpha = 1.0;
+	this.mVisible = this.mTouchable = true;
+	this.mBlendMode = "auto";
+	this.mTransformationMatrix = new openfl_geom_Matrix();
+	this.mOrientationChanged = this.mUseHandCursor = false;
+};
+$hxClasses["starling.display.DisplayObject"] = starling_display_DisplayObject;
+starling_display_DisplayObject.__name__ = ["starling","display","DisplayObject"];
+starling_display_DisplayObject.__super__ = starling_events_EventDispatcher;
+starling_display_DisplayObject.prototype = $extend(starling_events_EventDispatcher.prototype,{
+	mX: null
+	,mY: null
+	,mPivotX: null
+	,mPivotY: null
+	,mScaleX: null
+	,mScaleY: null
+	,mSkewX: null
+	,mSkewY: null
+	,mRotation: null
+	,mAlpha: null
+	,mVisible: null
+	,mTouchable: null
+	,mBlendMode: null
+	,mName: null
+	,mUseHandCursor: null
+	,mParent: null
+	,mTransformationMatrix: null
+	,mTransformationMatrix3D: null
+	,mOrientationChanged: null
+	,mFilter: null
+	,mIs3D: null
+	,mMask: null
+	,mIsMask: null
+	,dispose: function() {
+		if(this.mFilter != null) {
+			this.mFilter.dispose();
+		}
+		if(this.mMask != null) {
+			this.mMask.dispose();
+		}
+		this.removeEventListeners();
+		this.set_mask(null);
+	}
+	,removeFromParent: function(dispose) {
+		if(dispose == null) {
+			dispose = false;
+		}
+		if(this.mParent != null) {
+			this.mParent.removeChild(this,dispose);
+		} else if(dispose) {
+			this.dispose();
+		}
+	}
+	,getTransformationMatrix: function(targetSpace,resultMatrix) {
+		var commonParent;
+		var currentObject;
+		if(resultMatrix != null) {
+			resultMatrix.identity();
+		} else {
+			resultMatrix = new openfl_geom_Matrix();
+		}
+		if(targetSpace == this) {
+			return resultMatrix;
+		} else if(targetSpace == this.mParent || targetSpace == null && this.mParent == null) {
+			resultMatrix.copyFrom(this.get_transformationMatrix());
+			return resultMatrix;
+		} else if(targetSpace == null || targetSpace == this.get_base()) {
+			currentObject = this;
+			while(currentObject != targetSpace) {
+				resultMatrix.concat(currentObject.get_transformationMatrix());
+				currentObject = currentObject.mParent;
+			}
+			return resultMatrix;
+		} else if(targetSpace.mParent == this) {
+			targetSpace.getTransformationMatrix(this,resultMatrix);
+			resultMatrix.invert();
+			return resultMatrix;
+		}
+		commonParent = this.findCommonParent(this,targetSpace);
+		currentObject = this;
+		while(currentObject != commonParent) {
+			resultMatrix.concat(currentObject.get_transformationMatrix());
+			currentObject = currentObject.mParent;
+		}
+		if(commonParent == targetSpace) {
+			return resultMatrix;
+		}
+		starling_display_DisplayObject.sHelperMatrix.identity();
+		currentObject = targetSpace;
+		while(currentObject != commonParent) {
+			starling_display_DisplayObject.sHelperMatrix.concat(currentObject.get_transformationMatrix());
+			currentObject = currentObject.mParent;
+		}
+		starling_display_DisplayObject.sHelperMatrix.invert();
+		resultMatrix.concat(starling_display_DisplayObject.sHelperMatrix);
+		return resultMatrix;
+	}
+	,getBounds: function(targetSpace,resultRect) {
+		throw new js__$Boot_HaxeError(new starling_errors_AbstractMethodError());
+	}
+	,hitTest: function(localPoint,forTouch) {
+		if(forTouch == null) {
+			forTouch = false;
+		}
+		if(forTouch && (!this.mVisible || !this.mTouchable)) {
+			return null;
+		}
+		if(this.mMask != null && !this.hitTestMask(localPoint)) {
+			return null;
+		}
+		if(this.getBounds(this,starling_display_DisplayObject.sHelperRect).containsPoint(localPoint)) {
+			return this;
+		} else {
+			return null;
+		}
+	}
+	,hitTestMask: function(localPoint) {
+		if(this.mMask != null) {
+			if(this.mMask.get_stage() != null) {
+				this.getTransformationMatrix(this.mMask,starling_display_DisplayObject.sHelperMatrixAlt);
+			} else {
+				starling_display_DisplayObject.sHelperMatrixAlt.copyFrom(this.mMask.get_transformationMatrix());
+				starling_display_DisplayObject.sHelperMatrixAlt.invert();
+			}
+			var helperPoint = localPoint == starling_display_DisplayObject.sHelperPoint ? new openfl_geom_Point() : starling_display_DisplayObject.sHelperPoint;
+			starling_utils_MatrixUtil.transformPoint(starling_display_DisplayObject.sHelperMatrixAlt,localPoint,helperPoint);
+			return this.mMask.hitTest(helperPoint,true) != null;
+		} else {
+			return true;
+		}
+	}
+	,localToGlobal: function(localPoint,resultPoint) {
+		if(this.get_is3D()) {
+			starling_display_DisplayObject.sHelperPoint3D.setTo(localPoint.x,localPoint.y,0);
+			return this.local3DToGlobal(starling_display_DisplayObject.sHelperPoint3D,resultPoint);
+		} else {
+			this.getTransformationMatrix(this.get_base(),starling_display_DisplayObject.sHelperMatrixAlt);
+			return starling_utils_MatrixUtil.transformPoint(starling_display_DisplayObject.sHelperMatrixAlt,localPoint,resultPoint);
+		}
+	}
+	,globalToLocal: function(globalPoint,resultPoint) {
+		if(this.get_is3D()) {
+			this.globalToLocal3D(globalPoint,starling_display_DisplayObject.sHelperPoint3D);
+			this.get_stage().getCameraPosition(this,starling_display_DisplayObject.sHelperPointAlt3D);
+			return starling_utils_MathUtil.intersectLineWithXYPlane(starling_display_DisplayObject.sHelperPointAlt3D,starling_display_DisplayObject.sHelperPoint3D,resultPoint);
+		} else {
+			this.getTransformationMatrix(this.get_base(),starling_display_DisplayObject.sHelperMatrixAlt);
+			starling_display_DisplayObject.sHelperMatrixAlt.invert();
+			return starling_utils_MatrixUtil.transformPoint(starling_display_DisplayObject.sHelperMatrixAlt,globalPoint,resultPoint);
+		}
+	}
+	,render: function(support,parentAlpha) {
+		throw new js__$Boot_HaxeError(new starling_errors_AbstractMethodError());
+	}
+	,get_hasVisibleArea: function() {
+		if(this.mAlpha != 0.0 && this.mVisible && !this.mIsMask && this.mScaleX != 0.0) {
+			return this.mScaleY != 0.0;
+		} else {
+			return false;
+		}
+	}
+	,alignPivot: function(hAlign,vAlign) {
+		if(vAlign == null) {
+			vAlign = "center";
+		}
+		if(hAlign == null) {
+			hAlign = "center";
+		}
+		var bounds = this.getBounds(this,starling_display_DisplayObject.sHelperRect);
+		this.mOrientationChanged = true;
+		if(hAlign == "left") {
+			this.mPivotX = bounds.x;
+		} else if(hAlign == "center") {
+			this.mPivotX = bounds.x + bounds.width / 2.0;
+		} else if(hAlign == "right") {
+			this.mPivotX = bounds.x + bounds.width;
+		} else {
+			throw new js__$Boot_HaxeError(new openfl_errors_ArgumentError("Invalid horizontal alignment: " + hAlign));
+		}
+		if(vAlign == "top") {
+			this.mPivotY = bounds.y;
+		} else if(vAlign == "center") {
+			this.mPivotY = bounds.y + bounds.height / 2.0;
+		} else if(vAlign == "bottom") {
+			this.mPivotY = bounds.y + bounds.height;
+		} else {
+			throw new js__$Boot_HaxeError(new openfl_errors_ArgumentError("Invalid vertical alignment: " + vAlign));
+		}
+	}
+	,getTransformationMatrix3D: function(targetSpace,resultMatrix) {
+		var commonParent;
+		var currentObject;
+		if(resultMatrix != null) {
+			resultMatrix.identity();
+		} else {
+			resultMatrix = new openfl_geom_Matrix3D();
+		}
+		if(targetSpace == this) {
+			return resultMatrix;
+		} else if(targetSpace == this.mParent || targetSpace == null && this.mParent == null) {
+			resultMatrix.copyFrom(this.get_transformationMatrix3D());
+			return resultMatrix;
+		} else if(targetSpace == null || targetSpace == this.get_base()) {
+			currentObject = this;
+			while(currentObject != targetSpace) {
+				resultMatrix.append(currentObject.get_transformationMatrix3D());
+				currentObject = currentObject.mParent;
+			}
+			return resultMatrix;
+		} else if(targetSpace.mParent == this) {
+			targetSpace.getTransformationMatrix3D(this,resultMatrix);
+			resultMatrix.invert();
+			return resultMatrix;
+		}
+		commonParent = this.findCommonParent(this,targetSpace);
+		currentObject = this;
+		while(currentObject != commonParent) {
+			resultMatrix.append(currentObject.get_transformationMatrix3D());
+			currentObject = currentObject.mParent;
+		}
+		if(commonParent == targetSpace) {
+			return resultMatrix;
+		}
+		starling_display_DisplayObject.sHelperMatrix3D.identity();
+		currentObject = targetSpace;
+		while(currentObject != commonParent) {
+			starling_display_DisplayObject.sHelperMatrix3D.append(currentObject.get_transformationMatrix3D());
+			currentObject = currentObject.mParent;
+		}
+		starling_display_DisplayObject.sHelperMatrix3D.invert();
+		resultMatrix.append(starling_display_DisplayObject.sHelperMatrix3D);
+		return resultMatrix;
+	}
+	,local3DToGlobal: function(localPoint,resultPoint) {
+		var stage = this.get_stage();
+		if(stage == null) {
+			throw new js__$Boot_HaxeError(new openfl_errors_IllegalOperationError("Object not connected to stage"));
+		}
+		this.getTransformationMatrix3D(stage,starling_display_DisplayObject.sHelperMatrixAlt3D);
+		starling_utils_MatrixUtil.transformPoint3D(starling_display_DisplayObject.sHelperMatrixAlt3D,localPoint,starling_display_DisplayObject.sHelperPoint3D);
+		return starling_utils_MathUtil.intersectLineWithXYPlane(stage.get_cameraPosition(),starling_display_DisplayObject.sHelperPoint3D,resultPoint);
+	}
+	,globalToLocal3D: function(globalPoint,resultPoint) {
+		var stage = this.get_stage();
+		if(stage == null) {
+			throw new js__$Boot_HaxeError(new openfl_errors_IllegalOperationError("Object not connected to stage"));
+		}
+		this.getTransformationMatrix3D(stage,starling_display_DisplayObject.sHelperMatrixAlt3D);
+		starling_display_DisplayObject.sHelperMatrixAlt3D.invert();
+		return starling_utils_MatrixUtil.transformCoords3D(starling_display_DisplayObject.sHelperMatrixAlt3D,globalPoint.x,globalPoint.y,0,resultPoint);
+	}
+	,setParent: function(value) {
+		var ancestor = value;
+		while(ancestor != this && ancestor != null) ancestor = ancestor.mParent;
+		if(ancestor == this) {
+			throw new js__$Boot_HaxeError(new openfl_errors_ArgumentError("An object cannot be added as a child to itself or one " + "of its children (or children's children, etc.)"));
+		} else {
+			this.mParent = value;
+		}
+	}
+	,setIs3D: function(value) {
+		this.mIs3D = value;
+	}
+	,get_isMask: function() {
+		return this.mIsMask;
+	}
+	,isEquivalent: function(a,b,epsilon) {
+		if(epsilon == null) {
+			epsilon = 0.0001;
+		}
+		if(a - epsilon < b) {
+			return a + epsilon > b;
+		} else {
+			return false;
+		}
+	}
+	,findCommonParent: function(object1,object2) {
+		var currentObject = object1;
+		while(currentObject != null) {
+			starling_display_DisplayObject.sAncestors.set(starling_display_DisplayObject.sAncestors.get_length(),currentObject);
+			currentObject = currentObject.mParent;
+		}
+		currentObject = object2;
+		while(currentObject != null && starling_display_DisplayObject.sAncestors.indexOf(currentObject,0) == -1) currentObject = currentObject.mParent;
+		starling_display_DisplayObject.sAncestors.set_length(0);
+		if(currentObject != null) {
+			return currentObject;
+		} else {
+			throw new js__$Boot_HaxeError(new openfl_errors_ArgumentError("Object not connected to target"));
+		}
+	}
+	,dispatchEvent: function(event) {
+		if(event.type == "removedFromStage" && this.get_stage() == null) {
+			return;
+		} else {
+			starling_events_EventDispatcher.prototype.dispatchEvent.call(this,event);
+		}
+	}
+	,addEventListener: function(type,listener) {
+		if(type == "enterFrame" && !this.hasEventListener(type)) {
+			this.addEventListener("addedToStage",$bind(this,this.addEnterFrameListenerToStage));
+			this.addEventListener("removedFromStage",$bind(this,this.removeEnterFrameListenerFromStage));
+			if(this.get_stage() != null) {
+				this.addEnterFrameListenerToStage();
+			}
+		}
+		starling_events_EventDispatcher.prototype.addEventListener.call(this,type,listener);
+	}
+	,removeEventListener: function(type,listener) {
+		starling_events_EventDispatcher.prototype.removeEventListener.call(this,type,listener);
+		if(type == "enterFrame" && !this.hasEventListener(type)) {
+			this.removeEventListener("addedToStage",$bind(this,this.addEnterFrameListenerToStage));
+			this.removeEventListener("removedFromStage",$bind(this,this.removeEnterFrameListenerFromStage));
+			this.removeEnterFrameListenerFromStage();
+		}
+	}
+	,removeEventListeners: function(type) {
+		if((type == null || type == "enterFrame") && this.hasEventListener("enterFrame")) {
+			this.removeEventListener("addedToStage",$bind(this,this.addEnterFrameListenerToStage));
+			this.removeEventListener("removedFromStage",$bind(this,this.removeEnterFrameListenerFromStage));
+			this.removeEnterFrameListenerFromStage();
+		}
+		starling_events_EventDispatcher.prototype.removeEventListeners.call(this,type);
+	}
+	,addEnterFrameListenerToStage: function(e) {
+		starling_core_Starling.get_current().get_stage().addEnterFrameListener(this);
+	}
+	,removeEnterFrameListenerFromStage: function(e) {
+		starling_core_Starling.get_current().get_stage().removeEnterFrameListener(this);
+	}
+	,get_transformationMatrix: function() {
+		if(this.mOrientationChanged) {
+			this.mOrientationChanged = false;
+			if(this.mSkewX == 0.0 && this.mSkewY == 0.0) {
+				if(this.mRotation == 0.0) {
+					this.mTransformationMatrix.setTo(this.mScaleX,0.0,0.0,this.mScaleY,this.mX - this.mPivotX * this.mScaleX,this.mY - this.mPivotY * this.mScaleY);
+				} else {
+					var cos = Math.cos(this.mRotation);
+					var sin = Math.sin(this.mRotation);
+					var a = this.mScaleX * cos;
+					var b = this.mScaleX * sin;
+					var c = this.mScaleY * -sin;
+					var d = this.mScaleY * cos;
+					var tx = this.mX - this.mPivotX * a - this.mPivotY * c;
+					var ty = this.mY - this.mPivotX * b - this.mPivotY * d;
+					this.mTransformationMatrix.setTo(a,b,c,d,tx,ty);
+				}
+			} else {
+				this.mTransformationMatrix.identity();
+				this.mTransformationMatrix.scale(this.mScaleX,this.mScaleY);
+				starling_utils_MatrixUtil.skew(this.mTransformationMatrix,this.mSkewX,this.mSkewY);
+				this.mTransformationMatrix.rotate(this.mRotation);
+				this.mTransformationMatrix.translate(this.mX,this.mY);
+				if(this.mPivotX != 0.0 || this.mPivotY != 0.0) {
+					this.mTransformationMatrix.tx = this.mX - this.mTransformationMatrix.a * this.mPivotX - this.mTransformationMatrix.c * this.mPivotY;
+					this.mTransformationMatrix.ty = this.mY - this.mTransformationMatrix.b * this.mPivotX - this.mTransformationMatrix.d * this.mPivotY;
+				}
+			}
+		}
+		return this.mTransformationMatrix;
+	}
+	,set_transformationMatrix: function(matrix) {
+		var PI_Q = Math.PI / 4.0;
+		this.mOrientationChanged = false;
+		this.mTransformationMatrix.copyFrom(matrix);
+		this.mPivotX = this.mPivotY = 0;
+		this.mX = matrix.tx;
+		this.mY = matrix.ty;
+		this.mSkewX = Math.atan(-matrix.c / matrix.d);
+		this.mSkewY = Math.atan(matrix.b / matrix.a);
+		if(this.mSkewX != this.mSkewX) {
+			this.mSkewX = 0.0;
+		}
+		if(this.mSkewY != this.mSkewY) {
+			this.mSkewY = 0.0;
+		}
+		this.mScaleY = this.mSkewX > -PI_Q && this.mSkewX < PI_Q ? matrix.d / Math.cos(this.mSkewX) : -matrix.c / Math.sin(this.mSkewX);
+		this.mScaleX = this.mSkewY > -PI_Q && this.mSkewY < PI_Q ? matrix.a / Math.cos(this.mSkewY) : matrix.b / Math.sin(this.mSkewY);
+		if(this.isEquivalent(this.mSkewX,this.mSkewY)) {
+			this.mRotation = this.mSkewX;
+			this.mSkewX = this.mSkewY = 0;
+		} else {
+			this.mRotation = 0;
+		}
+		return this.mTransformationMatrix;
+	}
+	,get_transformationMatrix3D: function() {
+		if(this.mTransformationMatrix3D == null) {
+			this.mTransformationMatrix3D = new openfl_geom_Matrix3D();
+		}
+		return starling_utils_MatrixUtil.convertTo3D(this.get_transformationMatrix(),this.mTransformationMatrix3D);
+	}
+	,get_is3D: function() {
+		return this.mIs3D;
+	}
+	,get_useHandCursor: function() {
+		return this.mUseHandCursor;
+	}
+	,set_useHandCursor: function(value) {
+		if(value == this.mUseHandCursor) {
+			return this.mUseHandCursor;
+		}
+		this.mUseHandCursor = value;
+		if(this.mUseHandCursor) {
+			this.addEventListener("touch",$bind(this,this.onTouch));
+		} else {
+			this.removeEventListener("touch",$bind(this,this.onTouch));
+		}
+		return this.mUseHandCursor;
+	}
+	,onTouch: function(event) {
+		openfl_ui_Mouse.set_cursor(event.interactsWith(this) ? "button" : "auto");
+	}
+	,get_bounds: function() {
+		return this.getBounds(this.mParent);
+	}
+	,get_width: function() {
+		return this.getBounds(this.mParent,starling_display_DisplayObject.sHelperRect).width;
+	}
+	,set_width: function(value) {
+		this.set_scaleX(1.0);
+		var actualWidth = this.get_width();
+		if(actualWidth != 0.0) {
+			this.set_scaleX(value / actualWidth);
+		}
+		return this.getBounds(this.mParent,starling_display_DisplayObject.sHelperRect).width;
+	}
+	,get_height: function() {
+		return this.getBounds(this.mParent,starling_display_DisplayObject.sHelperRect).height;
+	}
+	,set_height: function(value) {
+		this.set_scaleY(1.0);
+		var actualHeight = this.get_height();
+		if(actualHeight != 0.0) {
+			this.set_scaleY(value / actualHeight);
+		}
+		return this.getBounds(this.mParent,starling_display_DisplayObject.sHelperRect).height;
+	}
+	,get_x: function() {
+		return this.mX;
+	}
+	,set_x: function(value) {
+		if(this.mX != value) {
+			this.mX = value;
+			this.mOrientationChanged = true;
+		}
+		return this.mX;
+	}
+	,get_y: function() {
+		return this.mY;
+	}
+	,set_y: function(value) {
+		if(this.mY != value) {
+			this.mY = value;
+			this.mOrientationChanged = true;
+		}
+		return this.mY;
+	}
+	,get_pivotX: function() {
+		return this.mPivotX;
+	}
+	,set_pivotX: function(value) {
+		if(this.mPivotX != value) {
+			this.mPivotX = value;
+			this.mOrientationChanged = true;
+		}
+		return this.mPivotX;
+	}
+	,get_pivotY: function() {
+		return this.mPivotY;
+	}
+	,set_pivotY: function(value) {
+		if(this.mPivotY != value) {
+			this.mPivotY = value;
+			this.mOrientationChanged = true;
+		}
+		return this.mPivotY;
+	}
+	,get_scaleX: function() {
+		return this.mScaleX;
+	}
+	,set_scaleX: function(value) {
+		if(this.mScaleX != value) {
+			this.mScaleX = value;
+			this.mOrientationChanged = true;
+		}
+		return this.mScaleX;
+	}
+	,get_scaleY: function() {
+		return this.mScaleY;
+	}
+	,set_scaleY: function(value) {
+		if(this.mScaleY != value) {
+			this.mScaleY = value;
+			this.mOrientationChanged = true;
+		}
+		return this.mScaleY;
+	}
+	,get_scale: function() {
+		return this.get_scaleX();
+	}
+	,set_scale: function(value) {
+		return this.set_scaleX(this.set_scaleY(value));
+	}
+	,get_skewX: function() {
+		return this.mSkewX;
+	}
+	,set_skewX: function(value) {
+		value = starling_utils_MathUtil.normalizeAngle(value);
+		if(this.mSkewX != value) {
+			this.mSkewX = value;
+			this.mOrientationChanged = true;
+		}
+		return this.mSkewX;
+	}
+	,get_skewY: function() {
+		return this.mSkewY;
+	}
+	,set_skewY: function(value) {
+		value = starling_utils_MathUtil.normalizeAngle(value);
+		if(this.mSkewY != value) {
+			this.mSkewY = value;
+			this.mOrientationChanged = true;
+		}
+		return this.mSkewY;
+	}
+	,get_rotation: function() {
+		return this.mRotation;
+	}
+	,set_rotation: function(value) {
+		value = starling_utils_MathUtil.normalizeAngle(value);
+		if(this.mRotation != value) {
+			this.mRotation = value;
+			this.mOrientationChanged = true;
+		}
+		return this.mRotation;
+	}
+	,get_alpha: function() {
+		return this.mAlpha;
+	}
+	,set_alpha: function(value) {
+		this.mAlpha = value < 0.0 ? 0.0 : value > 1.0 ? 1.0 : value;
+		return this.mAlpha;
+	}
+	,get_visible: function() {
+		return this.mVisible;
+	}
+	,set_visible: function(value) {
+		return this.mVisible = value;
+	}
+	,get_touchable: function() {
+		return this.mTouchable;
+	}
+	,set_touchable: function(value) {
+		return this.mTouchable = value;
+	}
+	,get_blendMode: function() {
+		return this.mBlendMode;
+	}
+	,set_blendMode: function(value) {
+		return this.mBlendMode = value;
+	}
+	,get_name: function() {
+		return this.mName;
+	}
+	,set_name: function(value) {
+		return this.mName = value;
+	}
+	,get_filter: function() {
+		return this.mFilter;
+	}
+	,set_filter: function(value) {
+		return this.mFilter = value;
+	}
+	,get_mask: function() {
+		return this.mMask;
+	}
+	,set_mask: function(value) {
+		if(this.mMask != value) {
+			if(this.mMask != null) {
+				this.mMask.mIsMask = false;
+			}
+			if(value != null) {
+				value.mIsMask = true;
+			}
+			this.mMask = value;
+		}
+		return this.mMask;
+	}
+	,get_parent: function() {
+		return this.mParent;
+	}
+	,get_base: function() {
+		var currentObject = this;
+		while(currentObject.mParent != null) currentObject = currentObject.mParent;
+		return currentObject;
+	}
+	,get_root: function() {
+		var currentObject = this;
+		while(currentObject.mParent != null) if(js_Boot.__instanceof(currentObject.mParent,starling_display_Stage)) {
+			return currentObject;
+		} else {
+			currentObject = currentObject.get_parent();
+		}
+		return null;
+	}
+	,get_stage: function() {
+		if(js_Boot.__instanceof(this.get_base(),starling_display_Stage)) {
+			return this.get_base();
+		} else {
+			return null;
+		}
+	}
+	,__class__: starling_display_DisplayObject
+	,__properties__: {get_stage:"get_stage",get_root:"get_root",get_base:"get_base",get_parent:"get_parent",set_mask:"set_mask",get_mask:"get_mask",set_filter:"set_filter",get_filter:"get_filter",set_name:"set_name",get_name:"get_name",set_blendMode:"set_blendMode",get_blendMode:"get_blendMode",set_touchable:"set_touchable",get_touchable:"get_touchable",set_visible:"set_visible",get_visible:"get_visible",set_alpha:"set_alpha",get_alpha:"get_alpha",set_rotation:"set_rotation",get_rotation:"get_rotation",set_skewY:"set_skewY",get_skewY:"get_skewY",set_skewX:"set_skewX",get_skewX:"get_skewX",set_scale:"set_scale",get_scale:"get_scale",set_scaleY:"set_scaleY",get_scaleY:"get_scaleY",set_scaleX:"set_scaleX",get_scaleX:"get_scaleX",set_pivotY:"set_pivotY",get_pivotY:"get_pivotY",set_pivotX:"set_pivotX",get_pivotX:"get_pivotX",set_y:"set_y",get_y:"get_y",set_x:"set_x",get_x:"get_x",set_height:"set_height",get_height:"get_height",set_width:"set_width",get_width:"get_width",get_bounds:"get_bounds",set_useHandCursor:"set_useHandCursor",get_useHandCursor:"get_useHandCursor",get_is3D:"get_is3D",get_transformationMatrix3D:"get_transformationMatrix3D",set_transformationMatrix:"set_transformationMatrix",get_transformationMatrix:"get_transformationMatrix",get_isMask:"get_isMask",get_hasVisibleArea:"get_hasVisibleArea"}
+});
+var starling_display_Quad = function(width,height,color,premultipliedAlpha) {
+	if(premultipliedAlpha == null) {
+		premultipliedAlpha = true;
+	}
+	if(color == null) {
+		color = 16777215;
+	}
+	starling_display_DisplayObject.call(this);
+	if(width == 0.0 || height == 0.0) {
+		throw new js__$Boot_HaxeError(new openfl_errors_ArgumentError("Invalid size: width and height must not be zero"));
+	}
+	this.mTinted = color != 16777215;
+	this.mVertexData = new starling_utils_VertexData(4,premultipliedAlpha);
+	this.mVertexData.setPosition(0,0.0,0.0);
+	this.mVertexData.setPosition(1,width,0.0);
+	this.mVertexData.setPosition(2,0.0,height);
+	this.mVertexData.setPosition(3,width,height);
+	this.mVertexData.setUniformColor(color);
+	this.onVertexDataChanged();
+};
+$hxClasses["starling.display.Quad"] = starling_display_Quad;
+starling_display_Quad.__name__ = ["starling","display","Quad"];
+starling_display_Quad.__super__ = starling_display_DisplayObject;
+starling_display_Quad.prototype = $extend(starling_display_DisplayObject.prototype,{
+	mTinted: null
+	,mVertexData: null
+	,setWidthHeight: function(width,height) {
+		this.mVertexData.setPosition(0,0.0,0.0);
+		this.mVertexData.setPosition(1,width,0.0);
+		this.mVertexData.setPosition(2,0.0,height);
+		this.mVertexData.setPosition(3,width,height);
+		this.onVertexDataChanged();
+	}
+	,onVertexDataChanged: function() {
+	}
+	,getBounds: function(targetSpace,resultRect) {
+		if(resultRect == null) {
+			resultRect = new openfl_geom_Rectangle();
+		}
+		if(targetSpace == this) {
+			this.mVertexData.getPosition(3,starling_display_Quad.sHelperPoint);
+			resultRect.setTo(0.0,0.0,starling_display_Quad.sHelperPoint.x,starling_display_Quad.sHelperPoint.y);
+		} else if(targetSpace == this.get_parent() && this.get_rotation() == 0.0) {
+			var scaleX = this.get_scaleX();
+			var scaleY = this.get_scaleY();
+			this.mVertexData.getPosition(3,starling_display_Quad.sHelperPoint);
+			resultRect.setTo(this.get_x() - this.get_pivotX() * scaleX,this.get_y() - this.get_pivotY() * scaleY,starling_display_Quad.sHelperPoint.x * scaleX,starling_display_Quad.sHelperPoint.y * scaleY);
+			if(scaleX < 0) {
+				resultRect.width *= -1;
+				resultRect.x -= resultRect.width;
+			}
+			if(scaleY < 0) {
+				resultRect.height *= -1;
+				resultRect.y -= resultRect.height;
+			}
+		} else if(this.get_is3D() && this.get_stage() != null) {
+			this.get_stage().getCameraPosition(targetSpace,starling_display_Quad.sHelperPoint3D);
+			this.getTransformationMatrix3D(targetSpace,starling_display_Quad.sHelperMatrix3D);
+			this.mVertexData.getBoundsProjected(starling_display_Quad.sHelperMatrix3D,starling_display_Quad.sHelperPoint3D,0,4,resultRect);
+		} else {
+			this.getTransformationMatrix(targetSpace,starling_display_Quad.sHelperMatrix);
+			this.mVertexData.getBounds(starling_display_Quad.sHelperMatrix,0,4,resultRect);
+		}
+		return resultRect;
+	}
+	,getVertexColor: function(vertexID) {
+		return this.mVertexData.getColor(vertexID);
+	}
+	,setVertexColor: function(vertexID,color) {
+		this.mVertexData.setColor(vertexID,color);
+		this.onVertexDataChanged();
+		if(color != 16777215) {
+			this.mTinted = true;
+		} else {
+			this.mTinted = this.mVertexData.get_tinted();
+		}
+	}
+	,getVertexAlpha: function(vertexID) {
+		return this.mVertexData.getAlpha(vertexID);
+	}
+	,setVertexAlpha: function(vertexID,alpha) {
+		this.mVertexData.setAlpha(vertexID,alpha);
+		this.onVertexDataChanged();
+		if(alpha != 1.0) {
+			this.mTinted = true;
+		} else {
+			this.mTinted = this.mVertexData.get_tinted();
+		}
+	}
+	,get_color: function() {
+		return this.mVertexData.getColor(0);
+	}
+	,set_color: function(value) {
+		this.mVertexData.setUniformColor(value);
+		this.onVertexDataChanged();
+		if(value != 16777215 || this.get_alpha() != 1.0) {
+			this.mTinted = true;
+		} else {
+			this.mTinted = this.mVertexData.get_tinted();
+		}
+		return this.mVertexData.getColor(0);
+	}
+	,set_alpha: function(value) {
+		starling_display_DisplayObject.prototype.set_alpha.call(this,value);
+		if(value < 1.0) {
+			this.mTinted = true;
+		} else {
+			this.mTinted = this.mVertexData.get_tinted();
+		}
+		return this.mAlpha;
+	}
+	,copyVertexDataTo: function(targetData,targetVertexID) {
+		if(targetVertexID == null) {
+			targetVertexID = 0;
+		}
+		this.mVertexData.copyTo(targetData,targetVertexID);
+	}
+	,copyVertexDataTransformedTo: function(targetData,targetVertexID,matrix) {
+		if(targetVertexID == null) {
+			targetVertexID = 0;
+		}
+		this.mVertexData.copyTransformedTo(targetData,targetVertexID,matrix,0,4);
+	}
+	,render: function(support,parentAlpha) {
+		support.batchQuad(this,parentAlpha);
+	}
+	,get_tinted: function() {
+		return this.mTinted;
+	}
+	,get_premultipliedAlpha: function() {
+		return this.mVertexData.get_premultipliedAlpha();
+	}
+	,__class__: starling_display_Quad
+	,__properties__: $extend(starling_display_DisplayObject.prototype.__properties__,{get_premultipliedAlpha:"get_premultipliedAlpha",get_tinted:"get_tinted",set_color:"set_color",get_color:"get_color"})
+});
+var starling_display_Poly4 = function(x1,y1,x2,y2,x3,y3,x4,y4,color,premultipliedAlpha) {
+	if(premultipliedAlpha == null) {
+		premultipliedAlpha = true;
+	}
+	if(color == null) {
+		color = 16777215;
+	}
+	if(y4 == null) {
+		y4 = 0;
+	}
+	if(x4 == null) {
+		x4 = 0;
+	}
+	if(y3 == null) {
+		y3 = 0;
+	}
+	if(x3 == null) {
+		x3 = 0;
+	}
+	if(y2 == null) {
+		y2 = 0;
+	}
+	if(x2 == null) {
+		x2 = 0;
+	}
+	if(y1 == null) {
+		y1 = 0;
+	}
+	if(x1 == null) {
+		x1 = 0;
+	}
+	this._lowerRight = new openfl_geom_Point(0,0);
+	this.ymax = 0;
+	this.ymin = 0;
+	this.xmax = 0;
+	this.xmin = 0;
+	this.p4 = new openfl_geom_Point(0,0);
+	this.p3 = new openfl_geom_Point(0,0);
+	this.p2 = new openfl_geom_Point(0,0);
+	this.p1 = new openfl_geom_Point(0,0);
+	this.p1.setTo(x1,y1);
+	this.p2.setTo(x2,y2);
+	this.p3.setTo(x3,y3);
+	this.p4.setTo(x4,y4);
+	this.xmin = Math.min(this.p1.x,Math.min(this.p2.x,Math.min(this.p3.x,this.p4.x)));
+	this.ymin = Math.min(this.p1.y,Math.min(this.p2.y,Math.min(this.p3.y,this.p4.y)));
+	this.xmax = Math.max(this.p1.x,Math.max(this.p2.x,Math.max(this.p3.x,this.p4.x)));
+	this.ymax = Math.max(this.p1.y,Math.max(this.p2.y,Math.max(this.p3.y,this.p4.y)));
+	starling_display_Quad.call(this,this.xmax - this.xmin,this.ymax - this.ymin,color,premultipliedAlpha);
+	this.mVertexData.setPosition(0,this.p1.x - this.xmin,this.p1.y - this.ymin);
+	this.mVertexData.setPosition(1,this.p2.x - this.xmin,this.p2.y - this.ymin);
+	this.mVertexData.setPosition(2,this.p3.x - this.xmin,this.p3.y - this.ymin);
+	this.mVertexData.setPosition(3,this.p4.x - this.xmin,this.p4.y - this.ymin);
+	this.onVertexDataChanged();
+	this.set_x(this.xmin);
+	this.set_y(this.ymin);
+	this._lowerRight.setTo(this.xmax - this.xmin,this.ymax - this.ymin);
+};
+$hxClasses["starling.display.Poly4"] = starling_display_Poly4;
+starling_display_Poly4.__name__ = ["starling","display","Poly4"];
+starling_display_Poly4.__super__ = starling_display_Quad;
+starling_display_Poly4.prototype = $extend(starling_display_Quad.prototype,{
+	p1: null
+	,p2: null
+	,p3: null
+	,p4: null
+	,xmin: null
+	,xmax: null
+	,ymin: null
+	,ymax: null
+	,setVertexPositions: function(x1,y1,x2,y2,x3,y3,x4,y4) {
+		if(y4 == null) {
+			y4 = 0;
+		}
+		if(x4 == null) {
+			x4 = 0;
+		}
+		if(y3 == null) {
+			y3 = 0;
+		}
+		if(x3 == null) {
+			x3 = 0;
+		}
+		if(y2 == null) {
+			y2 = 0;
+		}
+		if(x2 == null) {
+			x2 = 0;
+		}
+		if(y1 == null) {
+			y1 = 0;
+		}
+		if(x1 == null) {
+			x1 = 0;
+		}
+		this.p1.setTo(x1,y1);
+		this.p2.setTo(x2,y2);
+		this.p3.setTo(x3,y3);
+		this.p4.setTo(x4,y4);
+		this.xmin = Math.min(this.p1.x,Math.min(this.p2.x,Math.min(this.p3.x,this.p4.x)));
+		this.ymin = Math.min(this.p1.y,Math.min(this.p2.y,Math.min(this.p3.y,this.p4.y)));
+		this.xmax = Math.max(this.p1.x,Math.max(this.p2.x,Math.max(this.p3.x,this.p4.x)));
+		this.ymax = Math.max(this.p1.y,Math.max(this.p2.y,Math.max(this.p3.y,this.p4.y)));
+		this.setWidthHeight(this.xmax - this.xmin,this.ymax - this.ymin);
+		this.mVertexData.setPosition(0,this.p1.x - this.xmin,this.p1.y - this.ymin);
+		this.mVertexData.setPosition(1,this.p2.x - this.xmin,this.p2.y - this.ymin);
+		this.mVertexData.setPosition(2,this.p3.x - this.xmin,this.p3.y - this.ymin);
+		this.mVertexData.setPosition(3,this.p4.x - this.xmin,this.p4.y - this.ymin);
+		this.onVertexDataChanged();
+		this.set_x(this.xmin);
+		this.set_y(this.ymin);
+		this._lowerRight.setTo(this.xmax - this.xmin,this.ymax - this.ymin);
+	}
+	,_lowerRight: null
+	,min4: function(a,b,c,d) {
+		return Math.min(a,Math.min(b,Math.min(c,d)));
+	}
+	,max4: function(a,b,c,d) {
+		return Math.max(a,Math.max(b,Math.max(c,d)));
+	}
+	,getBounds: function(targetSpace,resultRect) {
+		if(resultRect == null) {
+			resultRect = new openfl_geom_Rectangle();
+		}
+		if(targetSpace == this) {
+			resultRect.setTo(0.0,0.0,this._lowerRight.x,this._lowerRight.y);
+		} else if(targetSpace == this.get_parent() && this.get_rotation() == 0.0) {
+			var scaleX = this.get_scaleX();
+			var scaleY = this.get_scaleY();
+			resultRect.setTo(this.get_x() - this.get_pivotX() * scaleX,this.get_y() - this.get_pivotY() * scaleY,this._lowerRight.x * scaleX,this._lowerRight.y * scaleY);
+			if(scaleX < 0) {
+				resultRect.width *= -1;
+				resultRect.x -= resultRect.width;
+			}
+			if(scaleY < 0) {
+				resultRect.height *= -1;
+				resultRect.y -= resultRect.height;
+			}
+		} else {
+			resultRect = starling_display_Quad.prototype.getBounds.call(this,targetSpace,resultRect);
+		}
+		return resultRect;
+	}
+	,__class__: starling_display_Poly4
+});
+var starling_display_Line = function(x1,y1,x2,y2,thickness,color,premultipliedAlpha) {
+	if(premultipliedAlpha == null) {
+		premultipliedAlpha = true;
+	}
+	this.l4 = new openfl_geom_Point(0,0);
+	this.l3 = new openfl_geom_Point(0,0);
+	this.l2 = new openfl_geom_Point(0,0);
+	this.l1 = new openfl_geom_Point(0,0);
+	this.to = new openfl_geom_Point(0,0);
+	this.from = new openfl_geom_Point(0,0);
+	this.from.setTo(x1,y1);
+	this.to.setTo(x2,y2);
+	this.thickness = thickness;
+	var dx = this.to.x - this.from.x;
+	var dy = this.to.y - this.from.y;
+	var l = Math.sqrt(dx * dx + dy * dy);
+	var u = new openfl_geom_Point(dx / l,dy / l);
+	var v = new openfl_geom_Point(u.y,-u.x);
+	var halfT = thickness * 0.5;
+	this.l1 = this.from.clone();
+	this.l1.offset(v.x * halfT,v.y * halfT);
+	this.l1.offset(-u.x * halfT,-u.y * halfT);
+	this.l2 = this.from.clone();
+	this.l2.offset(-v.x * halfT,-v.y * halfT);
+	this.l2.offset(-u.x * halfT,-u.y * halfT);
+	this.l3 = this.to.clone();
+	this.l3.offset(v.x * halfT,v.y * halfT);
+	this.l3.offset(u.x * halfT,u.y * halfT);
+	this.l4 = this.to.clone();
+	this.l4.offset(-v.x * halfT,-v.y * halfT);
+	this.l4.offset(u.x * halfT,u.y * halfT);
+	starling_display_Poly4.call(this,this.l1.x,this.l1.y,this.l2.x,this.l2.y,this.l3.x,this.l3.y,this.l4.x,this.l4.y,color,premultipliedAlpha);
+};
+$hxClasses["starling.display.Line"] = starling_display_Line;
+starling_display_Line.__name__ = ["starling","display","Line"];
+starling_display_Line.__super__ = starling_display_Poly4;
+starling_display_Line.prototype = $extend(starling_display_Poly4.prototype,{
+	from: null
+	,to: null
+	,l1: null
+	,l2: null
+	,l3: null
+	,l4: null
+	,thickness: null
+	,setPosition: function(x1,y1,x2,y2) {
+		this.from.setTo(x1,y1);
+		this.to.setTo(x2,y2);
+		var dx = this.to.x - this.from.x;
+		var dy = this.to.y - this.from.y;
+		var l = Math.sqrt(dx * dx + dy * dy);
+		var u = new openfl_geom_Point(dx / l,dy / l);
+		var v = new openfl_geom_Point(u.y,-u.x);
+		var halfT = this.thickness * 0.5;
+		this.l1 = this.from.clone();
+		this.l1.offset(v.x * halfT,v.y * halfT);
+		this.l1.offset(-u.x * halfT,-u.y * halfT);
+		this.l2 = this.from.clone();
+		this.l2.offset(-v.x * halfT,-v.y * halfT);
+		this.l2.offset(-u.x * halfT,-u.y * halfT);
+		this.l3 = this.to.clone();
+		this.l3.offset(v.x * halfT,v.y * halfT);
+		this.l3.offset(u.x * halfT,u.y * halfT);
+		this.l4 = this.to.clone();
+		this.l4.offset(-v.x * halfT,-v.y * halfT);
+		this.l4.offset(u.x * halfT,u.y * halfT);
+		this.setVertexPositions(this.l1.x,this.l1.y,this.l2.x,this.l2.y,this.l3.x,this.l3.y,this.l4.x,this.l4.y);
+	}
+	,__class__: starling_display_Line
+});
+Math.__name__ = ["Math"];
+var openfl_errors_Error = function(message,id) {
+	if(id == null) {
+		id = 0;
+	}
+	if(message == null) {
+		message = "";
+	}
+	this.message = message;
+	this.errorID = id;
+	this.name = "Error";
+};
+$hxClasses["openfl.errors.Error"] = openfl_errors_Error;
+openfl_errors_Error.__name__ = ["openfl","errors","Error"];
+openfl_errors_Error.prototype = {
+	errorID: null
+	,message: null
+	,name: null
+	,getStackTrace: function() {
+		return haxe_CallStack.toString(haxe_CallStack.exceptionStack());
+	}
+	,toString: function() {
+		if(this.message != null) {
+			return this.message;
+		} else {
+			return "Error";
+		}
+	}
+	,__class__: openfl_errors_Error
+};
+var openfl_errors_ArgumentError = function(message) {
+	if(message == null) {
+		message = "";
+	}
+	openfl_errors_Error.call(this,message);
+	this.name = "ArgumentError";
+};
+$hxClasses["openfl.errors.ArgumentError"] = openfl_errors_ArgumentError;
+openfl_errors_ArgumentError.__name__ = ["openfl","errors","ArgumentError"];
+openfl_errors_ArgumentError.__super__ = openfl_errors_Error;
+openfl_errors_ArgumentError.prototype = $extend(openfl_errors_Error.prototype,{
+	__class__: openfl_errors_ArgumentError
+});
+var starling_utils_VertexData = function(numVertices,premultipliedAlpha) {
+	if(premultipliedAlpha == null) {
+		premultipliedAlpha = false;
+	}
+	var a = [];
+	var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
+	var _g1 = 0;
+	var _g = a.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		vector.set(i,a[i]);
+	}
+	this.mRawData = vector;
+	this.mPremultipliedAlpha = premultipliedAlpha;
+	this.mNumVertices = 0;
+	this.set_numVertices(numVertices);
+};
+$hxClasses["starling.utils.VertexData"] = starling_utils_VertexData;
+starling_utils_VertexData.__name__ = ["starling","utils","VertexData"];
+starling_utils_VertexData.prototype = {
+	mRawData: null
+	,mPremultipliedAlpha: null
+	,mNumVertices: null
+	,clone: function(vertexID,numVertices) {
+		if(numVertices == null) {
+			numVertices = -1;
+		}
+		if(vertexID == null) {
+			vertexID = 0;
+		}
+		if(numVertices < 0 || vertexID + numVertices > this.mNumVertices) {
+			numVertices = this.mNumVertices - vertexID;
+		}
+		var clone = new starling_utils_VertexData(0,this.mPremultipliedAlpha);
+		clone.mNumVertices = numVertices;
+		clone.mRawData = this.mRawData.slice(vertexID * 8,numVertices * 8);
+		clone.mRawData.fixed = true;
+		return clone;
+	}
+	,copyTo: function(targetData,targetVertexID,vertexID,numVertices) {
+		if(numVertices == null) {
+			numVertices = -1;
+		}
+		if(vertexID == null) {
+			vertexID = 0;
+		}
+		if(targetVertexID == null) {
+			targetVertexID = 0;
+		}
+		this.copyTransformedTo(targetData,targetVertexID,null,vertexID,numVertices);
+	}
+	,copyTransformedTo: function(targetData,targetVertexID,matrix,vertexID,numVertices) {
+		if(numVertices == null) {
+			numVertices = -1;
+		}
+		if(vertexID == null) {
+			vertexID = 0;
+		}
+		if(targetVertexID == null) {
+			targetVertexID = 0;
+		}
+		if(numVertices < 0 || vertexID + numVertices > this.mNumVertices) {
+			numVertices = this.mNumVertices - vertexID;
+		}
+		var x;
+		var y;
+		var targetRawData = targetData.mRawData;
+		var targetIndex = targetVertexID * 8;
+		var sourceIndex = vertexID * 8;
+		var sourceEnd = (vertexID + numVertices) * 8;
+		if(matrix != null) {
+			while(sourceIndex < sourceEnd) {
+				x = this.mRawData.get(sourceIndex++);
+				y = this.mRawData.get(sourceIndex++);
+				targetRawData.set(targetIndex++,matrix.a * x + matrix.c * y + matrix.tx);
+				targetRawData.set(targetIndex++,matrix.d * y + matrix.b * x + matrix.ty);
+				targetRawData.set(targetIndex++,this.mRawData.get(sourceIndex++));
+				targetRawData.set(targetIndex++,this.mRawData.get(sourceIndex++));
+				targetRawData.set(targetIndex++,this.mRawData.get(sourceIndex++));
+				targetRawData.set(targetIndex++,this.mRawData.get(sourceIndex++));
+				targetRawData.set(targetIndex++,this.mRawData.get(sourceIndex++));
+				targetRawData.set(targetIndex++,this.mRawData.get(sourceIndex++));
+			}
+		} else {
+			while(sourceIndex < sourceEnd) targetRawData.set(targetIndex++,this.mRawData.get(sourceIndex++));
+		}
+	}
+	,append: function(data) {
+		var targetIndex = this.mRawData.get_length();
+		var rawData = data.mRawData;
+		var rawDataLength = rawData.get_length();
+		var _g1 = 0;
+		var _g = rawDataLength;
+		while(_g1 < _g) {
+			var i = _g1++;
+			this.mRawData.set(targetIndex++,rawData.get(i));
+		}
+		this.mNumVertices += data.get_numVertices();
+		this.mRawData.fixed = true;
+	}
+	,setPosition: function(vertexID,x,y) {
+		var offset = vertexID * 8;
+		this.mRawData.set(offset,x);
+		this.mRawData.set(offset + 1,y);
+	}
+	,getPosition: function(vertexID,position) {
+		var offset = vertexID * 8;
+		position.x = this.mRawData.get(offset);
+		position.y = this.mRawData.get(offset + 1);
+	}
+	,setColorAndAlpha: function(vertexID,color,alpha) {
+		if(alpha < 0.001) {
+			alpha = 0.001;
+		} else if(alpha > 1.0) {
+			alpha = 1.0;
+		}
+		var offset = vertexID * 8 + 2;
+		var multiplier = this.mPremultipliedAlpha ? alpha : 1.0;
+		this.mRawData.set(offset,_$UInt_UInt_$Impl_$.toFloat(color >>> 16 & 255) / 255.0 * multiplier);
+		this.mRawData.set(offset + 1,_$UInt_UInt_$Impl_$.toFloat(color >>> 8 & 255) / 255.0 * multiplier);
+		this.mRawData.set(offset + 2,_$UInt_UInt_$Impl_$.toFloat(color & 255) / 255.0 * multiplier);
+		this.mRawData.set(offset + 3,alpha);
+	}
+	,setColor: function(vertexID,color) {
+		var offset = vertexID * 8 + 2;
+		var multiplier = this.mPremultipliedAlpha ? this.mRawData.get(offset + 3) : 1.0;
+		this.mRawData.set(offset,_$UInt_UInt_$Impl_$.toFloat(color >>> 16 & 255) / 255.0 * multiplier);
+		this.mRawData.set(offset + 1,_$UInt_UInt_$Impl_$.toFloat(color >>> 8 & 255) / 255.0 * multiplier);
+		this.mRawData.set(offset + 2,_$UInt_UInt_$Impl_$.toFloat(color & 255) / 255.0 * multiplier);
+	}
+	,getColor: function(vertexID) {
+		var offset = vertexID * 8 + 2;
+		var divisor = this.mPremultipliedAlpha ? this.mRawData.get(offset + 3) : 1.0;
+		if(divisor == 0) {
+			return 0;
+		} else {
+			var red = this.mRawData.get(offset) / divisor;
+			var green = this.mRawData.get(offset + 1) / divisor;
+			var blue = this.mRawData.get(offset + 2) / divisor;
+			return (red * 255 | 0) << 16 | (green * 255 | 0) << 8 | (blue * 255 | 0);
+		}
+	}
+	,setAlpha: function(vertexID,alpha) {
+		if(this.mPremultipliedAlpha) {
+			this.setColorAndAlpha(vertexID,this.getColor(vertexID),alpha);
+		} else {
+			this.mRawData.set(vertexID * 8 + 2 + 3,alpha);
+		}
+	}
+	,getAlpha: function(vertexID) {
+		var offset = vertexID * 8 + 2 + 3;
+		return this.mRawData.get(offset);
+	}
+	,setTexCoords: function(vertexID,u,v) {
+		var offset = vertexID * 8 + 6;
+		this.mRawData.set(offset,u);
+		this.mRawData.set(offset + 1,v);
+	}
+	,getTexCoords: function(vertexID,texCoords) {
+		var offset = vertexID * 8 + 6;
+		texCoords.x = this.mRawData.get(offset);
+		texCoords.y = this.mRawData.get(offset + 1);
+	}
+	,translateVertex: function(vertexID,deltaX,deltaY) {
+		var offset = vertexID * 8;
+		this.mRawData.set(offset,this.mRawData.get(offset) + deltaX);
+		this.mRawData.set(offset + 1,this.mRawData.get(offset + 1) + deltaY);
+	}
+	,transformVertex: function(vertexID,matrix,numVertices) {
+		if(numVertices == null) {
+			numVertices = 1;
+		}
+		var x;
+		var y;
+		var offset = vertexID * 8;
+		var _g1 = 0;
+		var _g = numVertices;
+		while(_g1 < _g) {
+			var i = _g1++;
+			x = this.mRawData.get(offset);
+			y = this.mRawData.get(offset + 1);
+			this.mRawData.set(offset,matrix.a * x + matrix.c * y + matrix.tx);
+			this.mRawData.set(offset + 1,matrix.d * y + matrix.b * x + matrix.ty);
+			offset += 8;
+		}
+	}
+	,setUniformColor: function(color) {
+		var _g1 = 0;
+		var _g = this.mNumVertices;
+		while(_g1 < _g) {
+			var i = _g1++;
+			this.setColor(i,color);
+		}
+	}
+	,setUniformAlpha: function(alpha) {
+		var _g1 = 0;
+		var _g = this.mNumVertices;
+		while(_g1 < _g) {
+			var i = _g1++;
+			this.setAlpha(i,alpha);
+		}
+	}
+	,scaleAlpha: function(vertexID,factor,numVertices) {
+		if(numVertices == null) {
+			numVertices = 1;
+		}
+		if(factor == 1.0) {
+			return;
+		}
+		if(numVertices < 0 || vertexID + numVertices > this.mNumVertices) {
+			numVertices = this.mNumVertices - vertexID;
+		}
+		var i;
+		if(this.mPremultipliedAlpha) {
+			var _g1 = 0;
+			var _g = numVertices;
+			while(_g1 < _g) {
+				var i1 = _g1++;
+				this.setAlpha(vertexID + i1,this.getAlpha(vertexID + i1) * factor);
+			}
+		} else {
+			var offset = vertexID * 8 + 2 + 3;
+			var _g11 = 0;
+			var _g2 = numVertices;
+			while(_g11 < _g2) {
+				var i2 = _g11++;
+				var idx = offset + i2 * 8 | 0;
+				this.mRawData.set(idx,this.mRawData.get(idx) * factor);
+			}
+		}
+	}
+	,getBounds: function(transformationMatrix,vertexID,numVertices,resultRect) {
+		if(numVertices == null) {
+			numVertices = -1;
+		}
+		if(vertexID == null) {
+			vertexID = 0;
+		}
+		if(resultRect == null) {
+			resultRect = new openfl_geom_Rectangle();
+		}
+		if(numVertices < 0 || vertexID + numVertices > this.mNumVertices) {
+			numVertices = this.mNumVertices - vertexID;
+		}
+		if(numVertices == 0) {
+			if(transformationMatrix == null) {
+				resultRect.setEmpty();
+			} else {
+				starling_utils_MatrixUtil.transformCoords(transformationMatrix,0,0,starling_utils_VertexData.sHelperPoint);
+				resultRect.setTo(starling_utils_VertexData.sHelperPoint.x,starling_utils_VertexData.sHelperPoint.y,0,0);
+			}
+		} else {
+			var minX = 1.79e+308;
+			var maxX = -1.79e+308;
+			var minY = 1.79e+308;
+			var maxY = -1.79e+308;
+			var offset = vertexID * 8;
+			var x;
+			var y;
+			var i;
+			if(transformationMatrix == null) {
+				var _g1 = 0;
+				var _g = numVertices;
+				while(_g1 < _g) {
+					var i1 = _g1++;
+					x = this.mRawData.get(offset);
+					y = this.mRawData.get(offset + 1);
+					offset += 8;
+					if(minX > x) {
+						minX = x;
+					}
+					if(maxX < x) {
+						maxX = x;
+					}
+					if(minY > y) {
+						minY = y;
+					}
+					if(maxY < y) {
+						maxY = y;
+					}
+				}
+			} else {
+				var _g11 = 0;
+				var _g2 = numVertices;
+				while(_g11 < _g2) {
+					var i2 = _g11++;
+					x = this.mRawData.get(offset);
+					y = this.mRawData.get(offset + 1);
+					offset += 8;
+					starling_utils_MatrixUtil.transformCoords(transformationMatrix,x,y,starling_utils_VertexData.sHelperPoint);
+					if(minX > starling_utils_VertexData.sHelperPoint.x) {
+						minX = starling_utils_VertexData.sHelperPoint.x;
+					}
+					if(maxX < starling_utils_VertexData.sHelperPoint.x) {
+						maxX = starling_utils_VertexData.sHelperPoint.x;
+					}
+					if(minY > starling_utils_VertexData.sHelperPoint.y) {
+						minY = starling_utils_VertexData.sHelperPoint.y;
+					}
+					if(maxY < starling_utils_VertexData.sHelperPoint.y) {
+						maxY = starling_utils_VertexData.sHelperPoint.y;
+					}
+				}
+			}
+			resultRect.setTo(minX,minY,maxX - minX,maxY - minY);
+		}
+		return resultRect;
+	}
+	,getBoundsProjected: function(transformationMatrix,camPos,vertexID,numVertices,resultRect) {
+		if(numVertices == null) {
+			numVertices = -1;
+		}
+		if(vertexID == null) {
+			vertexID = 0;
+		}
+		if(camPos == null) {
+			throw new js__$Boot_HaxeError(new openfl_errors_ArgumentError("camPos must not be null"));
+		}
+		if(resultRect == null) {
+			resultRect = new openfl_geom_Rectangle();
+		}
+		if(numVertices < 0 || vertexID + numVertices > this.mNumVertices) {
+			numVertices = this.mNumVertices - vertexID;
+		}
+		if(numVertices == 0) {
+			if(transformationMatrix != null) {
+				starling_utils_MatrixUtil.transformCoords3D(transformationMatrix,0,0,0,starling_utils_VertexData.sHelperPoint3D);
+			} else {
+				starling_utils_VertexData.sHelperPoint3D.setTo(0,0,0);
+			}
+			starling_utils_MathUtil.intersectLineWithXYPlane(camPos,starling_utils_VertexData.sHelperPoint3D,starling_utils_VertexData.sHelperPoint);
+			resultRect.setTo(starling_utils_VertexData.sHelperPoint.x,starling_utils_VertexData.sHelperPoint.y,0,0);
+		} else {
+			var minX = 1.79e+308;
+			var maxX = -1.79e+308;
+			var minY = 1.79e+308;
+			var maxY = -1.79e+308;
+			var offset = vertexID * 8;
+			var x;
+			var y;
+			var i;
+			var _g1 = 0;
+			var _g = numVertices;
+			while(_g1 < _g) {
+				var i1 = _g1++;
+				x = this.mRawData.get(offset);
+				y = this.mRawData.get(offset + 1);
+				offset += 8;
+				if(transformationMatrix != null) {
+					starling_utils_MatrixUtil.transformCoords3D(transformationMatrix,x,y,0,starling_utils_VertexData.sHelperPoint3D);
+				} else {
+					starling_utils_VertexData.sHelperPoint3D.setTo(x,y,0);
+				}
+				starling_utils_MathUtil.intersectLineWithXYPlane(camPos,starling_utils_VertexData.sHelperPoint3D,starling_utils_VertexData.sHelperPoint);
+				if(minX > starling_utils_VertexData.sHelperPoint.x) {
+					minX = starling_utils_VertexData.sHelperPoint.x;
+				}
+				if(maxX < starling_utils_VertexData.sHelperPoint.x) {
+					maxX = starling_utils_VertexData.sHelperPoint.x;
+				}
+				if(minY > starling_utils_VertexData.sHelperPoint.y) {
+					minY = starling_utils_VertexData.sHelperPoint.y;
+				}
+				if(maxY < starling_utils_VertexData.sHelperPoint.y) {
+					maxY = starling_utils_VertexData.sHelperPoint.y;
+				}
+			}
+			resultRect.setTo(minX,minY,maxX - minX,maxY - minY);
+		}
+		return resultRect;
+	}
+	,toString: function() {
+		var result = "[VertexData \n";
+		var position = new openfl_geom_Point();
+		var texCoords = new openfl_geom_Point();
+		var _g1 = 0;
+		var _g = this.get_numVertices();
+		while(_g1 < _g) {
+			var i = _g1++;
+			this.getPosition(i,position);
+			this.getTexCoords(i,texCoords);
+			result += "  [Vertex " + i + ": " + "x=" + (position.x == null ? "null" : "" + position.x) + ", " + "y=" + (position.y == null ? "null" : "" + position.y) + ", " + "rgb=" + StringTools.hex(this.getColor(i)) + ", " + "a=" + Std.string(this.getAlpha(i)) + ", " + "u=" + (texCoords.x == null ? "null" : "" + texCoords.x) + ", " + "v=" + (texCoords.y == null ? "null" : "" + texCoords.y) + "]" + (i == this.get_numVertices() - 1 ? "\n" : ",\n");
+		}
+		return result + "]";
+	}
+	,get_tinted: function() {
+		var offset = 2;
+		var _g1 = 0;
+		var _g = this.mNumVertices;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var _g2 = 0;
+			while(_g2 < 4) {
+				var j = _g2++;
+				if(this.mRawData.get(offset + j) != 1.0) {
+					return true;
+				}
+			}
+			offset += 8;
+		}
+		return false;
+	}
+	,setPremultipliedAlpha: function(value,updateData) {
+		if(updateData == null) {
+			updateData = true;
+		}
+		if(value == this.mPremultipliedAlpha) {
+			return;
+		}
+		if(updateData) {
+			var dataLength = this.mNumVertices * 8;
+			var i = 2;
+			while(i < dataLength) {
+				var alpha = this.mRawData.get(i + 3);
+				var divisor = this.mPremultipliedAlpha ? alpha : 1.0;
+				var multiplier = value ? alpha : 1.0;
+				if(divisor != 0) {
+					this.mRawData.set(i,this.mRawData.get(i) / divisor * multiplier);
+					this.mRawData.set(i + 1,this.mRawData.get(i + 1) / divisor * multiplier);
+					this.mRawData.set(i + 2,this.mRawData.get(i + 2) / divisor * multiplier);
+				}
+				i += 8;
+			}
+		}
+		this.mPremultipliedAlpha = value;
+	}
+	,get_premultipliedAlpha: function() {
+		return this.mPremultipliedAlpha;
+	}
+	,set_premultipliedAlpha: function(value) {
+		this.setPremultipliedAlpha(value);
+		return this.mPremultipliedAlpha;
+	}
+	,get_numVertices: function() {
+		return this.mNumVertices;
+	}
+	,set_numVertices: function(value) {
+		this.mRawData.fixed = false;
+		this.mRawData.set_length(value * 8);
+		var startIndex = this.mNumVertices * 8 + 2 + 3;
+		var endIndex = value * 8;
+		var i = startIndex;
+		while(i < endIndex) {
+			this.mRawData.set(i,1.0);
+			i += 8;
+		}
+		this.mNumVertices = value;
+		this.mRawData.fixed = true;
+		return this.mNumVertices;
+	}
+	,get_rawData: function() {
+		return this.mRawData;
+	}
+	,__class__: starling_utils_VertexData
+	,__properties__: {get_rawData:"get_rawData",set_numVertices:"set_numVertices",get_numVertices:"get_numVertices",set_premultipliedAlpha:"set_premultipliedAlpha",get_premultipliedAlpha:"get_premultipliedAlpha",get_tinted:"get_tinted"}
+};
+var haxegon_Gfx = function() { };
+$hxClasses["haxegon.Gfx"] = haxegon_Gfx;
+haxegon_Gfx.__name__ = ["haxegon","Gfx"];
+haxegon_Gfx.__properties__ = {set_fullscreen:"set_fullscreen",get_fullscreen:"get_fullscreen",set_linethickness:"set_linethickness",get_linethickness:"get_linethickness"};
+haxegon_Gfx.reset = function() {
+	haxegon_Gfx.transform = false;
+	haxegon_Gfx.imagerotate = 0;
+	haxegon_Gfx.imagerotatexpivot = 0;
+	haxegon_Gfx.imagerotateypivot = 0;
+	haxegon_Gfx.imagexscale = 1.0;
+	haxegon_Gfx.imageyscale = 1.0;
+	haxegon_Gfx.imagescalexpivot = 0;
+	haxegon_Gfx.imagescaleypivot = 0;
+	haxegon_Gfx.coltransform = false;
+	haxegon_Gfx.imagealphamult = 1.0;
+	haxegon_Gfx.imagecolormult = 16777215;
+};
+haxegon_Gfx.reset_ifclear = function() {
+	if(haxegon_Gfx.imagerotate == 0) {
+		if(haxegon_Gfx.imagexscale == 1.0) {
+			if(haxegon_Gfx.imageyscale == 1.0) {
+				haxegon_Gfx.transform = false;
+			}
+		}
+	}
+	if(haxegon_Gfx.imagealphamult == 1.0) {
+		if(haxegon_Gfx.imagecolormult == 16777215) {
+			haxegon_Gfx.coltransform = false;
+		}
+	}
+};
+haxegon_Gfx.rotation = function(angle,xpivot,ypivot) {
+	if(ypivot == null) {
+		ypivot = -15000;
+	}
+	if(xpivot == null) {
+		xpivot = -15000;
+	}
+	haxegon_Gfx.imagerotate = angle;
+	haxegon_Gfx.imagerotatexpivot = xpivot;
+	haxegon_Gfx.imagerotateypivot = ypivot;
+	haxegon_Gfx.transform = true;
+	haxegon_Gfx.reset_ifclear();
+};
+haxegon_Gfx.scale = function(xscale,yscale,xpivot,ypivot) {
+	if(ypivot == null) {
+		ypivot = -10000;
+	}
+	if(xpivot == null) {
+		xpivot = -10000;
+	}
+	if(xscale == null && yscale == null) {
+		xscale = 1.0;
+		yscale = 1.0;
+	}
+	if(yscale == null && xscale != null) {
+		yscale = xscale;
+	}
+	haxegon_Gfx.imagexscale = xscale;
+	haxegon_Gfx.imageyscale = yscale;
+	haxegon_Gfx.imagescalexpivot = xpivot;
+	haxegon_Gfx.imagescaleypivot = ypivot;
+	haxegon_Gfx.transform = true;
+	haxegon_Gfx.reset_ifclear();
+};
+haxegon_Gfx.imagealpha = function(alpha) {
+	if(alpha == null) {
+		alpha = 1.0;
+	}
+	haxegon_Gfx.imagealphamult = alpha;
+	haxegon_Gfx.coltransform = true;
+	haxegon_Gfx.reset_ifclear();
+};
+haxegon_Gfx.imagecolor = function(color) {
+	if(color == null) {
+		color = 16777215;
+	}
+	haxegon_Gfx.imagecolormult = color;
+	haxegon_Gfx.coltransform = true;
+	haxegon_Gfx.reset_ifclear();
+};
+haxegon_Gfx.numberoftiles = function(tileset) {
+	haxegon_Gfx.changetileset(tileset);
+	return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.length;
+};
+haxegon_Gfx.changetileset = function(tilesetname) {
+	if(haxegon_Gfx.currenttilesetname != tilesetname) {
+		haxegon_Gfx.drawstate = 0;
+		var _this = haxegon_Gfx.tilesetindex;
+		if(__map_reserved[tilesetname] != null ? _this.existsReserved(tilesetname) : _this.h.hasOwnProperty(tilesetname)) {
+			var _this1 = haxegon_Gfx.tilesetindex;
+			haxegon_Gfx.currenttileset = __map_reserved[tilesetname] != null ? _this1.getReserved(tilesetname) : _this1.h[tilesetname];
+			haxegon_Gfx.currenttilesetname = tilesetname;
+		} else {
+			haxegon_Debug.log("ERROR: Cannot change to tileset \"" + tilesetname + "\", no tileset with that name found.",{ fileName : "Gfx.hx", lineNumber : 161, className : "haxegon.Gfx", methodName : "changetileset"});
+		}
+	}
+};
+haxegon_Gfx.loadtiles = function(imagename,width,height) {
+	var tex;
+	var _this = haxegon_Gfx.imageindex;
+	if(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename)) {
+		tex = haxegon_Gfx.getassetpackedtexture(imagename);
+	} else {
+		if(haxegon_Data.assetexists("data/graphics/" + imagename + ".png")) {
+			tex = starling_textures_Texture.fromBitmapData(haxegon_Data.getgraphicsasset("data/graphics/" + imagename + ".png"),false);
+		} else if(haxegon_Data.assetexists("data/graphics/" + imagename + ".jpg")) {
+			tex = starling_textures_Texture.fromBitmapData(haxegon_Data.getgraphicsasset("data/graphics/" + imagename + ".jpg"),false);
+		} else {
+			haxegon_Debug.log("ERROR: In loadtiles, cannot find \"data/graphics/" + imagename + ".png\" or \"data/graphics/" + imagename + ".jpg\"",{ fileName : "Gfx.hx", lineNumber : 179, className : "haxegon.Gfx", methodName : "loadtiles"});
+			return;
+		}
+		haxegon_Gfx.starlingassets.addTexture(imagename,tex);
+	}
+	var spritesheet = haxegon_Gfx.starlingassets.getTexture(imagename);
+	var tiles_rect = new openfl_geom_Rectangle(0,0,width,height);
+	haxegon_Gfx.tiles.push(new haxegon_HaxegonTileset(imagename,width,height));
+	var value = haxegon_Gfx.tiles.length - 1;
+	var _this1 = haxegon_Gfx.tilesetindex;
+	if(__map_reserved[imagename] != null) {
+		_this1.setReserved(imagename,value);
+	} else {
+		_this1.h[imagename] = value;
+	}
+	haxegon_Gfx.currenttileset = haxegon_Gfx.tiles.length - 1;
+	var tilerows;
+	var tilecolumns = (spritesheet.get_width() - spritesheet.get_width() % width) / width | 0;
+	tilerows = (spritesheet.get_height() - spritesheet.get_height() % height) / height | 0;
+	var framex = 0;
+	var framey = 0;
+	if(spritesheet.get_frame() != null) {
+		framex = spritesheet.get_frame().get_left() | 0;
+		framey = spritesheet.get_frame().get_top() | 0;
+	}
+	var _g1 = 0;
+	var _g = tilerows;
+	while(_g1 < _g) {
+		var j = _g1++;
+		var _g3 = 0;
+		var _g2 = tilecolumns;
+		while(_g3 < _g2) {
+			var i = _g3++;
+			var rect = new openfl_geom_Rectangle(framex + i * width,framey + j * height,width,height);
+			var newtex = starling_textures_Texture.fromTexture(spritesheet,rect);
+			haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.push(new starling_display_Image(newtex));
+			haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.length - 1].set_smoothing("none");
+		}
+	}
+};
+haxegon_Gfx.addblanktiles = function(tilesetname,num) {
+	var tileset = 0;
+	var _this = haxegon_Gfx.tilesetindex;
+	if(__map_reserved[tilesetname] != null ? _this.existsReserved(tilesetname) : _this.h.hasOwnProperty(tilesetname)) {
+		var _this1 = haxegon_Gfx.tilesetindex;
+		if(__map_reserved[tilesetname] != null) {
+			tileset = _this1.getReserved(tilesetname);
+		} else {
+			tileset = _this1.h[tilesetname];
+		}
+	} else {
+		haxegon_Debug.log("ERROR: Cannot add blank tiles to tileset \"" + tilesetname + "\", no tileset with that name found.",{ fileName : "Gfx.hx", lineNumber : 222, className : "haxegon.Gfx", methodName : "addblanktiles"});
+	}
+	var w = haxegon_Gfx.tiles[tileset].tiles[0].get_width() | 0;
+	var h = haxegon_Gfx.tiles[tileset].tiles[0].get_height() | 0;
+	var _g1 = 0;
+	var _g = num;
+	while(_g1 < _g) {
+		var i = _g1++;
+		var tex = starling_textures_Texture.fromBitmapData(new openfl_display_BitmapData(w,h,true,0),false);
+		var img = new starling_display_Image(tex);
+		img.set_touchable(false);
+		haxegon_Gfx.tiles[tileset].tiles.push(img);
+	}
+	haxegon_Gfx.tiles[tileset].sharedatlas = false;
+};
+haxegon_Gfx.createtiles = function(tilesetname,width,height,amount) {
+	var _this = haxegon_Gfx.tilesetindex;
+	var exindex = __map_reserved[tilesetname] != null ? _this.getReserved(tilesetname) : _this.h[tilesetname];
+	if(exindex == null) {
+		haxegon_Gfx.tiles.push(new haxegon_HaxegonTileset(tilesetname,width | 0,height | 0));
+		var value = haxegon_Gfx.tiles.length - 1;
+		var _this1 = haxegon_Gfx.tilesetindex;
+		if(__map_reserved[tilesetname] != null) {
+			_this1.setReserved(tilesetname,value);
+		} else {
+			_this1.h[tilesetname] = value;
+		}
+		haxegon_Gfx.currenttileset = haxegon_Gfx.tiles.length - 1;
+		var _g1 = 0;
+		var _g = amount;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var tex = starling_textures_Texture.fromBitmapData(new openfl_display_BitmapData(Math.floor(width),Math.floor(height),true,0),false);
+			var img = new starling_display_Image(tex);
+			img.set_touchable(false);
+			haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.push(img);
+		}
+		haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].sharedatlas = false;
+		haxegon_Gfx.changetileset(tilesetname);
+	} else {
+		haxegon_Gfx.changetileset(tilesetname);
+		haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].sharedatlas = false;
+		var purge = haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width != Math.floor(width) || haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height != Math.floor(height);
+		haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width = Math.floor(width);
+		haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height = Math.floor(height);
+		while(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.length > (purge ? 0 : amount)) {
+			var extile = haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.pop();
+			extile.set_touchable(false);
+			extile.get_texture().dispose();
+			extile.dispose();
+		}
+		var _g11 = 0;
+		var _g2 = amount;
+		while(_g11 < _g2) {
+			var i1 = _g11++;
+			if(i1 < haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.length && !purge && js_Boot.__instanceof(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[i1].get_texture(),starling_textures_RenderTexture)) {
+				(js_Boot.__cast(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[i1].get_texture() , starling_textures_RenderTexture)).clear();
+			} else {
+				var tex1 = starling_textures_Texture.fromBitmapData(new openfl_display_BitmapData(Math.floor(width),Math.floor(height),true,0),false);
+				var img1 = new starling_display_Image(tex1);
+				img1.set_touchable(false);
+				if(i1 < haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.length) {
+					haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[i1].get_texture().dispose();
+					haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[i1].dispose();
+					haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[i1] = img1;
+				} else {
+					haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.push(img1);
+				}
+			}
+		}
+	}
+};
+haxegon_Gfx.tilewidth = function(tilesetname) {
+	haxegon_Gfx.changetileset(tilesetname);
+	return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width;
+};
+haxegon_Gfx.tileheight = function(tilesetname) {
+	haxegon_Gfx.changetileset(tilesetname);
+	return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height;
+};
+haxegon_Gfx.getassetpackedtexture = function(imagename) {
+	var bd = null;
+	try {
+		bd = haxegon_Gfx.starlingassets.getTexture(imagename);
+	} catch( e ) {
+		haxe_CallStack.lastException = e;
+		haxegon_Debug.log("ERROR: Cannot find " + imagename + ".png in packed textures.",{ fileName : "Gfx.hx", lineNumber : 309, className : "haxegon.Gfx", methodName : "getassetpackedtexture"});
+	}
+	return bd;
+};
+haxegon_Gfx.loadimagefrompackedtexture = function(imagename,tex) {
+	var value = haxegon_Gfx.images.length;
+	var _this = haxegon_Gfx.imageindex;
+	if(__map_reserved[imagename] != null) {
+		_this.setReserved(imagename,value);
+	} else {
+		_this.h[imagename] = value;
+	}
+	haxegon_Gfx.haxegonimage = new haxegon_HaxegonImage(imagename);
+	haxegon_Gfx.haxegonimage.contents = new starling_display_Image(tex);
+	haxegon_Gfx.haxegonimage.fetchsize();
+	haxegon_Gfx.images.push(haxegon_Gfx.haxegonimage);
+	haxegon_Gfx.images[haxegon_Gfx.images.length - 1].contents.set_smoothing("none");
+};
+haxegon_Gfx.loadimage = function(imagename) {
+	var _this = haxegon_Gfx.imageindex;
+	if(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename)) {
+		return;
+	}
+	var tex;
+	if(haxegon_Data.assetexists("data/graphics/" + imagename + ".png")) {
+		tex = starling_textures_Texture.fromBitmapData(haxegon_Data.getgraphicsasset("data/graphics/" + imagename + ".png"),false);
+	} else if(haxegon_Data.assetexists("data/graphics/" + imagename + ".jpg")) {
+		tex = starling_textures_Texture.fromBitmapData(haxegon_Data.getgraphicsasset("data/graphics/" + imagename + ".jpg"),false);
+	} else {
+		haxegon_Debug.log("ERROR: In loadimage, cannot find \"data/graphics/" + imagename + ".png\" or \"data/graphics/" + imagename + ".jpg\"",{ fileName : "Gfx.hx", lineNumber : 335, className : "haxegon.Gfx", methodName : "loadimage"});
+		return;
+	}
+	haxegon_Gfx.starlingassets.addTexture(imagename,tex);
+	var value = haxegon_Gfx.images.length;
+	var _this1 = haxegon_Gfx.imageindex;
+	if(__map_reserved[imagename] != null) {
+		_this1.setReserved(imagename,value);
+	} else {
+		_this1.h[imagename] = value;
+	}
+	haxegon_Gfx.haxegonimage = new haxegon_HaxegonImage(imagename);
+	var tmp = haxegon_Gfx.starlingassets.getTexture(imagename);
+	haxegon_Gfx.haxegonimage.contents = new starling_display_Image(tmp);
+	haxegon_Gfx.haxegonimage.contents.set_smoothing("none");
+	haxegon_Gfx.haxegonimage.fetchsize();
+	haxegon_Gfx.images.push(haxegon_Gfx.haxegonimage);
+};
+haxegon_Gfx.createimage = function(imagename,width,height) {
+	var tex = starling_textures_Texture.fromBitmapData(new openfl_display_BitmapData(Math.floor(width),Math.floor(height),true,0),false);
+	var img = new starling_display_Image(tex);
+	img.set_touchable(false);
+	img.set_smoothing("none");
+	var _this = haxegon_Gfx.imageindex;
+	var exindex = __map_reserved[imagename] != null ? _this.getReserved(imagename) : _this.h[imagename];
+	if(exindex == null) {
+		var value = haxegon_Gfx.images.length;
+		var _this1 = haxegon_Gfx.imageindex;
+		if(__map_reserved[imagename] != null) {
+			_this1.setReserved(imagename,value);
+		} else {
+			_this1.h[imagename] = value;
+		}
+		haxegon_Gfx.haxegonimage = new haxegon_HaxegonImage(imagename);
+		haxegon_Gfx.haxegonimage.contents = img;
+		haxegon_Gfx.haxegonimage.fetchsize();
+		haxegon_Gfx.images.push(haxegon_Gfx.haxegonimage);
+	} else {
+		haxegon_Gfx.images[exindex].contents.get_texture().dispose();
+		haxegon_Gfx.images[exindex].contents.dispose();
+		haxegon_Gfx.images[exindex].contents = img;
+		haxegon_Gfx.images[exindex].fetchsize();
+	}
+};
+haxegon_Gfx.imagewidth = function(imagename) {
+	var _this = haxegon_Gfx.imageindex;
+	if(!(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename))) {
+		haxegon_Gfx.loadimage(imagename);
+	}
+	var _this1 = haxegon_Gfx.imageindex;
+	var imagenum = __map_reserved[imagename] != null ? _this1.getReserved(imagename) : _this1.h[imagename];
+	return haxegon_Gfx.images[imagenum].width;
+};
+haxegon_Gfx.imageheight = function(imagename) {
+	var _this = haxegon_Gfx.imageindex;
+	if(!(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename))) {
+		haxegon_Gfx.loadimage(imagename);
+	}
+	var _this1 = haxegon_Gfx.imageindex;
+	var imagenum = __map_reserved[imagename] != null ? _this1.getReserved(imagename) : _this1.h[imagename];
+	return haxegon_Gfx.images[imagenum].height;
+};
+haxegon_Gfx.promotetorendertarget = function(image) {
+	if(!js_Boot.__instanceof(image.get_texture(),starling_textures_RenderTexture)) {
+		var newtexture = new starling_textures_RenderTexture(image.get_texture().get_width() | 0,image.get_texture().get_height() | 0);
+		haxegon_Gfx.shapematrix.identity();
+		newtexture.draw(image,haxegon_Gfx.shapematrix);
+		image.get_texture().dispose();
+		image.set_texture(newtexture);
+	}
+};
+haxegon_Gfx.drawtoscreen = function() {
+	haxegon_Gfx.endquadbatch();
+	if(haxegon_Gfx.drawto != null) {
+		haxegon_Gfx.drawto.bundleunlock();
+	}
+	haxegon_Gfx.drawto = haxegon_Gfx.backbuffer;
+	if(haxegon_Gfx.drawto != null) {
+		haxegon_Gfx.drawto.bundlelock();
+	}
+};
+haxegon_Gfx.drawtoimage = function(imagename) {
+	var _this = haxegon_Gfx.imageindex;
+	if(!(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename))) {
+		haxegon_Debug.log("ERROR: In drawtoimage, cannot find image \"" + imagename + "\".",{ fileName : "Gfx.hx", lineNumber : 421, className : "haxegon.Gfx", methodName : "drawtoimage"});
+		return;
+	}
+	haxegon_Gfx.endquadbatch();
+	if(haxegon_Gfx.drawto != null) {
+		haxegon_Gfx.drawto.bundleunlock();
+	}
+	var _this1 = haxegon_Gfx.imageindex;
+	var imagenum = __map_reserved[imagename] != null ? _this1.getReserved(imagename) : _this1.h[imagename];
+	haxegon_Gfx.promotetorendertarget(haxegon_Gfx.images[imagenum].contents);
+	haxegon_Gfx.drawto = js_Boot.__cast(haxegon_Gfx.images[imagenum].contents.get_texture() , starling_textures_RenderTexture);
+	if(haxegon_Gfx.drawto != null) {
+		haxegon_Gfx.drawto.bundlelock();
+	}
+};
+haxegon_Gfx.drawtotile = function(tilesetname,tilenum) {
+	var tileset = 0;
+	var _this = haxegon_Gfx.tilesetindex;
+	if(__map_reserved[tilesetname] != null ? _this.existsReserved(tilesetname) : _this.h.hasOwnProperty(tilesetname)) {
+		var _this1 = haxegon_Gfx.tilesetindex;
+		if(__map_reserved[tilesetname] != null) {
+			tileset = _this1.getReserved(tilesetname);
+		} else {
+			tileset = _this1.h[tilesetname];
+		}
+	} else {
+		haxegon_Debug.log("ERROR: Cannot change to tileset \"" + tilesetname + "\", no tileset with that name found.",{ fileName : "Gfx.hx", lineNumber : 441, className : "haxegon.Gfx", methodName : "drawtotile"});
+	}
+	if(tilenum >= haxegon_Gfx.numberoftiles(tilesetname)) {
+		if(tilenum == haxegon_Gfx.numberoftiles(tilesetname)) {
+			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenum == null ? "null" : "" + tilenum) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\". (Because this includes tile number 0, " + (tilenum == null ? "null" : "" + tilenum) + " is not a valid tile.)",{ fileName : "Gfx.hx", lineNumber : 446, className : "haxegon.Gfx", methodName : "drawtotile"});
+		} else {
+			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenum == null ? "null" : "" + tilenum) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\".",{ fileName : "Gfx.hx", lineNumber : 448, className : "haxegon.Gfx", methodName : "drawtotile"});
+		}
+	}
+	haxegon_Gfx.endquadbatch();
+	if(haxegon_Gfx.drawto != null) {
+		haxegon_Gfx.drawto.bundleunlock();
+	}
+	haxegon_Gfx.promotetorendertarget(haxegon_Gfx.tiles[tileset].tiles[tilenum]);
+	haxegon_Gfx.drawto = js_Boot.__cast(haxegon_Gfx.tiles[tileset].tiles[tilenum].get_texture() , starling_textures_RenderTexture);
+	if(haxegon_Gfx.drawto != null) {
+		haxegon_Gfx.drawto.bundlelock();
+	}
+};
+haxegon_Gfx.imagealignx = function(imagewidth,x) {
+	if(x <= -5000) {
+		haxegon_Gfx.t1 = x - haxegon_Gfx.CENTER;
+		haxegon_Gfx.t2 = x - haxegon_Gfx.LEFT;
+		haxegon_Gfx.t3 = x - haxegon_Gfx.RIGHT;
+		if(haxegon_Gfx.t1 == 0 || Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t2) && Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t3)) {
+			return haxegon_Gfx.t1 + haxegon_Gfx.screenwidthmid - (imagewidth / 2 | 0);
+		} else if(haxegon_Gfx.t2 == 0 || Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t1) && Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t3)) {
+			return haxegon_Gfx.t2;
+		} else {
+			return haxegon_Gfx.t3 + imagewidth;
+		}
+	}
+	return x;
+};
+haxegon_Gfx.imagealigny = function(imageheight,y) {
+	if(y <= -5000) {
+		haxegon_Gfx.t1 = y - haxegon_Gfx.CENTER;
+		haxegon_Gfx.t2 = y - haxegon_Gfx.TOP;
+		haxegon_Gfx.t3 = y - haxegon_Gfx.BOTTOM;
+		if(haxegon_Gfx.t1 == 0 || Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t2) && Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t3)) {
+			return haxegon_Gfx.t1 + haxegon_Gfx.screenheightmid - (imageheight / 2 | 0);
+		} else if(haxegon_Gfx.t2 == 0 || Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t1) && Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t3)) {
+			return haxegon_Gfx.t2;
+		} else {
+			return haxegon_Gfx.t3 + imageheight;
+		}
+	}
+	return y;
+};
+haxegon_Gfx.imagealignonimagex = function(imagewidth,x) {
+	if(x <= -5000) {
+		haxegon_Gfx.t1 = x - haxegon_Gfx.CENTER;
+		haxegon_Gfx.t2 = x - haxegon_Gfx.LEFT;
+		haxegon_Gfx.t3 = x - haxegon_Gfx.RIGHT;
+		if(haxegon_Gfx.t1 == 0 || Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t2) && Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t3)) {
+			return haxegon_Gfx.t1 + (imagewidth / 2 | 0);
+		} else if(haxegon_Gfx.t2 == 0 || Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t1) && Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t3)) {
+			return haxegon_Gfx.t2;
+		} else {
+			return haxegon_Gfx.t3 + imagewidth;
+		}
+	}
+	return x;
+};
+haxegon_Gfx.imagealignonimagey = function(imageheight,y) {
+	if(y <= -5000) {
+		haxegon_Gfx.t1 = y - haxegon_Gfx.CENTER;
+		haxegon_Gfx.t2 = y - haxegon_Gfx.TOP;
+		haxegon_Gfx.t3 = y - haxegon_Gfx.BOTTOM;
+		if(haxegon_Gfx.t1 == 0 || Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t2) && Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t3)) {
+			return haxegon_Gfx.t1 + (imageheight / 2 | 0);
+		} else if(haxegon_Gfx.t2 == 0 || Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t1) && Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t3)) {
+			return haxegon_Gfx.t2;
+		} else {
+			return haxegon_Gfx.t3 + imageheight;
+		}
+	}
+	return y;
+};
+haxegon_Gfx.internaldrawimage = function(x,y,image,imagewidth,imageheight) {
+	if(!haxegon_Gfx.transform && !haxegon_Gfx.coltransform) {
+		haxegon_Gfx.shapematrix.identity();
+		haxegon_Gfx.shapematrix.translate(x | 0,y | 0);
+		haxegon_Gfx.quadbatch.addImage(image,1.0,haxegon_Gfx.shapematrix);
+	} else {
+		haxegon_Gfx.tempxalign = 0;
+		haxegon_Gfx.tempyalign = 0;
+		haxegon_Gfx.shapematrix.identity();
+		if(haxegon_Gfx.imagexscale != 1.0 || haxegon_Gfx.imageyscale != 1.0) {
+			if(haxegon_Gfx.imagescalexpivot != 0.0) {
+				haxegon_Gfx.tempxalign = haxegon_Gfx.imagealignonimagex(imagewidth,haxegon_Gfx.imagescalexpivot);
+			}
+			if(haxegon_Gfx.imagescaleypivot != 0.0) {
+				haxegon_Gfx.tempyalign = haxegon_Gfx.imagealignonimagey(imageheight,haxegon_Gfx.imagescaleypivot);
+			}
+			haxegon_Gfx.shapematrix.translate(-haxegon_Gfx.tempxalign,-haxegon_Gfx.tempyalign);
+			haxegon_Gfx.shapematrix.scale(haxegon_Gfx.imagexscale,haxegon_Gfx.imageyscale);
+			haxegon_Gfx.shapematrix.translate(haxegon_Gfx.tempxalign,haxegon_Gfx.tempyalign);
+		}
+		if(haxegon_Gfx.imagerotate != 0) {
+			if(haxegon_Gfx.imagerotatexpivot != 0.0) {
+				haxegon_Gfx.tempxalign = haxegon_Gfx.imagealignonimagex(imagewidth,haxegon_Gfx.imagerotatexpivot);
+			}
+			if(haxegon_Gfx.imagerotateypivot != 0.0) {
+				haxegon_Gfx.tempyalign = haxegon_Gfx.imagealignonimagey(imageheight,haxegon_Gfx.imagerotateypivot);
+			}
+			haxegon_Gfx.shapematrix.translate(-haxegon_Gfx.tempxalign,-haxegon_Gfx.tempyalign);
+			haxegon_Gfx.shapematrix.rotate(haxegon_Gfx.imagerotate * 3.1415 / 180);
+			haxegon_Gfx.shapematrix.translate(haxegon_Gfx.tempxalign,haxegon_Gfx.tempyalign);
+		}
+		haxegon_Gfx.shapematrix.translate(x,y);
+		if(haxegon_Gfx.coltransform) {
+			image.set_color(haxegon_Gfx.imagecolormult);
+			haxegon_Gfx.quadbatch.addImage(image,haxegon_Gfx.imagealphamult,haxegon_Gfx.shapematrix);
+			image.set_color(haxegon_Col.WHITE);
+		} else {
+			haxegon_Gfx.quadbatch.addImage(image,1.0,haxegon_Gfx.shapematrix);
+		}
+	}
+};
+haxegon_Gfx.drawimage = function(x,y,imagename) {
+	var _this = haxegon_Gfx.imageindex;
+	if(!(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename))) {
+		haxegon_Gfx.loadimage(imagename);
+	}
+	haxegon_Gfx.endquadbatch();
+	haxegon_Gfx.quadbatchcount++;
+	if(haxegon_Gfx.quadbatchcount >= 16383) {
+		haxegon_Gfx.endquadbatch();
+	}
+	haxegon_Gfx.drawstate = 3;
+	var _this1 = haxegon_Gfx.imageindex;
+	haxegon_Gfx.haxegonimage = haxegon_Gfx.images[__map_reserved[imagename] != null ? _this1.getReserved(imagename) : _this1.h[imagename]];
+	x = haxegon_Gfx.imagealignx(haxegon_Gfx.haxegonimage.width,x);
+	y = haxegon_Gfx.imagealigny(haxegon_Gfx.haxegonimage.height,y);
+	haxegon_Gfx.internaldrawimage(x,y,haxegon_Gfx.haxegonimage.contents,haxegon_Gfx.haxegonimage.width,haxegon_Gfx.haxegonimage.height);
+	haxegon_Gfx.endquadbatch();
+};
+haxegon_Gfx.drawsubimage = function(x,y,x1,y1,w1,h1,imagename) {
+	var _this = haxegon_Gfx.imageindex;
+	if(!(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename))) {
+		haxegon_Debug.log("ERROR: In drawsubimage, cannot find image \"" + imagename + "\".",{ fileName : "Gfx.hx", lineNumber : 601, className : "haxegon.Gfx", methodName : "drawsubimage"});
+		return;
+	}
+	haxegon_Gfx.endquadbatch();
+	haxegon_Gfx.quadbatchcount++;
+	if(haxegon_Gfx.quadbatchcount >= 16383) {
+		haxegon_Gfx.endquadbatch();
+	}
+	var _this1 = haxegon_Gfx.imageindex;
+	haxegon_Gfx.haxegonimage = haxegon_Gfx.images[__map_reserved[imagename] != null ? _this1.getReserved(imagename) : _this1.h[imagename]];
+	x = haxegon_Gfx.imagealignx(haxegon_Gfx.haxegonimage.width,x);
+	y = haxegon_Gfx.imagealigny(haxegon_Gfx.haxegonimage.height,y);
+	haxegon_Gfx.trect.x = x1;
+	haxegon_Gfx.trect.y = y1;
+	haxegon_Gfx.trect.width = w1;
+	haxegon_Gfx.trect.height = h1;
+	var subtex = starling_textures_Texture.fromTexture(haxegon_Gfx.haxegonimage.contents.get_texture(),haxegon_Gfx.trect);
+	var subimage = new starling_display_Image(subtex);
+	subimage.set_touchable(false);
+	subimage.set_smoothing("none");
+	haxegon_Gfx.internaldrawimage(x,y,subimage,subimage.get_width() | 0,subimage.get_height() | 0);
+	haxegon_Gfx.endquadbatch();
+	subtex.dispose();
+	subimage.dispose();
+};
+haxegon_Gfx.grabtilefromscreen = function(tilesetname,tilenumber,screenx,screeny) {
+	haxegon_Gfx.changetileset(tilesetname);
+	if(tilenumber >= haxegon_Gfx.numberoftiles(tilesetname)) {
+		if(tilenumber == haxegon_Gfx.numberoftiles(tilesetname)) {
+			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenumber == null ? "null" : "" + tilenumber) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\". (Because this includes tile number 0, " + (tilenumber == null ? "null" : "" + tilenumber) + " is not a valid tile.)",{ fileName : "Gfx.hx", lineNumber : 639, className : "haxegon.Gfx", methodName : "grabtilefromscreen"});
+			return;
+		} else {
+			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenumber == null ? "null" : "" + tilenumber) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\".",{ fileName : "Gfx.hx", lineNumber : 642, className : "haxegon.Gfx", methodName : "grabtilefromscreen"});
+			return;
+		}
+	}
+	haxegon_Gfx.endquadbatch();
+	haxegon_Gfx.promotetorendertarget(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[tilenumber]);
+	haxegon_Gfx.shapematrix.identity();
+	haxegon_Gfx.shapematrix.translate(-screenx,-screeny);
+	(js_Boot.__cast(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[tilenumber].get_texture() , starling_textures_RenderTexture)).draw(haxegon_Gfx.screen,haxegon_Gfx.shapematrix);
+};
+haxegon_Gfx.grabtilefromimage = function(tilesetname,tilenumber,imagename,imagex,imagey) {
+	var _this = haxegon_Gfx.imageindex;
+	if(!(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename))) {
+		throw new js__$Boot_HaxeError("ERROR: In grabtilefromimage, \"" + imagename + "\" does not exist.");
+	}
+	haxegon_Gfx.changetileset(tilesetname);
+	if(tilenumber >= haxegon_Gfx.numberoftiles(tilesetname)) {
+		if(tilenumber == haxegon_Gfx.numberoftiles(tilesetname)) {
+			haxegon_Debug.log("ERROR: Tried to grab tile from image to tile number " + (tilenumber == null ? "null" : "" + tilenumber) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\". (Because this includes tile number 0, " + (tilenumber == null ? "null" : "" + tilenumber) + " is not a valid tile.)",{ fileName : "Gfx.hx", lineNumber : 670, className : "haxegon.Gfx", methodName : "grabtilefromimage"});
+			return;
+		} else {
+			haxegon_Debug.log("ERROR: Tried to grab tile from image to tile number " + (tilenumber == null ? "null" : "" + tilenumber) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\".",{ fileName : "Gfx.hx", lineNumber : 673, className : "haxegon.Gfx", methodName : "grabtilefromimage"});
+			return;
+		}
+	}
+	haxegon_Gfx.endquadbatch();
+	haxegon_Gfx.promotetorendertarget(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[tilenumber]);
+	haxegon_Gfx.shapematrix.identity();
+	haxegon_Gfx.shapematrix.translate(-imagex,-imagey);
+	var tmp = js_Boot.__cast(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[tilenumber].get_texture() , starling_textures_RenderTexture);
+	var _this1 = haxegon_Gfx.imageindex;
+	tmp.draw(haxegon_Gfx.images[__map_reserved[imagename] != null ? _this1.getReserved(imagename) : _this1.h[imagename]].contents,haxegon_Gfx.shapematrix);
+};
+haxegon_Gfx.grabimagefromscreen = function(imagename,screenx,screeny) {
+	var _this = haxegon_Gfx.imageindex;
+	if(!(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename))) {
+		haxegon_Debug.log("ERROR: In Gfx.grabimagefromscreen, \"" + imagename + "\" does not exist. You need to create an image label first before using this function.",{ fileName : "Gfx.hx", lineNumber : 693, className : "haxegon.Gfx", methodName : "grabimagefromscreen"});
+		return;
+	}
+	haxegon_Gfx.endquadbatch();
+	var _this1 = haxegon_Gfx.imageindex;
+	haxegon_Gfx.haxegonimage = haxegon_Gfx.images[__map_reserved[imagename] != null ? _this1.getReserved(imagename) : _this1.h[imagename]];
+	haxegon_Gfx.promotetorendertarget(haxegon_Gfx.haxegonimage.contents);
+	haxegon_Gfx.shapematrix.identity();
+	haxegon_Gfx.shapematrix.translate(-screenx,-screeny);
+	(js_Boot.__cast(haxegon_Gfx.haxegonimage.contents.get_texture() , starling_textures_RenderTexture)).draw(haxegon_Gfx.screen,haxegon_Gfx.shapematrix);
+};
+haxegon_Gfx.grabimagefromimage = function(destinationimage,sourceimage,sourceimagex,sourceimagey) {
+	var _this = haxegon_Gfx.imageindex;
+	if(!(__map_reserved[destinationimage] != null ? _this.existsReserved(destinationimage) : _this.h.hasOwnProperty(destinationimage))) {
+		haxegon_Debug.log("ERROR: In grabimagefromimage, \"" + destinationimage + "\" does not exist. You need to create an image label first before using this function.",{ fileName : "Gfx.hx", lineNumber : 713, className : "haxegon.Gfx", methodName : "grabimagefromimage"});
+		return;
+	}
+	var _this1 = haxegon_Gfx.imageindex;
+	if(!(__map_reserved[sourceimage] != null ? _this1.existsReserved(sourceimage) : _this1.h.hasOwnProperty(sourceimage))) {
+		haxegon_Debug.log("ERROR: No image called \"" + sourceimage + "\" found.",{ fileName : "Gfx.hx", lineNumber : 718, className : "haxegon.Gfx", methodName : "grabimagefromimage"});
+		return;
+	}
+	haxegon_Gfx.endquadbatch();
+	var _this2 = haxegon_Gfx.imageindex;
+	haxegon_Gfx.haxegonimage = haxegon_Gfx.images[__map_reserved[destinationimage] != null ? _this2.getReserved(destinationimage) : _this2.h[destinationimage]];
+	var _this3 = haxegon_Gfx.imageindex;
+	var sourceimage1 = haxegon_Gfx.images[__map_reserved[sourceimage] != null ? _this3.getReserved(sourceimage) : _this3.h[sourceimage]];
+	haxegon_Gfx.promotetorendertarget(haxegon_Gfx.haxegonimage.contents);
+	haxegon_Gfx.shapematrix.identity();
+	haxegon_Gfx.shapematrix.translate(-sourceimagex,-sourceimagey);
+	(js_Boot.__cast(haxegon_Gfx.haxegonimage.contents.get_texture() , starling_textures_RenderTexture)).draw(sourceimage1.contents,haxegon_Gfx.shapematrix);
+};
+haxegon_Gfx.copytile = function(totileset,totilenumber,fromtileset,fromtilenumber) {
+	var _this = haxegon_Gfx.tilesetindex;
+	if(__map_reserved[fromtileset] != null ? _this.existsReserved(fromtileset) : _this.h.hasOwnProperty(fromtileset)) {
+		var tmp;
+		var _this1 = haxegon_Gfx.tilesetindex;
+		if(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width == haxegon_Gfx.tiles[__map_reserved[fromtileset] != null ? _this1.getReserved(fromtileset) : _this1.h[fromtileset]].width) {
+			var _this2 = haxegon_Gfx.tilesetindex;
+			tmp = haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height == haxegon_Gfx.tiles[__map_reserved[fromtileset] != null ? _this2.getReserved(fromtileset) : _this2.h[fromtileset]].height;
+		} else {
+			tmp = false;
+		}
+		if(tmp) {
+			var _this3 = haxegon_Gfx.tilesetindex;
+			haxegon_Gfx.promotetorendertarget(haxegon_Gfx.tiles[__map_reserved[totileset] != null ? _this3.getReserved(totileset) : _this3.h[totileset]].tiles[totilenumber]);
+			haxegon_Gfx.shapematrix.identity();
+			var _this4 = haxegon_Gfx.tilesetindex;
+			var tmp1 = js_Boot.__cast(haxegon_Gfx.tiles[__map_reserved[totileset] != null ? _this4.getReserved(totileset) : _this4.h[totileset]].tiles[totilenumber].get_texture() , starling_textures_RenderTexture);
+			var _this5 = haxegon_Gfx.tilesetindex;
+			tmp1.draw(haxegon_Gfx.tiles[__map_reserved[fromtileset] != null ? _this5.getReserved(fromtileset) : _this5.h[fromtileset]].tiles[fromtilenumber],haxegon_Gfx.shapematrix);
+		} else {
+			var tmp2 = "ERROR: Tilesets " + totileset + " (" + Std.string(haxegon_Gfx.tilewidth(totileset)) + "x" + Std.string(haxegon_Gfx.tileheight(totileset)) + ") and " + fromtileset + " (";
+			var _this6 = haxegon_Gfx.tilesetindex;
+			var tmp3 = tmp2 + Std.string(haxegon_Gfx.tiles[__map_reserved[fromtileset] != null ? _this6.getReserved(fromtileset) : _this6.h[fromtileset]].width) + "x";
+			var _this7 = haxegon_Gfx.tilesetindex;
+			haxegon_Debug.log(tmp3 + Std.string(haxegon_Gfx.tiles[__map_reserved[fromtileset] != null ? _this7.getReserved(fromtileset) : _this7.h[fromtileset]].height) + ") are different sizes. Maybe try just drawing to the tile you want instead with Gfx.drawtotile()?",{ fileName : "Gfx.hx", lineNumber : 746, className : "haxegon.Gfx", methodName : "copytile"});
+			return;
+		}
+	} else {
+		haxegon_Debug.log("ERROR: Tileset " + fromtileset + " hasn't been loaded or created.",{ fileName : "Gfx.hx", lineNumber : 750, className : "haxegon.Gfx", methodName : "copytile"});
+		return;
+	}
+};
+haxegon_Gfx.drawsubtile = function(x,y,tilesetname,tilenum,x1,y1,w,h) {
+	haxegon_Gfx.changetileset(tilesetname);
+	if(tilenum >= haxegon_Gfx.numberoftiles(tilesetname)) {
+		if(tilenum == haxegon_Gfx.numberoftiles(tilesetname)) {
+			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenum == null ? "null" : "" + tilenum) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\". (Because this includes tile number 0, " + (tilenum == null ? "null" : "" + tilenum) + " is not a valid tile.)",{ fileName : "Gfx.hx", lineNumber : 764, className : "haxegon.Gfx", methodName : "drawsubtile"});
+			return;
+		} else {
+			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenum == null ? "null" : "" + tilenum) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\".",{ fileName : "Gfx.hx", lineNumber : 767, className : "haxegon.Gfx", methodName : "drawsubtile"});
+			return;
+		}
+	}
+	haxegon_Gfx.endquadbatch();
+	haxegon_Gfx.quadbatchcount++;
+	if(haxegon_Gfx.quadbatchcount >= 16383) {
+		haxegon_Gfx.endquadbatch();
+	}
+	x = haxegon_Gfx.tilealignx(x);
+	y = haxegon_Gfx.tilealigny(y);
+	haxegon_Gfx.trect.x = x1;
+	haxegon_Gfx.trect.y = y1;
+	haxegon_Gfx.trect.width = w;
+	haxegon_Gfx.trect.height = h;
+	var subtex = starling_textures_Texture.fromTexture(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[tilenum].get_texture(),haxegon_Gfx.trect);
+	var subimage = new starling_display_Image(subtex);
+	subimage.set_touchable(false);
+	haxegon_Gfx.internaldrawimage(x,y,subimage,subimage.get_width() | 0,subimage.get_height() | 0);
+	haxegon_Gfx.endquadbatch();
+	subtex.dispose();
+	subimage.dispose();
+};
+haxegon_Gfx.drawtile = function(x,y,tilesetname,tilenum) {
+	haxegon_Gfx.changetileset(tilesetname);
+	if(tilenum >= haxegon_Gfx.numberoftiles(tilesetname)) {
+		if(tilenum == haxegon_Gfx.numberoftiles(tilesetname)) {
+			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenum == null ? "null" : "" + tilenum) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\". (Because this includes tile number 0, " + (tilenum == null ? "null" : "" + tilenum) + " is not a valid tile.)",{ fileName : "Gfx.hx", lineNumber : 804, className : "haxegon.Gfx", methodName : "drawtile"});
+			return;
+		} else {
+			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenum == null ? "null" : "" + tilenum) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\".",{ fileName : "Gfx.hx", lineNumber : 807, className : "haxegon.Gfx", methodName : "drawtile"});
+			return;
+		}
+	}
+	if(haxegon_Gfx.drawstate != 4) {
+		haxegon_Gfx.endquadbatch();
+	}
+	haxegon_Gfx.quadbatchcount++;
+	if(haxegon_Gfx.quadbatchcount >= 16383) {
+		haxegon_Gfx.endquadbatch();
+	}
+	haxegon_Gfx.drawstate = 4;
+	x = haxegon_Gfx.tilealignx(x);
+	y = haxegon_Gfx.tilealigny(y);
+	haxegon_Gfx.internaldrawimage(x,y,haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[tilenum],haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width,haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height);
+};
+haxegon_Gfx.tilealignx = function(x) {
+	if(x == haxegon_Gfx.CENTER) {
+		return haxegon_Gfx.screenwidthmid - (haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width / 2 | 0);
+	}
+	if(x == haxegon_Gfx.LEFT || x == haxegon_Gfx.TOP) {
+		return 0;
+	}
+	if(x == haxegon_Gfx.RIGHT || x == haxegon_Gfx.BOTTOM) {
+		return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width;
+	}
+	return x;
+};
+haxegon_Gfx.tilealigny = function(y) {
+	if(y == haxegon_Gfx.CENTER) {
+		return haxegon_Gfx.screenheightmid - (haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height / 2 | 0);
+	}
+	if(y == haxegon_Gfx.LEFT || y == haxegon_Gfx.TOP) {
+		return 0;
+	}
+	if(y == haxegon_Gfx.RIGHT || y == haxegon_Gfx.BOTTOM) {
+		return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height;
+	}
+	return y;
+};
+haxegon_Gfx.tilealignontilex = function(x) {
+	if(x == haxegon_Gfx.CENTER) {
+		return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width / 2 | 0;
+	}
+	if(x == haxegon_Gfx.LEFT || x == haxegon_Gfx.TOP) {
+		return 0;
+	}
+	if(x == haxegon_Gfx.RIGHT || x == haxegon_Gfx.BOTTOM) {
+		return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width;
+	}
+	return x;
+};
+haxegon_Gfx.tilealignontiley = function(y) {
+	if(y == haxegon_Gfx.CENTER) {
+		return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height / 2 | 0;
+	}
+	if(y == haxegon_Gfx.LEFT || y == haxegon_Gfx.TOP) {
+		return 0;
+	}
+	if(y == haxegon_Gfx.RIGHT || y == haxegon_Gfx.BOTTOM) {
+		return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height;
+	}
+	return y;
+};
+haxegon_Gfx.drawline = function(x1,y1,x2,y2,color,alpha) {
+	if(alpha == null) {
+		alpha = 1.0;
+	}
+	if(color == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
+		return;
+	}
+	if(haxegon_Gfx.drawstate != 1) {
+		haxegon_Gfx.endquadbatch();
+	}
+	haxegon_Gfx.quadbatchcount++;
+	if(haxegon_Gfx.quadbatchcount >= 16383) {
+		haxegon_Gfx.endquadbatch();
+	}
+	haxegon_Gfx.drawstate = 1;
+	haxegon_Gfx.templine.setPosition(x1,y1,x2,y2);
+	haxegon_Gfx.templine.thickness = haxegon_Gfx.get_linethickness();
+	haxegon_Gfx.templine.set_color(color);
+	haxegon_Gfx.templine.set_alpha(alpha);
+	haxegon_Gfx.quadbatch.addQuad(haxegon_Gfx.templine);
+};
+haxegon_Gfx.drawhexagon = function(x,y,radius,angle,color,alpha) {
+	if(alpha == null) {
+		alpha = 1.0;
+	}
+	if(color == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
+		return;
+	}
+	if(radius <= 0) {
+		return;
+	}
+	if(!haxegon_Geom.inbox(x,y,-radius,-radius,haxegon_Gfx.screenwidth + radius * 2,haxegon_Gfx.screenheight + radius * 2)) {
+		return;
+	}
+	if(haxegon_Gfx.drawstate != 1) {
+		haxegon_Gfx.endquadbatch();
+	}
+	haxegon_Gfx.drawstate = 1;
+	var tempring = new starling_display_Ring(x - radius,y - radius,radius - haxegon_Gfx.get_linethickness(),radius,color,alpha,true,6,angle);
+	var _g1 = 0;
+	var _g = tempring._polygons.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		haxegon_Gfx.quadbatchcount++;
+		if(haxegon_Gfx.quadbatchcount >= 16383) {
+			haxegon_Gfx.endquadbatch();
+		}
+		haxegon_Gfx.quadbatch.addQuad(tempring._polygons[i]);
+	}
+};
+haxegon_Gfx.fillhexagon = function(x,y,radius,angle,color,alpha) {
+	if(alpha == null) {
+		alpha = 1.0;
+	}
+	if(color == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
+		return;
+	}
+	if(radius <= 0) {
+		return;
+	}
+	if(!haxegon_Geom.inbox(x,y,-radius,-radius,haxegon_Gfx.screenwidth + radius * 2,haxegon_Gfx.screenheight + radius * 2)) {
+		return;
+	}
+	if(haxegon_Gfx.drawstate != 1) {
+		haxegon_Gfx.endquadbatch();
+	}
+	haxegon_Gfx.drawstate = 1;
+	var tempring = new starling_display_Disk(x - radius,y - radius,radius,color,alpha,true,6,angle);
+	var _g1 = 0;
+	var _g = tempring._polygons.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		haxegon_Gfx.quadbatchcount++;
+		if(haxegon_Gfx.quadbatchcount >= 16383) {
+			haxegon_Gfx.endquadbatch();
+		}
+		haxegon_Gfx.quadbatch.addQuad(tempring._polygons[i]);
+	}
+};
+haxegon_Gfx.drawcircle = function(x,y,radius,color,alpha) {
+	if(alpha == null) {
+		alpha = 1.0;
+	}
+	if(color == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
+		return;
+	}
+	if(radius <= 0) {
+		return;
+	}
+	if(!haxegon_Geom.inbox(x,y,-radius,-radius,haxegon_Gfx.screenwidth + radius * 2,haxegon_Gfx.screenheight + radius * 2)) {
+		return;
+	}
+	if(haxegon_Gfx.drawstate != 1) {
+		haxegon_Gfx.endquadbatch();
+	}
+	haxegon_Gfx.drawstate = 1;
+	var tempring = new starling_display_Ring(x - radius,y - radius,radius - haxegon_Gfx.get_linethickness(),radius,color,alpha);
+	var _g1 = 0;
+	var _g = tempring._polygons.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		haxegon_Gfx.quadbatchcount++;
+		if(haxegon_Gfx.quadbatchcount >= 16383) {
+			haxegon_Gfx.endquadbatch();
+		}
+		haxegon_Gfx.quadbatch.addQuad(tempring._polygons[i]);
+	}
+};
+haxegon_Gfx.fillcircle = function(x,y,radius,col,alpha) {
+	if(alpha == null) {
+		alpha = 1.0;
+	}
+	if(col == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
+		return;
+	}
+	if(radius <= 0) {
+		return;
+	}
+	if(!haxegon_Geom.inbox(x,y,-radius,-radius,haxegon_Gfx.screenwidth + radius * 2,haxegon_Gfx.screenheight + radius * 2)) {
+		return;
+	}
+	if(haxegon_Gfx.drawstate != 1) {
+		haxegon_Gfx.endquadbatch();
+	}
+	haxegon_Gfx.drawstate = 1;
+	var tempring = new starling_display_Disk(x - radius,y - radius,radius,col,alpha);
+	var _g1 = 0;
+	var _g = tempring._polygons.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		haxegon_Gfx.quadbatchcount++;
+		if(haxegon_Gfx.quadbatchcount >= 16383) {
+			haxegon_Gfx.endquadbatch();
+		}
+		haxegon_Gfx.quadbatch.addQuad(tempring._polygons[i]);
+	}
+};
+haxegon_Gfx.drawtri = function(x1,y1,x2,y2,x3,y3,color,alpha) {
+	if(alpha == null) {
+		alpha = 1.0;
+	}
+	if(color == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
+		return;
+	}
+	haxegon_Gfx.drawline(x1,y1,x2,y2,color,alpha);
+	haxegon_Gfx.drawline(x1,y1,x3,y3,color,alpha);
+	haxegon_Gfx.drawline(x2,y2,x3,y3,color,alpha);
+};
+haxegon_Gfx.filltri = function(x1,y1,x2,y2,x3,y3,color,alpha) {
+	if(alpha == null) {
+		alpha = 1.0;
+	}
+	if(color == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
+		return;
+	}
+	if(haxegon_Gfx.drawstate != 2) {
+		haxegon_Gfx.endquadbatch();
+	}
+	haxegon_Gfx.quadbatchcount++;
+	if(haxegon_Gfx.quadbatchcount >= 16383) {
+		haxegon_Gfx.endquadbatch();
+	}
+	haxegon_Gfx.drawstate = 2;
+	haxegon_Gfx.temppoly4.setVertexPositions(x1,y1,x2,y2,x3,y3,x3,y3);
+	haxegon_Gfx.temppoly4.set_color(color);
+	haxegon_Gfx.temppoly4.set_alpha(alpha);
+	haxegon_Gfx.quadbatch.addQuad(haxegon_Gfx.temppoly4);
+};
+haxegon_Gfx.drawbox = function(x,y,width,height,color,alpha) {
+	if(alpha == null) {
+		alpha = 1.0;
+	}
+	if(color == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
+		return;
+	}
+	if(width < 0) {
+		width = -width;
+		x -= width;
+	}
+	if(height < 0) {
+		height = -height;
+		y -= height;
+	}
+	haxegon_Gfx.fillbox(x,y,width,haxegon_Gfx.get_linethickness(),color,alpha);
+	haxegon_Gfx.fillbox(x + haxegon_Gfx.get_linethickness(),y + height - haxegon_Gfx.get_linethickness(),width - haxegon_Gfx.get_linethickness() * 2,haxegon_Gfx.get_linethickness(),color,alpha);
+	haxegon_Gfx.fillbox(x,y + haxegon_Gfx.get_linethickness(),haxegon_Gfx.get_linethickness(),height - haxegon_Gfx.get_linethickness(),color,alpha);
+	haxegon_Gfx.fillbox(x + width - haxegon_Gfx.get_linethickness(),y + haxegon_Gfx.get_linethickness(),haxegon_Gfx.get_linethickness(),height - haxegon_Gfx.get_linethickness(),color,alpha);
+};
+haxegon_Gfx.fillbox = function(x,y,width,height,col,alpha) {
+	if(alpha == null) {
+		alpha = 1.0;
+	}
+	if(col == haxegon_Col.TRANSPARENT) {
+		return;
+	}
+	if(haxegon_Gfx.drawstate != 1) {
+		haxegon_Gfx.endquadbatch();
+	}
+	haxegon_Gfx.quadbatchcount++;
+	if(haxegon_Gfx.quadbatchcount >= 16383) {
+		haxegon_Gfx.endquadbatch();
+	}
+	haxegon_Gfx.drawstate = 1;
+	haxegon_Gfx.tempquad.set_x(x);
+	haxegon_Gfx.tempquad.set_y(y);
+	haxegon_Gfx.tempquad.set_width(width);
+	haxegon_Gfx.tempquad.set_height(height);
+	haxegon_Gfx.tempquad.set_color(col);
+	haxegon_Gfx.tempquad.set_alpha(alpha);
+	haxegon_Gfx.quadbatch.addQuad(haxegon_Gfx.tempquad);
+};
+haxegon_Gfx.updatequadbatch = function() {
+	haxegon_Gfx.quadbatchcount++;
+	if(haxegon_Gfx.quadbatchcount >= 16383) {
+		haxegon_Gfx.endquadbatch();
+	}
+};
+haxegon_Gfx.endquadbatch = function() {
+	if(haxegon_Gfx.quadbatchcount > 0) {
+		haxegon_Gfx.drawto.draw(haxegon_Gfx.quadbatch);
+		haxegon_Gfx.quadbatch.reset();
+		haxegon_Gfx.quadbatchcount = 0;
+		haxegon_Gfx.drawstate = 0;
+	}
+};
+haxegon_Gfx.endquadbatchonsurface = function(d) {
+	if(haxegon_Gfx.quadbatchcount > 0) {
+		d.draw(haxegon_Gfx.quadbatch);
+		haxegon_Gfx.quadbatch.reset();
+		haxegon_Gfx.quadbatchcount = 0;
+	}
+};
+haxegon_Gfx.get_linethickness = function() {
+	return haxegon_Gfx._linethickness;
+};
+haxegon_Gfx.set_linethickness = function(size) {
+	haxegon_Gfx._linethickness = size;
+	if(haxegon_Gfx._linethickness < 1) {
+		haxegon_Gfx._linethickness = 1;
+	}
+	if(haxegon_Gfx._linethickness > 255) {
+		haxegon_Gfx._linethickness = 255;
+	}
+	return haxegon_Gfx._linethickness;
+};
+haxegon_Gfx.clearscreen = function(color) {
+	if(color == null) {
+		color = 0;
+	}
+	if(haxegon_Gfx.drawto == null) {
+		return;
+	}
+	haxegon_Gfx.endquadbatch();
+	if(color == haxegon_Col.TRANSPARENT) {
+		haxegon_Gfx.drawto.clear();
+	} else {
+		haxegon_Gfx.drawto.clear(color,1.0);
+	}
+};
+haxegon_Gfx.setpixel = function(x,y,color,alpha) {
+	if(alpha == null) {
+		alpha = 1.0;
+	}
+	if(color == haxegon_Col.TRANSPARENT && haxegon_Gfx.drawto != null) {
+		return;
+	}
+	haxegon_Gfx.fillbox(x,y,1,1,color,alpha);
+};
+haxegon_Gfx.getpixel = function(x,y) {
+	var w;
+	var h;
+	var xs;
+	var ys;
+	var resultpixel = haxegon_Col.TRANSPARENT;
+	if(haxegon_Gfx.drawto == haxegon_Gfx.backbuffer) {
+		w = haxegon_Gfx.screenwidth;
+		h = haxegon_Gfx.screenheight;
+		xs = starling_core_Starling.get_current().get_viewPort().width / w;
+		ys = starling_core_Starling.get_current().get_viewPort().height / h;
+		var screenshot = new openfl_display_BitmapData(w,h);
+		screenshot = starling_core_Starling.get_current().get_stage().drawToBitmapData(screenshot,false);
+		var pixelalpha = screenshot.getPixel32(x * xs | 0,y * ys | 0) >> 24 & 255;
+		var pixel = screenshot.getPixel(x * xs | 0,y * ys | 0);
+		if(pixelalpha == 0) {
+			resultpixel = haxegon_Col.TRANSPARENT;
+		} else {
+			resultpixel = pixel;
+		}
+		screenshot.dispose();
+	} else {
+		w = haxegon_Gfx.screenwidth;
+		h = haxegon_Gfx.screenheight;
+		xs = starling_core_Starling.get_current().get_viewPort().width / w;
+		ys = starling_core_Starling.get_current().get_viewPort().height / h;
+		haxegon_Gfx.endquadbatch();
+		haxegon_Gfx.drawto.bundleunlock();
+		var screenshot1 = new openfl_display_BitmapData(w,h);
+		screenshot1 = starling_core_Starling.get_current().get_stage().drawToBitmapData(screenshot1,false);
+		haxegon_Gfx.backbuffer.bundlelock();
+		haxegon_Gfx.backbuffer.clear();
+		haxegon_Gfx.backbuffer.draw(new starling_display_Image(haxegon_Gfx.drawto));
+		haxegon_Gfx.backbuffer.bundleunlock();
+		var screenshot2 = new openfl_display_BitmapData(w,h);
+		screenshot2 = starling_core_Starling.get_current().get_stage().drawToBitmapData(screenshot2,true);
+		var pixelalpha1 = screenshot2.getPixel32(x * xs | 0,y * ys | 0) >> 24 & 255;
+		var pixel1 = screenshot2.getPixel(x * xs | 0,y * ys | 0);
+		if(pixelalpha1 == 0) {
+			resultpixel = haxegon_Col.TRANSPARENT;
+		} else {
+			resultpixel = pixel1;
+		}
+		screenshot2.dispose();
+		haxegon_Gfx.backbuffer.draw(new starling_display_Image(starling_textures_Texture.fromBitmapData(screenshot1)));
+		screenshot1.dispose();
+	}
+	return resultpixel;
+};
+haxegon_Gfx.updategraphicsmode = function(windowwidth,windowheight) {
+	if(!haxegon_Gfx._fullscreen) {
+		if(haxegon_Gfx.flashstage.get_displayState() == 1 || haxegon_Gfx.flashstage.get_displayState() == 0) {
+			haxegon_Gfx.flashstage.set_displayState(2);
+		}
+	} else if(haxegon_Gfx.flashstage.get_displayState() == 2) {
+		try {
+			haxegon_Gfx.flashstage.set_displayState(1);
+		} catch( e ) {
+			haxe_CallStack.lastException = e;
+		}
+	}
+	if(windowwidth == 0 && windowheight == 0) {
+		return;
+	}
+	haxegon_Gfx.starstage.set_stageWidth(haxegon_Gfx.screenwidth);
+	haxegon_Gfx.starstage.set_stageHeight(haxegon_Gfx.screenheight);
+	var stretchscalex;
+	var stretchscaley;
+	var stretchscalex1 = (windowwidth | 0) / haxegon_Gfx.screenwidth;
+	var stretchscaley1 = (windowheight | 0) / haxegon_Gfx.screenheight;
+	var stretchscale = Math.min(stretchscalex1,stretchscaley1);
+	var viewPortRectangle = new openfl_geom_Rectangle();
+	viewPortRectangle.width = haxegon_Gfx.screenwidth * stretchscale;
+	viewPortRectangle.height = haxegon_Gfx.screenheight * stretchscale;
+	viewPortRectangle.x = (windowwidth - (haxegon_Gfx.screenwidth * stretchscale | 0)) / 2 | 0;
+	viewPortRectangle.y = (windowheight - (haxegon_Gfx.screenheight * stretchscale | 0)) / 2 | 0;
+	starling_core_Starling.get_current().set_viewPort(viewPortRectangle);
+};
+haxegon_Gfx.getscreenx = function(_x) {
+	return Math.floor((_x - starling_core_Starling.get_current().get_viewPort().x) * haxegon_Gfx.screenwidth / starling_core_Starling.get_current().get_viewPort().width);
+};
+haxegon_Gfx.getscreeny = function(_y) {
+	return Math.floor((_y - starling_core_Starling.get_current().get_viewPort().y) * haxegon_Gfx.screenheight / starling_core_Starling.get_current().get_viewPort().height);
+};
+haxegon_Gfx.resizescreen = function(width,height) {
+	haxegon_Gfx.initgfx(width | 0,height | 0);
+	haxegon_Text.init(haxegon_Gfx.starstage);
+	haxegon_Gfx.updategraphicsmode(haxegon_Gfx.starstage.get_stageWidth(),haxegon_Gfx.starstage.get_stageHeight());
+};
+haxegon_Gfx.get_fullscreen = function() {
+	return haxegon_Gfx._fullscreen;
+};
+haxegon_Gfx.set_fullscreen = function(fs) {
+	haxegon_Gfx._fullscreen = fs;
+	if(fs) {
+		haxegon_Debug.log("Warning: HTML5 target does not currently support fullscreen. Check again in a later version!",{ fileName : "Gfx.hx", lineNumber : 1198, className : "haxegon.Gfx", methodName : "set_fullscreen"});
+	}
+	return fs;
+};
+haxegon_Gfx.init = function(_starlingstage,_flashstage) {
+	haxegon_Gfx.starstage = _starlingstage;
+	haxegon_Gfx.flashstage = _flashstage;
+	haxegon_Gfx.starstage.addEventListener("resize",haxegon_Gfx.onresize);
+	haxegon_Gfx.quadbatch = new starling_display_QuadBatch();
+	haxegon_Gfx.set_linethickness(1);
+	haxegon_Gfx.loadpackedtextures();
+	haxegon_Gfx.reset();
+};
+haxegon_Gfx.onresize = function(e) {
+	haxegon_Gfx.updategraphicsmode(e.get_width(),e.get_height());
+};
+haxegon_Gfx.loadpackedtextures = function() {
+	if(!haxegon_Gfx.gfxinit) {
+		haxegon_Gfx.starlingassets = new starling_utils_AssetManager();
+		haxegon_Gfx.starlingassets.set_verbose(false);
+		var atlasnum = 0;
+		var _g = 0;
+		var _g1 = openfl_utils_Assets.list("TEXT");
+		while(_g < _g1.length) {
+			var t = _g1[_g];
+			++_g;
+			var extension = haxegon_S.getlastbranch(t,".");
+			if(extension == "xml") {
+				var xml = Xml.parse(openfl_utils_Assets.getText(t)).firstElement();
+				if(xml.nodeType != Xml.Element) {
+					throw new js__$Boot_HaxeError("Bad node type, expected Element but found " + xml.nodeType);
+				}
+				if(xml.nodeName == "TextureAtlas") {
+					var texturepackedimage = starling_textures_Texture.fromBitmapData(openfl_utils_Assets.getBitmapData("data/graphics/" + xml.get("imagePath")),false);
+					haxegon_Gfx.starlingassets.addTexture("atlas" + atlasnum,texturepackedimage);
+					haxegon_Gfx.starlingassets.addTextureAtlas("atlas" + atlasnum,new starling_textures_TextureAtlas(texturepackedimage,xml));
+					++atlasnum;
+					var i = xml.elementsNamed("SubTexture");
+					while(i.hasNext()) {
+						var i1 = i.next();
+						haxegon_Gfx.loadimagefrompackedtexture(i1.get("name"),haxegon_Gfx.getassetpackedtexture(i1.get("name")));
+					}
+				}
+			}
+		}
+	}
+};
+haxegon_Gfx.initgfx = function(width,height) {
+	haxegon_Gfx.screenwidth = width;
+	haxegon_Gfx.screenheight = height;
+	haxegon_Gfx.screenwidthmid = haxegon_Gfx.screenwidth / 2 | 0;
+	haxegon_Gfx.screenheightmid = haxegon_Gfx.screenheight / 2 | 0;
+	haxegon_Gfx.devicexres = openfl_system_Capabilities.get_screenResolutionX() | 0;
+	haxegon_Gfx.deviceyres = openfl_system_Capabilities.get_screenResolutionY() | 0;
+	if(!haxegon_Gfx.gfxinit) {
+		haxegon_Gfx.backbuffer = new starling_textures_RenderTexture(width,height,true);
+		haxegon_Gfx.drawto = haxegon_Gfx.backbuffer;
+		haxegon_Gfx.screen = new starling_display_Image(haxegon_Gfx.backbuffer);
+		haxegon_Gfx.screen.set_touchable(false);
+		haxegon_Gfx.screen.set_scale(1);
+		haxegon_Gfx.screen.set_smoothing("none");
+		haxegon_Gfx.starstage.addChildAt(haxegon_Gfx.screen,0);
+		haxegon_Filter.init();
+	}
+	haxegon_Gfx.gfxinit = true;
+};
+haxegon_Gfx.settrect = function(x,y,w,h) {
+	haxegon_Gfx.trect.x = x;
+	haxegon_Gfx.trect.y = y;
+	haxegon_Gfx.trect.width = w;
+	haxegon_Gfx.trect.height = h;
+};
+haxegon_Gfx.startframe = function() {
+	haxegon_Gfx.drawstate = 0;
+	haxegon_Gfx.drawto.bundlelock();
+	if(haxegon_Gfx.clearcolor != haxegon_Col.TRANSPARENT) {
+		haxegon_Gfx.clearscreen(haxegon_Gfx.clearcolor);
+	}
+	haxegon_Gfx.quadbatch.reset();
+	haxegon_Gfx.quadbatchcount = 0;
+	haxegon_Text.resettextfields();
+};
+haxegon_Gfx.endframe = function() {
+	haxegon_Gfx.endquadbatch();
+	haxegon_Gfx.drawto.bundleunlock();
 };
 var Globals = function() {
 };
 $hxClasses["Globals"] = Globals;
 Globals.__name__ = ["Globals"];
+Globals.init = function() {
+	Globals.allowBackgroundCircles = true;
+	Globals.size = Globals._INIT_SIZE;
+	Globals.updateColor();
+};
+Globals.updateColor = function() {
+	Globals.color = haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,Globals.backgroundSaturation,Globals.backgroundLightness);
+};
+Globals.checkToggleBackgroundCircles = function() {
+	if(haxegon_Input.justpressed(haxegon_Key.B)) {
+		if(Globals.allowBackgroundCircles) {
+			Globals.allowBackgroundCircles = false;
+		} else {
+			Globals.allowBackgroundCircles = true;
+		}
+	}
+};
+Globals.checkToggleMusic = function() {
+	if(haxegon_Input.justpressed(haxegon_Key.M)) {
+		if(Globals._songPlaying) {
+			Globals._songPlaying = false;
+		} else {
+			Globals._songPlaying = true;
+		}
+	}
+};
 Globals.changeBackgroundColor = function() {
-	haxegon_Gfx.clearscreen(haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,Globals.backgroundSaturation,Globals.backgroundLightness));
+	Globals.X_MID = haxegon_Gfx.screenwidthmid;
+	Globals.Y_MID = haxegon_Gfx.screenheightmid;
+	Globals.updateColor();
+	haxegon_Gfx.clearscreen(Globals.color);
+	if(Globals.allowBackgroundCircles) {
+		Globals.updateBackgroundCircles();
+	}
+};
+Globals.updateBackgroundCirclesSize = function() {
+	if(Globals.size >= Globals._MAX_CIRCLES_SIZE) {
+		Globals.size = Globals._INIT_SIZE;
+	} else {
+		Globals.size += Globals._BACKGROUND_CIRCLES_INCREASE_SPEED + (Globals.level + 1) / 5;
+	}
+};
+Globals.updateBackgroundCircles = function() {
+	Globals.updateBackgroundCirclesSize();
+	var _g1 = 0;
+	var _g = Globals.backgroundCirclesAmount;
+	while(_g1 < _g) {
+		var idx = _g1++;
+		if(idx % 2 == 0) {
+			Globals.color = haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,0.25,0.18);
+		} else {
+			Globals.updateColor();
+		}
+		var radius = Globals.size * Globals.mult * (Globals.backgroundCirclesAmount - (idx + 1));
+		haxegon_Gfx.fillcircle(Globals.X_MID,Globals.Y_MID,radius,Globals.color);
+	}
 };
 Globals.prototype = {
 	__class__: Globals
@@ -3995,68 +9727,6 @@ Lambda.array = function(it) {
 	}
 	return a;
 };
-var List = function() {
-	this.length = 0;
-};
-$hxClasses["List"] = List;
-List.__name__ = ["List"];
-List.prototype = {
-	h: null
-	,q: null
-	,length: null
-	,add: function(item) {
-		var x = new _$List_ListNode(item,null);
-		if(this.h == null) {
-			this.h = x;
-		} else {
-			this.q.next = x;
-		}
-		this.q = x;
-		this.length++;
-	}
-	,pop: function() {
-		if(this.h == null) {
-			return null;
-		}
-		var x = this.h.item;
-		this.h = this.h.next;
-		if(this.h == null) {
-			this.q = null;
-		}
-		this.length--;
-		return x;
-	}
-	,clear: function() {
-		this.h = null;
-		this.q = null;
-		this.length = 0;
-	}
-	,remove: function(v) {
-		var prev = null;
-		var l = this.h;
-		while(l != null) {
-			if(l.item == v) {
-				if(prev == null) {
-					this.h = l.next;
-				} else {
-					prev.next = l.next;
-				}
-				if(this.q == l) {
-					this.q = prev;
-				}
-				this.length--;
-				return true;
-			}
-			prev = l;
-			l = l.next;
-		}
-		return false;
-	}
-	,iterator: function() {
-		return new _$List_ListIterator(this.h);
-	}
-	,__class__: List
-};
 var _$List_ListNode = function(item,next) {
 	this.item = item;
 	this.next = next;
@@ -4093,7 +9763,7 @@ var Main = function() {
 	this.bloom = 0;
 	this.showText = true;
 	this.isChangingScene = false;
-	this.TEXT_BLENDING_SPEED = 0.01;
+	this.TEXT_BLENDING_SPEED = 0.015;
 	this.GAME_BY = "A game by Nacho 'bazoo' Verdon";
 	this.GAME_NAME = "DOTGER";
 	haxegon_Music.loadsong("music/dotger100bpm");
@@ -4103,7 +9773,8 @@ var Main = function() {
 	haxegon_Music.loadsong("music/dotger140bpm");
 	haxegon_Music.loadsound("playerHitDebris",0.8);
 	haxegon_Music.loadsound("playerHitPowerUp",0.4);
-	haxegon_Core.delaycall($bind(this,this.startBlending),2);
+	Globals.init();
+	haxegon_Core.delaycall($bind(this,this.startBlending),1.5);
 };
 $hxClasses["Main"] = Main;
 Main.__name__ = ["Main"];
@@ -4120,7 +9791,7 @@ Main.prototype = {
 	,X_MID: null
 	,Y_MID: null
 	,update: function() {
-		Globals.changeBackgroundColor();
+		haxegon_Gfx.clearscreen(haxegon_Col.hsl(haxegon_Core.get_time() * Globals.backgroundChangeSpeed,Globals.backgroundSaturation,Globals.backgroundLightness));
 		if(this.isBlending) {
 			this.handleColor();
 		}
@@ -4422,7 +10093,6 @@ _$_$ASSET_$_$OPENFL_$_$data_$graphics_$fonts_$opensans_$opensans_$ttf.__super__ 
 _$_$ASSET_$_$OPENFL_$_$data_$graphics_$fonts_$opensans_$opensans_$ttf.prototype = $extend(openfl_text_Font.prototype,{
 	__class__: _$_$ASSET_$_$OPENFL_$_$data_$graphics_$fonts_$opensans_$opensans_$ttf
 });
-Math.__name__ = ["Math"];
 var MenuScene = function() {
 	this._START_GAME_KEYS = [haxegon_Key.W,haxegon_Key.A,haxegon_Key.S,haxegon_Key.D,haxegon_Key.UP,haxegon_Key.DOWN,haxegon_Key.LEFT,haxegon_Key.RIGHT,haxegon_Key.ENTER,haxegon_Key.SPACE];
 	this._DOT_SHRINK_SPEED = 0.09;
@@ -4441,7 +10111,7 @@ var MenuScene = function() {
 	this._HINT_OFFSET_EXTRA_SPEED = 0.125;
 	this._HINT_OFFSET_EXTRA = 10;
 	this._HINT_OFFSET = 25;
-	this._HINT_DELAY = 6;
+	this._HINT_DELAY = 4;
 	this._HOW_TO = "Arrows";
 	this._PLAYER_INITIAL_SHRINK_SPEED = 0.05;
 	this._PLAYER_INITIAL_LIGHTNESS = 0.5;
@@ -4493,6 +10163,8 @@ MenuScene.prototype = {
 	,_START_GAME_KEYS: null
 	,update: function() {
 		Globals.changeBackgroundColor();
+		Globals.checkToggleBackgroundCircles();
+		Globals.checkToggleMusic();
 		this.drawPlayer();
 		this.drawDot();
 		this.checkStartGame();
@@ -4611,6 +10283,18 @@ MenuScene.prototype = {
 		haxegon_Text.rotation(0);
 		haxegon_Text.display(haxegon_Gfx.screenwidthmid - playerOffset,haxegon_Gfx.screenheightmid - charSize,"<",color);
 		haxegon_Text.display(haxegon_Gfx.screenwidthmid + playerOffset,haxegon_Gfx.screenheightmid - charSize,">",color);
+		haxegon_Text.align(haxegon_Text.RIGHT);
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid - 50,haxegon_Gfx.screenheight - 100,"[M]usic");
+		haxegon_Text.align(haxegon_Text.LEFT);
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid - 50 - haxegon_Text.width("[M]usic") + 2 + haxegon_Text.width("["),haxegon_Gfx.screenheight - 100,"M",color);
+		if(Globals._songPlaying) {
+			haxegon_Text.display(haxegon_Gfx.screenwidthmid - 100,haxegon_Gfx.screenheight - 75,"ON",color);
+		} else {
+			haxegon_Text.display(haxegon_Gfx.screenwidthmid - 100,haxegon_Gfx.screenheight - 75,"OFF",color);
+		}
+		haxegon_Text.align(haxegon_Text.LEFT);
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid + 50,haxegon_Gfx.screenheight - 100,"[B]ackground");
+		haxegon_Text.display(haxegon_Gfx.screenwidthmid + 50 + haxegon_Text.width("[") + 2,haxegon_Gfx.screenheight - 100,"B",color);
 	}
 	,__class__: MenuScene
 };
@@ -7437,3568 +13121,6 @@ haxegon_Convert.toint = function(value) {
 haxegon_Convert.tofloat = function(value) {
 	return parseFloat(value);
 };
-var starling_events_EventDispatcher = function() {
-};
-$hxClasses["starling.events.EventDispatcher"] = starling_events_EventDispatcher;
-starling_events_EventDispatcher.__name__ = ["starling","events","EventDispatcher"];
-starling_events_EventDispatcher.prototype = {
-	mEventListeners: null
-	,addEventListener: function(type,listener) {
-		if(this.mEventListeners == null) {
-			this.mEventListeners = new haxe_ds_StringMap();
-		}
-		var _this = this.mEventListeners;
-		var listeners = __map_reserved[type] != null ? _this.getReserved(type) : _this.h[type];
-		if(listeners == null) {
-			var this1 = this.mEventListeners;
-			var v = openfl__$Vector_Vector_$Impl_$.toFunctionVector(null);
-			var _this1 = this1;
-			if(__map_reserved[type] != null) {
-				_this1.setReserved(type,v);
-			} else {
-				_this1.h[type] = v;
-			}
-			var _this2 = this.mEventListeners;
-			(__map_reserved[type] != null ? _this2.getReserved(type) : _this2.h[type]).push(listener);
-		} else {
-			var _g1 = 0;
-			var _g = listeners.get_length();
-			while(_g1 < _g) {
-				var i = _g1++;
-				if(Reflect.compareMethods(listeners.get(i),listener)) {
-					return;
-				}
-			}
-			listeners.set(listeners.get_length(),listener);
-		}
-	}
-	,removeEventListener: function(type,listener) {
-		if(this.mEventListeners != null) {
-			var _this = this.mEventListeners;
-			var listeners = __map_reserved[type] != null ? _this.getReserved(type) : _this.h[type];
-			var numListeners = listeners != null ? listeners.get_length() : 0;
-			if(numListeners > 0) {
-				var index = listeners.indexOf(listener,0);
-				if(index != -1) {
-					var restListeners = listeners.slice(0,index);
-					var _g1 = index + 1;
-					var _g = numListeners;
-					while(_g1 < _g) {
-						var i = _g1++;
-						restListeners.set(i - 1,listeners.get(i));
-					}
-					var _this1 = this.mEventListeners;
-					if(__map_reserved[type] != null) {
-						_this1.setReserved(type,restListeners);
-					} else {
-						_this1.h[type] = restListeners;
-					}
-				}
-			}
-		}
-	}
-	,removeEventListeners: function(type) {
-		if(type != null && this.mEventListeners != null) {
-			this.mEventListeners.remove(type);
-		} else {
-			this.mEventListeners = null;
-		}
-	}
-	,dispatchEvent: function(event) {
-		var bubbles = event.bubbles;
-		var tmp;
-		if(!bubbles) {
-			if(this.mEventListeners != null) {
-				var key = event.type;
-				var _this = this.mEventListeners;
-				tmp = !(__map_reserved[key] != null ? _this.existsReserved(key) : _this.h.hasOwnProperty(key));
-			} else {
-				tmp = true;
-			}
-		} else {
-			tmp = false;
-		}
-		if(tmp) {
-			return;
-		}
-		var previousTarget = event.target;
-		event.setTarget(this);
-		if(bubbles && js_Boot.__instanceof(this,starling_display_DisplayObject)) {
-			this.bubbleEvent(event);
-		} else {
-			this.invokeEvent(event);
-		}
-		if(previousTarget != null) {
-			event.setTarget(previousTarget);
-		}
-	}
-	,invokeEvent: function(event) {
-		var listeners;
-		if(this.mEventListeners != null) {
-			var key = event.type;
-			var _this = this.mEventListeners;
-			if(__map_reserved[key] != null) {
-				listeners = _this.getReserved(key);
-			} else {
-				listeners = _this.h[key];
-			}
-		} else {
-			listeners = null;
-		}
-		var numListeners = listeners == null ? 0 : listeners.get_length();
-		if(numListeners != 0) {
-			event.setCurrentTarget(this);
-			var _g1 = 0;
-			var _g = numListeners;
-			while(_g1 < _g) {
-				var i = _g1++;
-				var listener = listeners.get(i);
-				if(listener == null) {
-					continue;
-				}
-				var numArgs = 2;
-				if(numArgs == 0) {
-					listener();
-				} else if(numArgs == 1) {
-					listener(event);
-				} else {
-					listener(event,event.data);
-				}
-				if(event.stopsImmediatePropagation) {
-					return true;
-				}
-			}
-			return event.stopsPropagation;
-		} else {
-			return false;
-		}
-	}
-	,bubbleEvent: function(event) {
-		var chain;
-		var element = js_Boot.__cast(this , starling_display_DisplayObject);
-		var length = 1;
-		if(starling_events_EventDispatcher.sBubbleChains.length > 0) {
-			chain = starling_events_EventDispatcher.sBubbleChains.pop();
-			chain.set(0,element);
-		} else {
-			var a = [element];
-			var vector = openfl__$Vector_Vector_$Impl_$.toObjectVector(null);
-			var _g1 = 0;
-			var _g = a.length;
-			while(_g1 < _g) {
-				var i = _g1++;
-				vector.set(i,a[i]);
-			}
-			chain = vector;
-		}
-		while(true) {
-			element = element.get_parent();
-			if(!(element != null)) {
-				break;
-			}
-			chain.set(length++,element);
-		}
-		var _g11 = 0;
-		var _g2 = length;
-		while(_g11 < _g2) {
-			var i1 = _g11++;
-			if(chain.get(i1) == null) {
-				continue;
-			}
-			var stopPropagation = chain.get(i1).invokeEvent(event);
-			if(stopPropagation) {
-				break;
-			}
-		}
-		chain.set_length(0);
-		starling_events_EventDispatcher.sBubbleChains[starling_events_EventDispatcher.sBubbleChains.length] = chain;
-	}
-	,dispatchEventWith: function(type,bubbles,data) {
-		if(bubbles == null) {
-			bubbles = false;
-		}
-		if(bubbles || this.hasEventListener(type)) {
-			var event = starling_events_Event.fromPool(type,bubbles,data);
-			this.dispatchEvent(event);
-			starling_events_Event.toPool(event);
-		}
-	}
-	,hasEventListener: function(type) {
-		var listeners;
-		if(this.mEventListeners != null) {
-			var _this = this.mEventListeners;
-			if(__map_reserved[type] != null) {
-				listeners = _this.getReserved(type);
-			} else {
-				listeners = _this.h[type];
-			}
-		} else {
-			listeners = null;
-		}
-		if(listeners != null) {
-			return listeners.get_length() != 0;
-		} else {
-			return false;
-		}
-	}
-	,__class__: starling_events_EventDispatcher
-};
-var openfl__$Vector_Vector_$Impl_$ = {};
-$hxClasses["openfl._Vector.Vector_Impl_"] = openfl__$Vector_Vector_$Impl_$;
-openfl__$Vector_Vector_$Impl_$.__name__ = ["openfl","_Vector","Vector_Impl_"];
-openfl__$Vector_Vector_$Impl_$.__properties__ = {set_length:"set_length",get_length:"get_length",set_fixed:"set_fixed",get_fixed:"get_fixed"};
-openfl__$Vector_Vector_$Impl_$.concat = function(this1,a) {
-	return this1.concat(a);
-};
-openfl__$Vector_Vector_$Impl_$.copy = function(this1) {
-	return this1.copy();
-};
-openfl__$Vector_Vector_$Impl_$.get = function(this1,index) {
-	return this1.get(index);
-};
-openfl__$Vector_Vector_$Impl_$.indexOf = function(this1,x,from) {
-	if(from == null) {
-		from = 0;
-	}
-	return this1.indexOf(x,from);
-};
-openfl__$Vector_Vector_$Impl_$.insertAt = function(this1,index,element) {
-	this1.insertAt(index,element);
-};
-openfl__$Vector_Vector_$Impl_$.iterator = function(this1) {
-	return this1.iterator();
-};
-openfl__$Vector_Vector_$Impl_$.join = function(this1,sep) {
-	return this1.join(sep);
-};
-openfl__$Vector_Vector_$Impl_$.lastIndexOf = function(this1,x,from) {
-	if(from == null) {
-		from = 0;
-	}
-	return this1.lastIndexOf(x,from);
-};
-openfl__$Vector_Vector_$Impl_$.pop = function(this1) {
-	return this1.pop();
-};
-openfl__$Vector_Vector_$Impl_$.push = function(this1,x) {
-	return this1.push(x);
-};
-openfl__$Vector_Vector_$Impl_$.reverse = function(this1) {
-	return this1.reverse();
-};
-openfl__$Vector_Vector_$Impl_$.set = function(this1,index,value) {
-	return this1.set(index,value);
-};
-openfl__$Vector_Vector_$Impl_$.shift = function(this1) {
-	return this1.shift();
-};
-openfl__$Vector_Vector_$Impl_$.slice = function(this1,pos,end) {
-	return this1.slice(pos,end);
-};
-openfl__$Vector_Vector_$Impl_$.sort = function(this1,f) {
-	this1.sort(f);
-};
-openfl__$Vector_Vector_$Impl_$.splice = function(this1,pos,len) {
-	return this1.splice(pos,len);
-};
-openfl__$Vector_Vector_$Impl_$.toString = function(this1) {
-	if(this1 != null) {
-		return this1.toString();
-	} else {
-		return null;
-	}
-};
-openfl__$Vector_Vector_$Impl_$.unshift = function(this1,x) {
-	this1.unshift(x);
-};
-openfl__$Vector_Vector_$Impl_$.ofArray = function(a) {
-	var vector = openfl__$Vector_Vector_$Impl_$.toObjectVector(null);
-	var _g1 = 0;
-	var _g = a.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		vector.set(i,a[i]);
-	}
-	return vector;
-};
-openfl__$Vector_Vector_$Impl_$.convert = function(v) {
-	return v;
-};
-openfl__$Vector_Vector_$Impl_$.toBoolVector = function(t,length,fixed) {
-	return new openfl__$Vector_BoolVector(length,fixed);
-};
-openfl__$Vector_Vector_$Impl_$.toIntVector = function(t,length,fixed) {
-	return new openfl__$Vector_IntVector(length,fixed);
-};
-openfl__$Vector_Vector_$Impl_$.toFloatVector = function(t,length,fixed) {
-	return new openfl__$Vector_FloatVector(length,fixed);
-};
-openfl__$Vector_Vector_$Impl_$.toFunctionVector = function(t,length,fixed) {
-	return new openfl__$Vector_FunctionVector(length,fixed);
-};
-openfl__$Vector_Vector_$Impl_$.toObjectVector = function(t,length,fixed) {
-	return new openfl__$Vector_ObjectVector(length,fixed);
-};
-openfl__$Vector_Vector_$Impl_$.fromBoolVector = function(vector) {
-	return vector;
-};
-openfl__$Vector_Vector_$Impl_$.fromIntVector = function(vector) {
-	return vector;
-};
-openfl__$Vector_Vector_$Impl_$.fromFloatVector = function(vector) {
-	return vector;
-};
-openfl__$Vector_Vector_$Impl_$.fromFunctionVector = function(vector) {
-	return vector;
-};
-openfl__$Vector_Vector_$Impl_$.fromObjectVector = function(vector) {
-	return vector;
-};
-openfl__$Vector_Vector_$Impl_$.get_fixed = function(this1) {
-	return this1.fixed;
-};
-openfl__$Vector_Vector_$Impl_$.set_fixed = function(this1,value) {
-	return this1.fixed = value;
-};
-openfl__$Vector_Vector_$Impl_$.get_length = function(this1) {
-	return this1.get_length();
-};
-openfl__$Vector_Vector_$Impl_$.set_length = function(this1,value) {
-	return this1.set_length(value);
-};
-var lime_math_Matrix3 = function(a,b,c,d,tx,ty) {
-	if(ty == null) {
-		ty = 0;
-	}
-	if(tx == null) {
-		tx = 0;
-	}
-	if(d == null) {
-		d = 1;
-	}
-	if(c == null) {
-		c = 0;
-	}
-	if(b == null) {
-		b = 0;
-	}
-	if(a == null) {
-		a = 1;
-	}
-	this.a = a;
-	this.b = b;
-	this.c = c;
-	this.d = d;
-	this.tx = tx;
-	this.ty = ty;
-};
-$hxClasses["lime.math.Matrix3"] = lime_math_Matrix3;
-lime_math_Matrix3.__name__ = ["lime","math","Matrix3"];
-lime_math_Matrix3.prototype = {
-	a: null
-	,b: null
-	,c: null
-	,d: null
-	,tx: null
-	,ty: null
-	,clone: function() {
-		return new lime_math_Matrix3(this.a,this.b,this.c,this.d,this.tx,this.ty);
-	}
-	,concat: function(m) {
-		var a1 = this.a * m.a + this.b * m.c;
-		this.b = this.a * m.b + this.b * m.d;
-		this.a = a1;
-		var c1 = this.c * m.a + this.d * m.c;
-		this.d = this.c * m.b + this.d * m.d;
-		this.c = c1;
-		var tx1 = this.tx * m.a + this.ty * m.c + m.tx;
-		this.ty = this.tx * m.b + this.ty * m.d + m.ty;
-		this.tx = tx1;
-	}
-	,copyColumnFrom: function(column,vector4) {
-		if(column > 2) {
-			throw new js__$Boot_HaxeError("Column " + column + " out of bounds (2)");
-		} else if(column == 0) {
-			this.a = vector4.x;
-			this.c = vector4.y;
-		} else if(column == 1) {
-			this.b = vector4.x;
-			this.d = vector4.y;
-		} else {
-			this.tx = vector4.x;
-			this.ty = vector4.y;
-		}
-	}
-	,copyColumnTo: function(column,vector4) {
-		if(column > 2) {
-			throw new js__$Boot_HaxeError("Column " + column + " out of bounds (2)");
-		} else if(column == 0) {
-			vector4.x = this.a;
-			vector4.y = this.c;
-			vector4.z = 0;
-		} else if(column == 1) {
-			vector4.x = this.b;
-			vector4.y = this.d;
-			vector4.z = 0;
-		} else {
-			vector4.x = this.tx;
-			vector4.y = this.ty;
-			vector4.z = 1;
-		}
-	}
-	,copyFrom: function(sourceMatrix3) {
-		this.a = sourceMatrix3.a;
-		this.b = sourceMatrix3.b;
-		this.c = sourceMatrix3.c;
-		this.d = sourceMatrix3.d;
-		this.tx = sourceMatrix3.tx;
-		this.ty = sourceMatrix3.ty;
-	}
-	,copyRowFrom: function(row,vector4) {
-		if(row > 2) {
-			throw new js__$Boot_HaxeError("Row " + row + " out of bounds (2)");
-		} else if(row == 0) {
-			this.a = vector4.x;
-			this.c = vector4.y;
-		} else if(row == 1) {
-			this.b = vector4.x;
-			this.d = vector4.y;
-		} else {
-			this.tx = vector4.x;
-			this.ty = vector4.y;
-		}
-	}
-	,copyRowTo: function(row,vector4) {
-		if(row > 2) {
-			throw new js__$Boot_HaxeError("Row " + row + " out of bounds (2)");
-		} else if(row == 0) {
-			vector4.x = this.a;
-			vector4.y = this.b;
-			vector4.z = this.tx;
-		} else if(row == 1) {
-			vector4.x = this.c;
-			vector4.y = this.d;
-			vector4.z = this.ty;
-		} else {
-			vector4.x = 0;
-			vector4.y = 0;
-			vector4.z = 1;
-		}
-	}
-	,createBox: function(scaleX,scaleY,rotation,tx,ty) {
-		if(ty == null) {
-			ty = 0;
-		}
-		if(tx == null) {
-			tx = 0;
-		}
-		if(rotation == null) {
-			rotation = 0;
-		}
-		this.a = scaleX;
-		this.d = scaleY;
-		this.b = rotation;
-		this.tx = tx;
-		this.ty = ty;
-	}
-	,createGradientBox: function(width,height,rotation,tx,ty) {
-		if(ty == null) {
-			ty = 0;
-		}
-		if(tx == null) {
-			tx = 0;
-		}
-		if(rotation == null) {
-			rotation = 0;
-		}
-		this.a = width / 1638.4;
-		this.d = height / 1638.4;
-		if(rotation != 0) {
-			var cos = Math.cos(rotation);
-			var sin = Math.sin(rotation);
-			this.b = sin * this.d;
-			this.c = -sin * this.a;
-			this.a *= cos;
-			this.d *= cos;
-		} else {
-			this.b = 0;
-			this.c = 0;
-		}
-		this.tx = tx + width / 2;
-		this.ty = ty + height / 2;
-	}
-	,equals: function(Matrix3) {
-		if(Matrix3 != null && this.tx == Matrix3.tx && this.ty == Matrix3.ty && this.a == Matrix3.a && this.b == Matrix3.b && this.c == Matrix3.c) {
-			return this.d == Matrix3.d;
-		} else {
-			return false;
-		}
-	}
-	,deltaTransformVector2: function(Vector2) {
-		return new lime_math_Vector2(Vector2.x * this.a + Vector2.y * this.c,Vector2.x * this.b + Vector2.y * this.d);
-	}
-	,identity: function() {
-		this.a = 1;
-		this.b = 0;
-		this.c = 0;
-		this.d = 1;
-		this.tx = 0;
-		this.ty = 0;
-	}
-	,invert: function() {
-		var norm = this.a * this.d - this.b * this.c;
-		if(norm == 0) {
-			this.a = this.b = this.c = this.d = 0;
-			this.tx = -this.tx;
-			this.ty = -this.ty;
-		} else {
-			norm = 1.0 / norm;
-			var a1 = this.d * norm;
-			this.d = this.a * norm;
-			this.a = a1;
-			this.b *= -norm;
-			this.c *= -norm;
-			var tx1 = -this.a * this.tx - this.c * this.ty;
-			this.ty = -this.b * this.tx - this.d * this.ty;
-			this.tx = tx1;
-		}
-		return this;
-	}
-	,mult: function(m) {
-		var result = new lime_math_Matrix3(this.a,this.b,this.c,this.d,this.tx,this.ty);
-		result.concat(m);
-		return result;
-	}
-	,rotate: function(theta) {
-		var cos = Math.cos(theta);
-		var sin = Math.sin(theta);
-		var a1 = this.a * cos - this.b * sin;
-		this.b = this.a * sin + this.b * cos;
-		this.a = a1;
-		var c1 = this.c * cos - this.d * sin;
-		this.d = this.c * sin + this.d * cos;
-		this.c = c1;
-		var tx1 = this.tx * cos - this.ty * sin;
-		this.ty = this.tx * sin + this.ty * cos;
-		this.tx = tx1;
-	}
-	,scale: function(sx,sy) {
-		this.a *= sx;
-		this.b *= sy;
-		this.c *= sx;
-		this.d *= sy;
-		this.tx *= sx;
-		this.ty *= sy;
-	}
-	,setRotation: function(theta,scale) {
-		if(scale == null) {
-			scale = 1;
-		}
-		this.a = Math.cos(theta) * scale;
-		this.c = Math.sin(theta) * scale;
-		this.b = -this.c;
-		this.d = this.a;
-	}
-	,setTo: function(a,b,c,d,tx,ty) {
-		this.a = a;
-		this.b = b;
-		this.c = c;
-		this.d = d;
-		this.tx = tx;
-		this.ty = ty;
-	}
-	,to3DString: function(roundPixels) {
-		if(roundPixels == null) {
-			roundPixels = false;
-		}
-		if(roundPixels) {
-			return "Matrix33d(" + this.a + ", " + this.b + ", " + "0, 0, " + this.c + ", " + this.d + ", " + "0, 0, 0, 0, 1, 0, " + (this.tx | 0) + ", " + (this.ty | 0) + ", 0, 1)";
-		} else {
-			return "Matrix33d(" + this.a + ", " + this.b + ", " + "0, 0, " + this.c + ", " + this.d + ", " + "0, 0, 0, 0, 1, 0, " + this.tx + ", " + this.ty + ", 0, 1)";
-		}
-	}
-	,toMozString: function() {
-		return "Matrix3(" + this.a + ", " + this.b + ", " + this.c + ", " + this.d + ", " + this.tx + "px, " + this.ty + "px)";
-	}
-	,toString: function() {
-		return "Matrix3(" + this.a + ", " + this.b + ", " + this.c + ", " + this.d + ", " + this.tx + ", " + this.ty + ")";
-	}
-	,transformVector2: function(pos) {
-		return new lime_math_Vector2(pos.x * this.a + pos.y * this.c + this.tx,pos.x * this.b + pos.y * this.d + this.ty);
-	}
-	,translate: function(dx,dy) {
-		this.tx += dx;
-		this.ty += dy;
-	}
-	,__cleanValues: function() {
-		this.a = Math.round(this.a * 1000) / 1000;
-		this.b = Math.round(this.b * 1000) / 1000;
-		this.c = Math.round(this.c * 1000) / 1000;
-		this.d = Math.round(this.d * 1000) / 1000;
-		this.tx = Math.round(this.tx * 10) / 10;
-		this.ty = Math.round(this.ty * 10) / 10;
-	}
-	,__transformX: function(pos) {
-		return pos.x * this.a + pos.y * this.c + this.tx;
-	}
-	,__transformY: function(pos) {
-		return pos.x * this.b + pos.y * this.d + this.ty;
-	}
-	,__translateTransformed: function(pos) {
-		this.tx = pos.x * this.a + pos.y * this.c + this.tx;
-		this.ty = pos.x * this.b + pos.y * this.d + this.ty;
-	}
-	,__class__: lime_math_Matrix3
-};
-var lime_utils_ObjectPool_$openfl_$geom_$Matrix = function(create,clean,size) {
-	if(create != null) {
-		this.create = create;
-	}
-	if(clean != null) {
-		this.clean = clean;
-	}
-	if(size != null) {
-		this.set_size(size);
-	}
-	this.__pool = new haxe_ds_ObjectMap();
-	this.activeObjects = 0;
-	this.inactiveObjects = 0;
-	this.__inactiveObject0 = null;
-	this.__inactiveObject1 = null;
-	this.__inactiveObjectList = new List();
-};
-$hxClasses["lime.utils.ObjectPool_openfl_geom_Matrix"] = lime_utils_ObjectPool_$openfl_$geom_$Matrix;
-lime_utils_ObjectPool_$openfl_$geom_$Matrix.__name__ = ["lime","utils","ObjectPool_openfl_geom_Matrix"];
-lime_utils_ObjectPool_$openfl_$geom_$Matrix.prototype = {
-	activeObjects: null
-	,inactiveObjects: null
-	,__inactiveObject0: null
-	,__inactiveObject1: null
-	,__inactiveObjectList: null
-	,__pool: null
-	,__size: null
-	,add: function(object) {
-		if(!this.__pool.exists(object)) {
-			this.__pool.set(object,false);
-			this.clean(object);
-			if(this.__inactiveObject0 == null) {
-				this.__inactiveObject0 = object;
-			} else if(this.__inactiveObject1 == null) {
-				this.__inactiveObject1 = object;
-			} else {
-				this.__inactiveObjectList.add(object);
-			}
-			this.inactiveObjects++;
-		}
-	}
-	,clean: function(object) {
-	}
-	,clear: function() {
-		this.__pool = new haxe_ds_ObjectMap();
-		this.activeObjects = 0;
-		this.inactiveObjects = 0;
-		this.__inactiveObject0 = null;
-		this.__inactiveObject1 = null;
-		this.__inactiveObjectList.clear();
-	}
-	,create: function() {
-		return null;
-	}
-	,get: function() {
-		var object = null;
-		if(this.inactiveObjects > 0) {
-			var object1 = null;
-			if(this.__inactiveObject0 != null) {
-				object1 = this.__inactiveObject0;
-				this.__inactiveObject0 = null;
-			} else if(this.__inactiveObject1 != null) {
-				object1 = this.__inactiveObject1;
-				this.__inactiveObject1 = null;
-			} else {
-				object1 = this.__inactiveObjectList.pop();
-				if(this.__inactiveObjectList.length > 0) {
-					this.__inactiveObject0 = this.__inactiveObjectList.pop();
-				}
-				if(this.__inactiveObjectList.length > 0) {
-					this.__inactiveObject1 = this.__inactiveObjectList.pop();
-				}
-			}
-			this.inactiveObjects--;
-			this.activeObjects++;
-			object = object1;
-		} else if(this.__size == null || this.activeObjects < this.__size) {
-			object = this.create();
-			if(object != null) {
-				this.__pool.set(object,true);
-				this.activeObjects++;
-			}
-		}
-		return object;
-	}
-	,release: function(object) {
-		this.activeObjects--;
-		if(this.__size == null || this.activeObjects + this.inactiveObjects < this.__size) {
-			this.clean(object);
-			if(this.__inactiveObject0 == null) {
-				this.__inactiveObject0 = object;
-			} else if(this.__inactiveObject1 == null) {
-				this.__inactiveObject1 = object;
-			} else {
-				this.__inactiveObjectList.add(object);
-			}
-			this.inactiveObjects++;
-		} else {
-			this.__pool.remove(object);
-		}
-	}
-	,__addInactive: function(object) {
-		if(this.__inactiveObject0 == null) {
-			this.__inactiveObject0 = object;
-		} else if(this.__inactiveObject1 == null) {
-			this.__inactiveObject1 = object;
-		} else {
-			this.__inactiveObjectList.add(object);
-		}
-		this.inactiveObjects++;
-	}
-	,__getInactive: function() {
-		var object = null;
-		if(this.__inactiveObject0 != null) {
-			object = this.__inactiveObject0;
-			this.__inactiveObject0 = null;
-		} else if(this.__inactiveObject1 != null) {
-			object = this.__inactiveObject1;
-			this.__inactiveObject1 = null;
-		} else {
-			object = this.__inactiveObjectList.pop();
-			if(this.__inactiveObjectList.length > 0) {
-				this.__inactiveObject0 = this.__inactiveObjectList.pop();
-			}
-			if(this.__inactiveObjectList.length > 0) {
-				this.__inactiveObject1 = this.__inactiveObjectList.pop();
-			}
-		}
-		this.inactiveObjects--;
-		this.activeObjects++;
-		return object;
-	}
-	,__removeInactive: function(count) {
-		if(count <= 0 || this.inactiveObjects == 0) {
-			return;
-		}
-		if(this.__inactiveObject0 != null) {
-			this.__pool.remove(this.__inactiveObject0);
-			this.__inactiveObject0 = null;
-			this.inactiveObjects--;
-			--count;
-		}
-		if(count == 0 || this.inactiveObjects == 0) {
-			return;
-		}
-		if(this.__inactiveObject1 != null) {
-			this.__pool.remove(this.__inactiveObject1);
-			this.__inactiveObject1 = null;
-			this.inactiveObjects--;
-			--count;
-		}
-		if(count == 0 || this.inactiveObjects == 0) {
-			return;
-		}
-		var _g_head = this.__inactiveObjectList.h;
-		while(_g_head != null) {
-			var val = _g_head.item;
-			_g_head = _g_head.next;
-			var object = val;
-			this.__pool.remove(object);
-			this.__inactiveObjectList.remove(object);
-			this.inactiveObjects--;
-			--count;
-			if(count == 0 || this.inactiveObjects == 0) {
-				return;
-			}
-		}
-	}
-	,get_size: function() {
-		return this.__size;
-	}
-	,set_size: function(value) {
-		if(value == null) {
-			this.__size = null;
-		} else {
-			var current = this.inactiveObjects + this.activeObjects;
-			this.__size = value;
-			if(current > value) {
-				this.__removeInactive(current - value);
-			} else if(value > current) {
-				var object;
-				var _g1 = 0;
-				var _g = value - current;
-				while(_g1 < _g) {
-					var i = _g1++;
-					object = this.create();
-					if(object != null) {
-						this.__pool.set(object,false);
-						this.__inactiveObjectList.add(object);
-						this.inactiveObjects++;
-					} else {
-						break;
-					}
-				}
-			}
-		}
-		return value;
-	}
-	,__class__: lime_utils_ObjectPool_$openfl_$geom_$Matrix
-	,__properties__: {set_size:"set_size",get_size:"get_size"}
-};
-var openfl_geom_Matrix = function(a,b,c,d,tx,ty) {
-	if(ty == null) {
-		ty = 0;
-	}
-	if(tx == null) {
-		tx = 0;
-	}
-	if(d == null) {
-		d = 1;
-	}
-	if(c == null) {
-		c = 0;
-	}
-	if(b == null) {
-		b = 0;
-	}
-	if(a == null) {
-		a = 1;
-	}
-	this.a = a;
-	this.b = b;
-	this.c = c;
-	this.d = d;
-	this.tx = tx;
-	this.ty = ty;
-};
-$hxClasses["openfl.geom.Matrix"] = openfl_geom_Matrix;
-openfl_geom_Matrix.__name__ = ["openfl","geom","Matrix"];
-openfl_geom_Matrix.prototype = {
-	a: null
-	,b: null
-	,c: null
-	,d: null
-	,tx: null
-	,ty: null
-	,__array: null
-	,clone: function() {
-		return new openfl_geom_Matrix(this.a,this.b,this.c,this.d,this.tx,this.ty);
-	}
-	,concat: function(m) {
-		var a1 = this.a * m.a + this.b * m.c;
-		this.b = this.a * m.b + this.b * m.d;
-		this.a = a1;
-		var c1 = this.c * m.a + this.d * m.c;
-		this.d = this.c * m.b + this.d * m.d;
-		this.c = c1;
-		var tx1 = this.tx * m.a + this.ty * m.c + m.tx;
-		this.ty = this.tx * m.b + this.ty * m.d + m.ty;
-		this.tx = tx1;
-	}
-	,copyColumnFrom: function(column,vector3D) {
-		if(column > 2) {
-			throw new js__$Boot_HaxeError("Column " + column + " out of bounds (2)");
-		} else if(column == 0) {
-			this.a = vector3D.x;
-			this.c = vector3D.y;
-		} else if(column == 1) {
-			this.b = vector3D.x;
-			this.d = vector3D.y;
-		} else {
-			this.tx = vector3D.x;
-			this.ty = vector3D.y;
-		}
-	}
-	,copyColumnTo: function(column,vector3D) {
-		if(column > 2) {
-			throw new js__$Boot_HaxeError("Column " + column + " out of bounds (2)");
-		} else if(column == 0) {
-			vector3D.x = this.a;
-			vector3D.y = this.c;
-			vector3D.z = 0;
-		} else if(column == 1) {
-			vector3D.x = this.b;
-			vector3D.y = this.d;
-			vector3D.z = 0;
-		} else {
-			vector3D.x = this.tx;
-			vector3D.y = this.ty;
-			vector3D.z = 1;
-		}
-	}
-	,copyFrom: function(sourceMatrix) {
-		this.a = sourceMatrix.a;
-		this.b = sourceMatrix.b;
-		this.c = sourceMatrix.c;
-		this.d = sourceMatrix.d;
-		this.tx = sourceMatrix.tx;
-		this.ty = sourceMatrix.ty;
-	}
-	,copyRowFrom: function(row,vector3D) {
-		if(row > 2) {
-			throw new js__$Boot_HaxeError("Row " + row + " out of bounds (2)");
-		} else if(row == 0) {
-			this.a = vector3D.x;
-			this.c = vector3D.y;
-		} else if(row == 1) {
-			this.b = vector3D.x;
-			this.d = vector3D.y;
-		} else {
-			this.tx = vector3D.x;
-			this.ty = vector3D.y;
-		}
-	}
-	,copyRowTo: function(row,vector3D) {
-		if(row > 2) {
-			throw new js__$Boot_HaxeError("Row " + row + " out of bounds (2)");
-		} else if(row == 0) {
-			vector3D.x = this.a;
-			vector3D.y = this.b;
-			vector3D.z = this.tx;
-		} else if(row == 1) {
-			vector3D.x = this.c;
-			vector3D.y = this.d;
-			vector3D.z = this.ty;
-		} else {
-			vector3D.setTo(0,0,1);
-		}
-	}
-	,createBox: function(scaleX,scaleY,rotation,tx,ty) {
-		if(ty == null) {
-			ty = 0;
-		}
-		if(tx == null) {
-			tx = 0;
-		}
-		if(rotation == null) {
-			rotation = 0;
-		}
-		if(rotation != 0) {
-			var cos = Math.cos(rotation);
-			var sin = Math.sin(rotation);
-			this.a = cos * scaleX;
-			this.b = sin * scaleY;
-			this.c = -sin * scaleX;
-			this.d = cos * scaleY;
-		} else {
-			this.a = scaleX;
-			this.b = 0;
-			this.c = 0;
-			this.d = scaleY;
-		}
-		this.tx = tx;
-		this.ty = ty;
-	}
-	,createGradientBox: function(width,height,rotation,tx,ty) {
-		if(ty == null) {
-			ty = 0;
-		}
-		if(tx == null) {
-			tx = 0;
-		}
-		if(rotation == null) {
-			rotation = 0;
-		}
-		this.a = width / 1638.4;
-		this.d = height / 1638.4;
-		if(rotation != 0) {
-			var cos = Math.cos(rotation);
-			var sin = Math.sin(rotation);
-			this.b = sin * this.d;
-			this.c = -sin * this.a;
-			this.a *= cos;
-			this.d *= cos;
-		} else {
-			this.b = 0;
-			this.c = 0;
-		}
-		this.tx = tx + width / 2;
-		this.ty = ty + height / 2;
-	}
-	,deltaTransformPoint: function(point) {
-		return new openfl_geom_Point(point.x * this.a + point.y * this.c,point.x * this.b + point.y * this.d);
-	}
-	,equals: function(matrix) {
-		if(matrix != null && this.tx == matrix.tx && this.ty == matrix.ty && this.a == matrix.a && this.b == matrix.b && this.c == matrix.c) {
-			return this.d == matrix.d;
-		} else {
-			return false;
-		}
-	}
-	,identity: function() {
-		this.a = 1;
-		this.b = 0;
-		this.c = 0;
-		this.d = 1;
-		this.tx = 0;
-		this.ty = 0;
-	}
-	,invert: function() {
-		var norm = this.a * this.d - this.b * this.c;
-		if(norm == 0) {
-			this.a = this.b = this.c = this.d = 0;
-			this.tx = -this.tx;
-			this.ty = -this.ty;
-		} else {
-			norm = 1.0 / norm;
-			var a1 = this.d * norm;
-			this.d = this.a * norm;
-			this.a = a1;
-			this.b *= -norm;
-			this.c *= -norm;
-			var tx1 = -this.a * this.tx - this.c * this.ty;
-			this.ty = -this.b * this.tx - this.d * this.ty;
-			this.tx = tx1;
-		}
-		return this;
-	}
-	,rotate: function(theta) {
-		var cos = Math.cos(theta);
-		var sin = Math.sin(theta);
-		var a1 = this.a * cos - this.b * sin;
-		this.b = this.a * sin + this.b * cos;
-		this.a = a1;
-		var c1 = this.c * cos - this.d * sin;
-		this.d = this.c * sin + this.d * cos;
-		this.c = c1;
-		var tx1 = this.tx * cos - this.ty * sin;
-		this.ty = this.tx * sin + this.ty * cos;
-		this.tx = tx1;
-	}
-	,scale: function(sx,sy) {
-		this.a *= sx;
-		this.b *= sy;
-		this.c *= sx;
-		this.d *= sy;
-		this.tx *= sx;
-		this.ty *= sy;
-	}
-	,setRotation: function(theta,scale) {
-		if(scale == null) {
-			scale = 1;
-		}
-		this.a = Math.cos(theta) * scale;
-		this.c = Math.sin(theta) * scale;
-		this.b = -this.c;
-		this.d = this.a;
-	}
-	,setTo: function(a,b,c,d,tx,ty) {
-		this.a = a;
-		this.b = b;
-		this.c = c;
-		this.d = d;
-		this.tx = tx;
-		this.ty = ty;
-	}
-	,to3DString: function(roundPixels) {
-		if(roundPixels == null) {
-			roundPixels = false;
-		}
-		if(roundPixels) {
-			return "matrix3d(" + this.a + ", " + this.b + ", 0, 0, " + this.c + ", " + this.d + ", 0, 0, 0, 0, 1, 0, " + (this.tx | 0) + ", " + (this.ty | 0) + ", 0, 1)";
-		} else {
-			return "matrix3d(" + this.a + ", " + this.b + ", 0, 0, " + this.c + ", " + this.d + ", 0, 0, 0, 0, 1, 0, " + this.tx + ", " + this.ty + ", 0, 1)";
-		}
-	}
-	,toMozString: function() {
-		return "matrix(" + this.a + ", " + this.b + ", " + this.c + ", " + this.d + ", " + this.tx + "px, " + this.ty + "px)";
-	}
-	,toString: function() {
-		return "matrix(" + this.a + ", " + this.b + ", " + this.c + ", " + this.d + ", " + this.tx + ", " + this.ty + ")";
-	}
-	,transformPoint: function(pos) {
-		return new openfl_geom_Point(pos.x * this.a + pos.y * this.c + this.tx,pos.x * this.b + pos.y * this.d + this.ty);
-	}
-	,translate: function(dx,dy) {
-		this.tx += dx;
-		this.ty += dy;
-	}
-	,toArray: function(transpose) {
-		if(transpose == null) {
-			transpose = false;
-		}
-		if(this.__array == null) {
-			var this1 = new Float32Array(9);
-			this.__array = this1;
-		}
-		if(transpose) {
-			this.__array[0] = this.a;
-			this.__array[1] = this.b;
-			this.__array[2] = 0;
-			this.__array[3] = this.c;
-			this.__array[4] = this.d;
-			this.__array[5] = 0;
-			this.__array[6] = this.tx;
-			this.__array[7] = this.ty;
-			this.__array[8] = 1;
-		} else {
-			this.__array[0] = this.a;
-			this.__array[1] = this.c;
-			this.__array[2] = this.tx;
-			this.__array[3] = this.b;
-			this.__array[4] = this.d;
-			this.__array[5] = this.ty;
-			this.__array[6] = 0;
-			this.__array[7] = 0;
-			this.__array[8] = 1;
-		}
-		return this.__array;
-	}
-	,__cleanValues: function() {
-		this.a = Math.round(this.a * 1000) / 1000;
-		this.b = Math.round(this.b * 1000) / 1000;
-		this.c = Math.round(this.c * 1000) / 1000;
-		this.d = Math.round(this.d * 1000) / 1000;
-		this.tx = Math.round(this.tx * 10) / 10;
-		this.ty = Math.round(this.ty * 10) / 10;
-	}
-	,__toMatrix3: function() {
-		openfl_geom_Matrix.__matrix3.setTo(this.a,this.b,this.c,this.d,this.tx,this.ty);
-		return openfl_geom_Matrix.__matrix3;
-	}
-	,__transformInversePoint: function(point) {
-		var norm = this.a * this.d - this.b * this.c;
-		if(norm == 0) {
-			point.x = -this.tx;
-			point.y = -this.ty;
-		} else {
-			var px = 1.0 / norm * (this.c * (this.ty - point.y) + this.d * (point.x - this.tx));
-			point.y = 1.0 / norm * (this.a * (point.y - this.ty) + this.b * (this.tx - point.x));
-			point.x = px;
-		}
-	}
-	,__transformInverseX: function(px,py) {
-		var norm = this.a * this.d - this.b * this.c;
-		if(norm == 0) {
-			return -this.tx;
-		} else {
-			return 1.0 / norm * (this.c * (this.ty - py) + this.d * (px - this.tx));
-		}
-	}
-	,__transformInverseY: function(px,py) {
-		var norm = this.a * this.d - this.b * this.c;
-		if(norm == 0) {
-			return -this.ty;
-		} else {
-			return 1.0 / norm * (this.a * (py - this.ty) + this.b * (this.tx - px));
-		}
-	}
-	,__transformPoint: function(point) {
-		var px = point.x;
-		var py = point.y;
-		point.x = px * this.a + py * this.c + this.tx;
-		point.y = px * this.b + py * this.d + this.ty;
-	}
-	,__transformX: function(px,py) {
-		return px * this.a + py * this.c + this.tx;
-	}
-	,__transformY: function(px,py) {
-		return px * this.b + py * this.d + this.ty;
-	}
-	,__translateTransformed: function(px,py) {
-		this.tx = px * this.a + py * this.c + this.tx;
-		this.ty = px * this.b + py * this.d + this.ty;
-	}
-	,__class__: openfl_geom_Matrix
-};
-var openfl_geom_Matrix3D = function(v) {
-	if(v != null && v.get_length() == 16) {
-		this.rawData = v.concat(null);
-	} else {
-		var a = [1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0];
-		var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
-		var _g1 = 0;
-		var _g = a.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			vector.set(i,a[i]);
-		}
-		this.rawData = vector;
-	}
-};
-$hxClasses["openfl.geom.Matrix3D"] = openfl_geom_Matrix3D;
-openfl_geom_Matrix3D.__name__ = ["openfl","geom","Matrix3D"];
-openfl_geom_Matrix3D.create2D = function(x,y,scale,rotation) {
-	if(rotation == null) {
-		rotation = 0;
-	}
-	if(scale == null) {
-		scale = 1;
-	}
-	var theta = rotation * Math.PI / 180.0;
-	var c = Math.cos(theta);
-	var s = Math.sin(theta);
-	var a = [c * scale,-s * scale,0,0,s * scale,c * scale,0,0,0,0,1,0,x,y,0,1];
-	var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
-	var _g1 = 0;
-	var _g = a.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		vector.set(i,a[i]);
-	}
-	return new openfl_geom_Matrix3D(vector);
-};
-openfl_geom_Matrix3D.createABCD = function(a,b,c,d,tx,ty) {
-	var a1 = [a,b,0,0,c,d,0,0,0,0,1,0,tx,ty,0,1];
-	var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
-	var _g1 = 0;
-	var _g = a1.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		vector.set(i,a1[i]);
-	}
-	return new openfl_geom_Matrix3D(vector);
-};
-openfl_geom_Matrix3D.createOrtho = function(x0,x1,y0,y1,zNear,zFar) {
-	var sx = 1.0 / (x1 - x0);
-	var sy = 1.0 / (y1 - y0);
-	var sz = 1.0 / (zFar - zNear);
-	var a = [2.0 * sx,0,0,0,0,2.0 * sy,0,0,0,0,-2.0 * sz,0,-(x0 + x1) * sx,-(y0 + y1) * sy,-(zNear + zFar) * sz,1];
-	var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
-	var _g1 = 0;
-	var _g = a.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		vector.set(i,a[i]);
-	}
-	return new openfl_geom_Matrix3D(vector);
-};
-openfl_geom_Matrix3D.interpolate = function(thisMat,toMat,percent) {
-	var m = new openfl_geom_Matrix3D();
-	var _g = 0;
-	while(_g < 16) {
-		var i = _g++;
-		m.rawData.set(i,thisMat.rawData.get(i) + (toMat.rawData.get(i) - thisMat.rawData.get(i)) * percent);
-	}
-	return m;
-};
-openfl_geom_Matrix3D.__getAxisRotation = function(x,y,z,degrees) {
-	var m = new openfl_geom_Matrix3D();
-	var a1 = new openfl_geom_Vector3D(x,y,z);
-	var rad = -degrees * (Math.PI / 180);
-	var c = Math.cos(rad);
-	var s = Math.sin(rad);
-	var t = 1.0 - c;
-	m.rawData.set(0,c + a1.x * a1.x * t);
-	m.rawData.set(5,c + a1.y * a1.y * t);
-	m.rawData.set(10,c + a1.z * a1.z * t);
-	var tmp1 = a1.x * a1.y * t;
-	var tmp2 = a1.z * s;
-	m.rawData.set(4,tmp1 + tmp2);
-	m.rawData.set(1,tmp1 - tmp2);
-	tmp1 = a1.x * a1.z * t;
-	tmp2 = a1.y * s;
-	m.rawData.set(8,tmp1 - tmp2);
-	m.rawData.set(2,tmp1 + tmp2);
-	tmp1 = a1.y * a1.z * t;
-	tmp2 = a1.x * s;
-	m.rawData.set(9,tmp1 + tmp2);
-	m.rawData.set(6,tmp1 - tmp2);
-	return m;
-};
-openfl_geom_Matrix3D.prototype = {
-	rawData: null
-	,append: function(lhs) {
-		var m111 = this.rawData.get(0);
-		var m121 = this.rawData.get(4);
-		var m131 = this.rawData.get(8);
-		var m141 = this.rawData.get(12);
-		var m112 = this.rawData.get(1);
-		var m122 = this.rawData.get(5);
-		var m132 = this.rawData.get(9);
-		var m142 = this.rawData.get(13);
-		var m113 = this.rawData.get(2);
-		var m123 = this.rawData.get(6);
-		var m133 = this.rawData.get(10);
-		var m143 = this.rawData.get(14);
-		var m114 = this.rawData.get(3);
-		var m124 = this.rawData.get(7);
-		var m134 = this.rawData.get(11);
-		var m144 = this.rawData.get(15);
-		var m211 = lhs.rawData.get(0);
-		var m221 = lhs.rawData.get(4);
-		var m231 = lhs.rawData.get(8);
-		var m241 = lhs.rawData.get(12);
-		var m212 = lhs.rawData.get(1);
-		var m222 = lhs.rawData.get(5);
-		var m232 = lhs.rawData.get(9);
-		var m242 = lhs.rawData.get(13);
-		var m213 = lhs.rawData.get(2);
-		var m223 = lhs.rawData.get(6);
-		var m233 = lhs.rawData.get(10);
-		var m243 = lhs.rawData.get(14);
-		var m214 = lhs.rawData.get(3);
-		var m224 = lhs.rawData.get(7);
-		var m234 = lhs.rawData.get(11);
-		var m244 = lhs.rawData.get(15);
-		this.rawData.set(0,m111 * m211 + m112 * m221 + m113 * m231 + m114 * m241);
-		this.rawData.set(1,m111 * m212 + m112 * m222 + m113 * m232 + m114 * m242);
-		this.rawData.set(2,m111 * m213 + m112 * m223 + m113 * m233 + m114 * m243);
-		this.rawData.set(3,m111 * m214 + m112 * m224 + m113 * m234 + m114 * m244);
-		this.rawData.set(4,m121 * m211 + m122 * m221 + m123 * m231 + m124 * m241);
-		this.rawData.set(5,m121 * m212 + m122 * m222 + m123 * m232 + m124 * m242);
-		this.rawData.set(6,m121 * m213 + m122 * m223 + m123 * m233 + m124 * m243);
-		this.rawData.set(7,m121 * m214 + m122 * m224 + m123 * m234 + m124 * m244);
-		this.rawData.set(8,m131 * m211 + m132 * m221 + m133 * m231 + m134 * m241);
-		this.rawData.set(9,m131 * m212 + m132 * m222 + m133 * m232 + m134 * m242);
-		this.rawData.set(10,m131 * m213 + m132 * m223 + m133 * m233 + m134 * m243);
-		this.rawData.set(11,m131 * m214 + m132 * m224 + m133 * m234 + m134 * m244);
-		this.rawData.set(12,m141 * m211 + m142 * m221 + m143 * m231 + m144 * m241);
-		this.rawData.set(13,m141 * m212 + m142 * m222 + m143 * m232 + m144 * m242);
-		this.rawData.set(14,m141 * m213 + m142 * m223 + m143 * m233 + m144 * m243);
-		this.rawData.set(15,m141 * m214 + m142 * m224 + m143 * m234 + m144 * m244);
-	}
-	,appendRotation: function(degrees,axis,pivotPoint) {
-		var tx;
-		var ty;
-		var tz = 0;
-		ty = tz;
-		tx = ty;
-		if(pivotPoint != null) {
-			tx = pivotPoint.x;
-			ty = pivotPoint.y;
-			tz = pivotPoint.z;
-		}
-		var radian = degrees * Math.PI / 180;
-		var cos = Math.cos(radian);
-		var sin = Math.sin(radian);
-		var x = axis.x;
-		var y = axis.y;
-		var z = axis.z;
-		var x2 = x * x;
-		var y2 = y * y;
-		var z2 = z * z;
-		var ls = x2 + y2 + z2;
-		if(ls != 0) {
-			var l = Math.sqrt(ls);
-			x /= l;
-			y /= l;
-			z /= l;
-			x2 /= ls;
-			y2 /= ls;
-			z2 /= ls;
-		}
-		var ccos = 1 - cos;
-		var m = new openfl_geom_Matrix3D();
-		var d = m.rawData;
-		d.set(0,x2 + (y2 + z2) * cos);
-		d.set(1,x * y * ccos + z * sin);
-		d.set(2,x * z * ccos - y * sin);
-		d.set(4,x * y * ccos - z * sin);
-		d.set(5,y2 + (x2 + z2) * cos);
-		d.set(6,y * z * ccos + x * sin);
-		d.set(8,x * z * ccos + y * sin);
-		d.set(9,y * z * ccos - x * sin);
-		d.set(10,z2 + (x2 + y2) * cos);
-		d.set(12,(tx * (y2 + z2) - x * (ty * y + tz * z)) * ccos + (ty * z - tz * y) * sin);
-		d.set(13,(ty * (x2 + z2) - y * (tx * x + tz * z)) * ccos + (tz * x - tx * z) * sin);
-		d.set(14,(tz * (x2 + y2) - z * (tx * x + ty * y)) * ccos + (tx * y - ty * x) * sin);
-		this.append(m);
-	}
-	,appendScale: function(xScale,yScale,zScale) {
-		var a = [xScale,0.0,0.0,0.0,0.0,yScale,0.0,0.0,0.0,0.0,zScale,0.0,0.0,0.0,0.0,1.0];
-		var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
-		var _g1 = 0;
-		var _g = a.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			vector.set(i,a[i]);
-		}
-		this.append(new openfl_geom_Matrix3D(vector));
-	}
-	,appendTranslation: function(x,y,z) {
-		var _g = this.rawData;
-		_g.set(12,_g.get(12) + x);
-		var _g1 = this.rawData;
-		_g1.set(13,_g1.get(13) + y);
-		var _g2 = this.rawData;
-		_g2.set(14,_g2.get(14) + z);
-	}
-	,clone: function() {
-		return new openfl_geom_Matrix3D(this.rawData.copy());
-	}
-	,copyColumnFrom: function(column,vector3D) {
-		switch(column) {
-		case 0:
-			this.rawData.set(0,vector3D.x);
-			this.rawData.set(1,vector3D.y);
-			this.rawData.set(2,vector3D.z);
-			this.rawData.set(3,vector3D.w);
-			break;
-		case 1:
-			this.rawData.set(4,vector3D.x);
-			this.rawData.set(5,vector3D.y);
-			this.rawData.set(6,vector3D.z);
-			this.rawData.set(7,vector3D.w);
-			break;
-		case 2:
-			this.rawData.set(8,vector3D.x);
-			this.rawData.set(9,vector3D.y);
-			this.rawData.set(10,vector3D.z);
-			this.rawData.set(11,vector3D.w);
-			break;
-		case 3:
-			this.rawData.set(12,vector3D.x);
-			this.rawData.set(13,vector3D.y);
-			this.rawData.set(14,vector3D.z);
-			this.rawData.set(15,vector3D.w);
-			break;
-		default:
-		}
-	}
-	,copyColumnTo: function(column,vector3D) {
-		switch(column) {
-		case 0:
-			vector3D.x = this.rawData.get(0);
-			vector3D.y = this.rawData.get(1);
-			vector3D.z = this.rawData.get(2);
-			vector3D.w = this.rawData.get(3);
-			break;
-		case 1:
-			vector3D.x = this.rawData.get(4);
-			vector3D.y = this.rawData.get(5);
-			vector3D.z = this.rawData.get(6);
-			vector3D.w = this.rawData.get(7);
-			break;
-		case 2:
-			vector3D.x = this.rawData.get(8);
-			vector3D.y = this.rawData.get(9);
-			vector3D.z = this.rawData.get(10);
-			vector3D.w = this.rawData.get(11);
-			break;
-		case 3:
-			vector3D.x = this.rawData.get(12);
-			vector3D.y = this.rawData.get(13);
-			vector3D.z = this.rawData.get(14);
-			vector3D.w = this.rawData.get(15);
-			break;
-		default:
-		}
-	}
-	,copyFrom: function(other) {
-		this.rawData = other.rawData.copy();
-	}
-	,copyRawDataFrom: function(vector,index,transpose) {
-		if(transpose == null) {
-			transpose = false;
-		}
-		if(index == null) {
-			index = 0;
-		}
-		if(transpose) {
-			this.transpose();
-		}
-		var length = vector.get_length() - index;
-		var _g1 = 0;
-		var _g = length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			this.rawData.set(i,vector.get(i + index));
-		}
-		if(transpose) {
-			this.transpose();
-		}
-	}
-	,copyRawDataTo: function(vector,index,transpose) {
-		if(transpose == null) {
-			transpose = false;
-		}
-		if(index == null) {
-			index = 0;
-		}
-		if(transpose) {
-			this.transpose();
-		}
-		var _g1 = 0;
-		var _g = this.rawData.get_length();
-		while(_g1 < _g) {
-			var i = _g1++;
-			vector.set(i + index,this.rawData.get(i));
-		}
-		if(transpose) {
-			this.transpose();
-		}
-	}
-	,copyRowFrom: function(row,vector3D) {
-		switch(row) {
-		case 0:
-			this.rawData.set(0,vector3D.x);
-			this.rawData.set(4,vector3D.y);
-			this.rawData.set(8,vector3D.z);
-			this.rawData.set(12,vector3D.w);
-			break;
-		case 1:
-			this.rawData.set(1,vector3D.x);
-			this.rawData.set(5,vector3D.y);
-			this.rawData.set(9,vector3D.z);
-			this.rawData.set(13,vector3D.w);
-			break;
-		case 2:
-			this.rawData.set(2,vector3D.x);
-			this.rawData.set(6,vector3D.y);
-			this.rawData.set(10,vector3D.z);
-			this.rawData.set(14,vector3D.w);
-			break;
-		case 3:
-			this.rawData.set(3,vector3D.x);
-			this.rawData.set(7,vector3D.y);
-			this.rawData.set(11,vector3D.z);
-			this.rawData.set(15,vector3D.w);
-			break;
-		default:
-		}
-	}
-	,copyRowTo: function(row,vector3D) {
-		switch(row) {
-		case 0:
-			vector3D.x = this.rawData.get(0);
-			vector3D.y = this.rawData.get(4);
-			vector3D.z = this.rawData.get(8);
-			vector3D.w = this.rawData.get(12);
-			break;
-		case 1:
-			vector3D.x = this.rawData.get(1);
-			vector3D.y = this.rawData.get(5);
-			vector3D.z = this.rawData.get(9);
-			vector3D.w = this.rawData.get(13);
-			break;
-		case 2:
-			vector3D.x = this.rawData.get(2);
-			vector3D.y = this.rawData.get(6);
-			vector3D.z = this.rawData.get(10);
-			vector3D.w = this.rawData.get(14);
-			break;
-		case 3:
-			vector3D.x = this.rawData.get(3);
-			vector3D.y = this.rawData.get(7);
-			vector3D.z = this.rawData.get(11);
-			vector3D.w = this.rawData.get(15);
-			break;
-		default:
-		}
-	}
-	,copyToMatrix3D: function(other) {
-		other.rawData = this.rawData.copy();
-	}
-	,decompose: function(orientationStyle) {
-		if(orientationStyle == null) {
-			orientationStyle = 1;
-		}
-		var vec = openfl__$Vector_Vector_$Impl_$.toObjectVector(null);
-		var m = this.clone();
-		var mr = m.rawData.copy();
-		var pos = new openfl_geom_Vector3D(mr.get(12),mr.get(13),mr.get(14));
-		mr.set(12,0);
-		mr.set(13,0);
-		mr.set(14,0);
-		var scale = new openfl_geom_Vector3D();
-		scale.x = Math.sqrt(mr.get(0) * mr.get(0) + mr.get(1) * mr.get(1) + mr.get(2) * mr.get(2));
-		scale.y = Math.sqrt(mr.get(4) * mr.get(4) + mr.get(5) * mr.get(5) + mr.get(6) * mr.get(6));
-		scale.z = Math.sqrt(mr.get(8) * mr.get(8) + mr.get(9) * mr.get(9) + mr.get(10) * mr.get(10));
-		if(mr.get(0) * (mr.get(5) * mr.get(10) - mr.get(6) * mr.get(9)) - mr.get(1) * (mr.get(4) * mr.get(10) - mr.get(6) * mr.get(8)) + mr.get(2) * (mr.get(4) * mr.get(9) - mr.get(5) * mr.get(8)) < 0) {
-			scale.z = -scale.z;
-		}
-		var _g = mr;
-		_g.set(0,_g.get(0) / scale.x);
-		var _g1 = mr;
-		_g1.set(1,_g1.get(1) / scale.x);
-		var _g2 = mr;
-		_g2.set(2,_g2.get(2) / scale.x);
-		var _g3 = mr;
-		_g3.set(4,_g3.get(4) / scale.y);
-		var _g4 = mr;
-		_g4.set(5,_g4.get(5) / scale.y);
-		var _g5 = mr;
-		_g5.set(6,_g5.get(6) / scale.y);
-		var _g6 = mr;
-		_g6.set(8,_g6.get(8) / scale.z);
-		var _g7 = mr;
-		_g7.set(9,_g7.get(9) / scale.z);
-		var _g8 = mr;
-		_g8.set(10,_g8.get(10) / scale.z);
-		var rot = new openfl_geom_Vector3D();
-		switch(orientationStyle) {
-		case 0:
-			rot.w = Math.acos((mr.get(0) + mr.get(5) + mr.get(10) - 1) / 2);
-			var len = Math.sqrt((mr.get(6) - mr.get(9)) * (mr.get(6) - mr.get(9)) + (mr.get(8) - mr.get(2)) * (mr.get(8) - mr.get(2)) + (mr.get(1) - mr.get(4)) * (mr.get(1) - mr.get(4)));
-			if(len != 0) {
-				rot.x = (mr.get(6) - mr.get(9)) / len;
-				rot.y = (mr.get(8) - mr.get(2)) / len;
-				rot.z = (mr.get(1) - mr.get(4)) / len;
-			} else {
-				rot.x = rot.y = rot.z = 0;
-			}
-			break;
-		case 1:
-			rot.y = Math.asin(-mr.get(2));
-			if(mr.get(2) != 1 && mr.get(2) != -1) {
-				rot.x = Math.atan2(mr.get(6),mr.get(10));
-				rot.z = Math.atan2(mr.get(1),mr.get(0));
-			} else {
-				rot.z = 0;
-				rot.x = Math.atan2(mr.get(4),mr.get(5));
-			}
-			break;
-		case 2:
-			var tr = mr.get(0) + mr.get(5) + mr.get(10);
-			if(tr > 0) {
-				rot.w = Math.sqrt(1 + tr) / 2;
-				rot.x = (mr.get(6) - mr.get(9)) / (4 * rot.w);
-				rot.y = (mr.get(8) - mr.get(2)) / (4 * rot.w);
-				rot.z = (mr.get(1) - mr.get(4)) / (4 * rot.w);
-			} else if(mr.get(0) > mr.get(5) && mr.get(0) > mr.get(10)) {
-				rot.x = Math.sqrt(1 + mr.get(0) - mr.get(5) - mr.get(10)) / 2;
-				rot.w = (mr.get(6) - mr.get(9)) / (4 * rot.x);
-				rot.y = (mr.get(1) + mr.get(4)) / (4 * rot.x);
-				rot.z = (mr.get(8) + mr.get(2)) / (4 * rot.x);
-			} else if(mr.get(5) > mr.get(10)) {
-				rot.y = Math.sqrt(1 + mr.get(5) - mr.get(0) - mr.get(10)) / 2;
-				rot.x = (mr.get(1) + mr.get(4)) / (4 * rot.y);
-				rot.w = (mr.get(8) - mr.get(2)) / (4 * rot.y);
-				rot.z = (mr.get(6) + mr.get(9)) / (4 * rot.y);
-			} else {
-				rot.z = Math.sqrt(1 + mr.get(10) - mr.get(0) - mr.get(5)) / 2;
-				rot.x = (mr.get(8) + mr.get(2)) / (4 * rot.z);
-				rot.y = (mr.get(6) + mr.get(9)) / (4 * rot.z);
-				rot.w = (mr.get(1) - mr.get(4)) / (4 * rot.z);
-			}
-			break;
-		}
-		vec.push(pos);
-		vec.push(rot);
-		vec.push(scale);
-		return vec;
-	}
-	,deltaTransformVector: function(v) {
-		var x = v.x;
-		var y = v.y;
-		var z = v.z;
-		return new openfl_geom_Vector3D(x * this.rawData.get(0) + y * this.rawData.get(4) + z * this.rawData.get(8) + this.rawData.get(3),x * this.rawData.get(1) + y * this.rawData.get(5) + z * this.rawData.get(9) + this.rawData.get(7),x * this.rawData.get(2) + y * this.rawData.get(6) + z * this.rawData.get(10) + this.rawData.get(11),0);
-	}
-	,identity: function() {
-		var a = [1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0];
-		var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
-		var _g1 = 0;
-		var _g = a.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			vector.set(i,a[i]);
-		}
-		this.rawData = vector;
-	}
-	,interpolateTo: function(toMat,percent) {
-		var _g = 0;
-		while(_g < 16) {
-			var i = _g++;
-			this.rawData.set(i,this.rawData.get(i) + (toMat.rawData.get(i) - this.rawData.get(i)) * percent);
-		}
-	}
-	,invert: function() {
-		var d = this.get_determinant();
-		var invertable = Math.abs(d) > 0.00000000001;
-		if(invertable) {
-			d = 1 / d;
-			var m11 = this.rawData.get(0);
-			var m21 = this.rawData.get(4);
-			var m31 = this.rawData.get(8);
-			var m41 = this.rawData.get(12);
-			var m12 = this.rawData.get(1);
-			var m22 = this.rawData.get(5);
-			var m32 = this.rawData.get(9);
-			var m42 = this.rawData.get(13);
-			var m13 = this.rawData.get(2);
-			var m23 = this.rawData.get(6);
-			var m33 = this.rawData.get(10);
-			var m43 = this.rawData.get(14);
-			var m14 = this.rawData.get(3);
-			var m24 = this.rawData.get(7);
-			var m34 = this.rawData.get(11);
-			var m44 = this.rawData.get(15);
-			this.rawData.set(0,d * (m22 * (m33 * m44 - m43 * m34) - m32 * (m23 * m44 - m43 * m24) + m42 * (m23 * m34 - m33 * m24)));
-			this.rawData.set(1,-d * (m12 * (m33 * m44 - m43 * m34) - m32 * (m13 * m44 - m43 * m14) + m42 * (m13 * m34 - m33 * m14)));
-			this.rawData.set(2,d * (m12 * (m23 * m44 - m43 * m24) - m22 * (m13 * m44 - m43 * m14) + m42 * (m13 * m24 - m23 * m14)));
-			this.rawData.set(3,-d * (m12 * (m23 * m34 - m33 * m24) - m22 * (m13 * m34 - m33 * m14) + m32 * (m13 * m24 - m23 * m14)));
-			this.rawData.set(4,-d * (m21 * (m33 * m44 - m43 * m34) - m31 * (m23 * m44 - m43 * m24) + m41 * (m23 * m34 - m33 * m24)));
-			this.rawData.set(5,d * (m11 * (m33 * m44 - m43 * m34) - m31 * (m13 * m44 - m43 * m14) + m41 * (m13 * m34 - m33 * m14)));
-			this.rawData.set(6,-d * (m11 * (m23 * m44 - m43 * m24) - m21 * (m13 * m44 - m43 * m14) + m41 * (m13 * m24 - m23 * m14)));
-			this.rawData.set(7,d * (m11 * (m23 * m34 - m33 * m24) - m21 * (m13 * m34 - m33 * m14) + m31 * (m13 * m24 - m23 * m14)));
-			this.rawData.set(8,d * (m21 * (m32 * m44 - m42 * m34) - m31 * (m22 * m44 - m42 * m24) + m41 * (m22 * m34 - m32 * m24)));
-			this.rawData.set(9,-d * (m11 * (m32 * m44 - m42 * m34) - m31 * (m12 * m44 - m42 * m14) + m41 * (m12 * m34 - m32 * m14)));
-			this.rawData.set(10,d * (m11 * (m22 * m44 - m42 * m24) - m21 * (m12 * m44 - m42 * m14) + m41 * (m12 * m24 - m22 * m14)));
-			this.rawData.set(11,-d * (m11 * (m22 * m34 - m32 * m24) - m21 * (m12 * m34 - m32 * m14) + m31 * (m12 * m24 - m22 * m14)));
-			this.rawData.set(12,-d * (m21 * (m32 * m43 - m42 * m33) - m31 * (m22 * m43 - m42 * m23) + m41 * (m22 * m33 - m32 * m23)));
-			this.rawData.set(13,d * (m11 * (m32 * m43 - m42 * m33) - m31 * (m12 * m43 - m42 * m13) + m41 * (m12 * m33 - m32 * m13)));
-			this.rawData.set(14,-d * (m11 * (m22 * m43 - m42 * m23) - m21 * (m12 * m43 - m42 * m13) + m41 * (m12 * m23 - m22 * m13)));
-			this.rawData.set(15,d * (m11 * (m22 * m33 - m32 * m23) - m21 * (m12 * m33 - m32 * m13) + m31 * (m12 * m23 - m22 * m13)));
-		}
-		return invertable;
-	}
-	,pointAt: function(pos,at,up) {
-		if(at == null) {
-			at = new openfl_geom_Vector3D(0,0,-1);
-		}
-		if(up == null) {
-			up = new openfl_geom_Vector3D(0,-1,0);
-		}
-		var dir = at.subtract(pos);
-		var vup = up.clone();
-		var right;
-		dir.normalize();
-		vup.normalize();
-		var dir2 = dir.clone();
-		dir2.scaleBy(vup.dotProduct(dir));
-		vup = vup.subtract(dir2);
-		if(vup.get_length() > 0) {
-			vup.normalize();
-		} else if(dir.x != 0) {
-			vup = new openfl_geom_Vector3D(-dir.y,dir.x,0);
-		} else {
-			vup = new openfl_geom_Vector3D(1,0,0);
-		}
-		right = vup.crossProduct(dir);
-		right.normalize();
-		this.rawData.set(0,right.x);
-		this.rawData.set(4,right.y);
-		this.rawData.set(8,right.z);
-		this.rawData.set(12,0.0);
-		this.rawData.set(1,vup.x);
-		this.rawData.set(5,vup.y);
-		this.rawData.set(9,vup.z);
-		this.rawData.set(13,0.0);
-		this.rawData.set(2,dir.x);
-		this.rawData.set(6,dir.y);
-		this.rawData.set(10,dir.z);
-		this.rawData.set(14,0.0);
-		this.rawData.set(3,pos.x);
-		this.rawData.set(7,pos.y);
-		this.rawData.set(11,pos.z);
-		this.rawData.set(15,1.0);
-	}
-	,prepend: function(rhs) {
-		var m111 = rhs.rawData.get(0);
-		var m121 = rhs.rawData.get(4);
-		var m131 = rhs.rawData.get(8);
-		var m141 = rhs.rawData.get(12);
-		var m112 = rhs.rawData.get(1);
-		var m122 = rhs.rawData.get(5);
-		var m132 = rhs.rawData.get(9);
-		var m142 = rhs.rawData.get(13);
-		var m113 = rhs.rawData.get(2);
-		var m123 = rhs.rawData.get(6);
-		var m133 = rhs.rawData.get(10);
-		var m143 = rhs.rawData.get(14);
-		var m114 = rhs.rawData.get(3);
-		var m124 = rhs.rawData.get(7);
-		var m134 = rhs.rawData.get(11);
-		var m144 = rhs.rawData.get(15);
-		var m211 = this.rawData.get(0);
-		var m221 = this.rawData.get(4);
-		var m231 = this.rawData.get(8);
-		var m241 = this.rawData.get(12);
-		var m212 = this.rawData.get(1);
-		var m222 = this.rawData.get(5);
-		var m232 = this.rawData.get(9);
-		var m242 = this.rawData.get(13);
-		var m213 = this.rawData.get(2);
-		var m223 = this.rawData.get(6);
-		var m233 = this.rawData.get(10);
-		var m243 = this.rawData.get(14);
-		var m214 = this.rawData.get(3);
-		var m224 = this.rawData.get(7);
-		var m234 = this.rawData.get(11);
-		var m244 = this.rawData.get(15);
-		this.rawData.set(0,m111 * m211 + m112 * m221 + m113 * m231 + m114 * m241);
-		this.rawData.set(1,m111 * m212 + m112 * m222 + m113 * m232 + m114 * m242);
-		this.rawData.set(2,m111 * m213 + m112 * m223 + m113 * m233 + m114 * m243);
-		this.rawData.set(3,m111 * m214 + m112 * m224 + m113 * m234 + m114 * m244);
-		this.rawData.set(4,m121 * m211 + m122 * m221 + m123 * m231 + m124 * m241);
-		this.rawData.set(5,m121 * m212 + m122 * m222 + m123 * m232 + m124 * m242);
-		this.rawData.set(6,m121 * m213 + m122 * m223 + m123 * m233 + m124 * m243);
-		this.rawData.set(7,m121 * m214 + m122 * m224 + m123 * m234 + m124 * m244);
-		this.rawData.set(8,m131 * m211 + m132 * m221 + m133 * m231 + m134 * m241);
-		this.rawData.set(9,m131 * m212 + m132 * m222 + m133 * m232 + m134 * m242);
-		this.rawData.set(10,m131 * m213 + m132 * m223 + m133 * m233 + m134 * m243);
-		this.rawData.set(11,m131 * m214 + m132 * m224 + m133 * m234 + m134 * m244);
-		this.rawData.set(12,m141 * m211 + m142 * m221 + m143 * m231 + m144 * m241);
-		this.rawData.set(13,m141 * m212 + m142 * m222 + m143 * m232 + m144 * m242);
-		this.rawData.set(14,m141 * m213 + m142 * m223 + m143 * m233 + m144 * m243);
-		this.rawData.set(15,m141 * m214 + m142 * m224 + m143 * m234 + m144 * m244);
-	}
-	,prependRotation: function(degrees,axis,pivotPoint) {
-		var tx;
-		var ty;
-		var tz = 0;
-		ty = tz;
-		tx = ty;
-		if(pivotPoint != null) {
-			tx = pivotPoint.x;
-			ty = pivotPoint.y;
-			tz = pivotPoint.z;
-		}
-		var radian = degrees * Math.PI / 180;
-		var cos = Math.cos(radian);
-		var sin = Math.sin(radian);
-		var x = axis.x;
-		var y = axis.y;
-		var z = axis.z;
-		var x2 = x * x;
-		var y2 = y * y;
-		var z2 = z * z;
-		var ls = x2 + y2 + z2;
-		if(ls != 0) {
-			var l = Math.sqrt(ls);
-			x /= l;
-			y /= l;
-			z /= l;
-			x2 /= ls;
-			y2 /= ls;
-			z2 /= ls;
-		}
-		var ccos = 1 - cos;
-		var m = new openfl_geom_Matrix3D();
-		var d = m.rawData;
-		d.set(0,x2 + (y2 + z2) * cos);
-		d.set(1,x * y * ccos + z * sin);
-		d.set(2,x * z * ccos - y * sin);
-		d.set(4,x * y * ccos - z * sin);
-		d.set(5,y2 + (x2 + z2) * cos);
-		d.set(6,y * z * ccos + x * sin);
-		d.set(8,x * z * ccos + y * sin);
-		d.set(9,y * z * ccos - x * sin);
-		d.set(10,z2 + (x2 + y2) * cos);
-		d.set(12,(tx * (y2 + z2) - x * (ty * y + tz * z)) * ccos + (ty * z - tz * y) * sin);
-		d.set(13,(ty * (x2 + z2) - y * (tx * x + tz * z)) * ccos + (tz * x - tx * z) * sin);
-		d.set(14,(tz * (x2 + y2) - z * (tx * x + ty * y)) * ccos + (tx * y - ty * x) * sin);
-		this.prepend(m);
-	}
-	,prependScale: function(xScale,yScale,zScale) {
-		var a = [xScale,0.0,0.0,0.0,0.0,yScale,0.0,0.0,0.0,0.0,zScale,0.0,0.0,0.0,0.0,1.0];
-		var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
-		var _g1 = 0;
-		var _g = a.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			vector.set(i,a[i]);
-		}
-		this.prepend(new openfl_geom_Matrix3D(vector));
-	}
-	,prependTranslation: function(x,y,z) {
-		var m = new openfl_geom_Matrix3D();
-		m.set_position(new openfl_geom_Vector3D(x,y,z));
-		this.prepend(m);
-	}
-	,recompose: function(components,orientationStyle) {
-		if(components.get_length() < 3 || components.get(2).x == 0 || components.get(2).y == 0 || components.get(2).z == 0) {
-			return false;
-		}
-		if(orientationStyle == null) {
-			orientationStyle = 1;
-		}
-		this.identity();
-		var scale = [];
-		scale[0] = scale[1] = scale[2] = components.get(2).x;
-		scale[4] = scale[5] = scale[6] = components.get(2).y;
-		scale[8] = scale[9] = scale[10] = components.get(2).z;
-		if(orientationStyle == null) {
-			var x = components.get(1).x;
-			var y = components.get(1).y;
-			var z = components.get(1).z;
-			var w = components.get(1).w;
-			if(orientationStyle == 0) {
-				x *= Math.sin(w / 2);
-				y *= Math.sin(w / 2);
-				z *= Math.sin(w / 2);
-				w = Math.cos(w / 2);
-			}
-			this.rawData.set(0,(1 - 2 * y * y - 2 * z * z) * scale[0]);
-			this.rawData.set(1,(2 * x * y + 2 * w * z) * scale[1]);
-			this.rawData.set(2,(2 * x * z - 2 * w * y) * scale[2]);
-			this.rawData.set(3,0);
-			this.rawData.set(4,(2 * x * y - 2 * w * z) * scale[4]);
-			this.rawData.set(5,(1 - 2 * x * x - 2 * z * z) * scale[5]);
-			this.rawData.set(6,(2 * y * z + 2 * w * x) * scale[6]);
-			this.rawData.set(7,0);
-			this.rawData.set(8,(2 * x * z + 2 * w * y) * scale[8]);
-			this.rawData.set(9,(2 * y * z - 2 * w * x) * scale[9]);
-			this.rawData.set(10,(1 - 2 * x * x - 2 * y * y) * scale[10]);
-			this.rawData.set(11,0);
-			this.rawData.set(12,components.get(0).x);
-			this.rawData.set(13,components.get(0).y);
-			this.rawData.set(14,components.get(0).z);
-			this.rawData.set(15,1);
-		} else if(orientationStyle == 1) {
-			var cx = Math.cos(components.get(1).x);
-			var cy = Math.cos(components.get(1).y);
-			var cz = Math.cos(components.get(1).z);
-			var sx = Math.sin(components.get(1).x);
-			var sy = Math.sin(components.get(1).y);
-			var sz = Math.sin(components.get(1).z);
-			this.rawData.set(0,cy * cz * scale[0]);
-			this.rawData.set(1,cy * sz * scale[1]);
-			this.rawData.set(2,-sy * scale[2]);
-			this.rawData.set(3,0);
-			this.rawData.set(4,(sx * sy * cz - cx * sz) * scale[4]);
-			this.rawData.set(5,(sx * sy * sz + cx * cz) * scale[5]);
-			this.rawData.set(6,sx * cy * scale[6]);
-			this.rawData.set(7,0);
-			this.rawData.set(8,(cx * sy * cz + sx * sz) * scale[8]);
-			this.rawData.set(9,(cx * sy * sz - sx * cz) * scale[9]);
-			this.rawData.set(10,cx * cy * scale[10]);
-			this.rawData.set(11,0);
-			this.rawData.set(12,components.get(0).x);
-			this.rawData.set(13,components.get(0).y);
-			this.rawData.set(14,components.get(0).z);
-			this.rawData.set(15,1);
-		} else {
-			var x1 = components.get(1).x;
-			var y1 = components.get(1).y;
-			var z1 = components.get(1).z;
-			var w1 = components.get(1).w;
-			if(orientationStyle == 0) {
-				x1 *= Math.sin(w1 / 2);
-				y1 *= Math.sin(w1 / 2);
-				z1 *= Math.sin(w1 / 2);
-				w1 = Math.cos(w1 / 2);
-			}
-			this.rawData.set(0,(1 - 2 * y1 * y1 - 2 * z1 * z1) * scale[0]);
-			this.rawData.set(1,(2 * x1 * y1 + 2 * w1 * z1) * scale[1]);
-			this.rawData.set(2,(2 * x1 * z1 - 2 * w1 * y1) * scale[2]);
-			this.rawData.set(3,0);
-			this.rawData.set(4,(2 * x1 * y1 - 2 * w1 * z1) * scale[4]);
-			this.rawData.set(5,(1 - 2 * x1 * x1 - 2 * z1 * z1) * scale[5]);
-			this.rawData.set(6,(2 * y1 * z1 + 2 * w1 * x1) * scale[6]);
-			this.rawData.set(7,0);
-			this.rawData.set(8,(2 * x1 * z1 + 2 * w1 * y1) * scale[8]);
-			this.rawData.set(9,(2 * y1 * z1 - 2 * w1 * x1) * scale[9]);
-			this.rawData.set(10,(1 - 2 * x1 * x1 - 2 * y1 * y1) * scale[10]);
-			this.rawData.set(11,0);
-			this.rawData.set(12,components.get(0).x);
-			this.rawData.set(13,components.get(0).y);
-			this.rawData.set(14,components.get(0).z);
-			this.rawData.set(15,1);
-		}
-		if(components.get(2).x == 0) {
-			this.rawData.set(0,1e-15);
-		}
-		if(components.get(2).y == 0) {
-			this.rawData.set(5,1e-15);
-		}
-		if(components.get(2).z == 0) {
-			this.rawData.set(10,1e-15);
-		}
-		return !(components.get(2).x == 0 || components.get(2).y == 0 || components.get(2).y == 0);
-	}
-	,transformVector: function(v) {
-		var x = v.x;
-		var y = v.y;
-		var z = v.z;
-		return new openfl_geom_Vector3D(x * this.rawData.get(0) + y * this.rawData.get(4) + z * this.rawData.get(8) + this.rawData.get(12),x * this.rawData.get(1) + y * this.rawData.get(5) + z * this.rawData.get(9) + this.rawData.get(13),x * this.rawData.get(2) + y * this.rawData.get(6) + z * this.rawData.get(10) + this.rawData.get(14),x * this.rawData.get(3) + y * this.rawData.get(7) + z * this.rawData.get(11) + this.rawData.get(15));
-	}
-	,transformVectors: function(vin,vout) {
-		var i = 0;
-		var x;
-		var y;
-		var z;
-		while(i + 3 <= vin.get_length()) {
-			x = vin.get(i);
-			y = vin.get(i + 1);
-			z = vin.get(i + 2);
-			vout.set(i,x * this.rawData.get(0) + y * this.rawData.get(4) + z * this.rawData.get(8) + this.rawData.get(12));
-			vout.set(i + 1,x * this.rawData.get(1) + y * this.rawData.get(5) + z * this.rawData.get(9) + this.rawData.get(13));
-			vout.set(i + 2,x * this.rawData.get(2) + y * this.rawData.get(6) + z * this.rawData.get(10) + this.rawData.get(14));
-			i += 3;
-		}
-	}
-	,transpose: function() {
-		var oRawData = this.rawData.copy();
-		this.rawData.set(1,oRawData.get(4));
-		this.rawData.set(2,oRawData.get(8));
-		this.rawData.set(3,oRawData.get(12));
-		this.rawData.set(4,oRawData.get(1));
-		this.rawData.set(6,oRawData.get(9));
-		this.rawData.set(7,oRawData.get(13));
-		this.rawData.set(8,oRawData.get(2));
-		this.rawData.set(9,oRawData.get(6));
-		this.rawData.set(11,oRawData.get(14));
-		this.rawData.set(12,oRawData.get(3));
-		this.rawData.set(13,oRawData.get(7));
-		this.rawData.set(14,oRawData.get(11));
-	}
-	,get_determinant: function() {
-		return (this.rawData.get(0) * this.rawData.get(5) - this.rawData.get(4) * this.rawData.get(1)) * (this.rawData.get(10) * this.rawData.get(15) - this.rawData.get(14) * this.rawData.get(11)) - (this.rawData.get(0) * this.rawData.get(9) - this.rawData.get(8) * this.rawData.get(1)) * (this.rawData.get(6) * this.rawData.get(15) - this.rawData.get(14) * this.rawData.get(7)) + (this.rawData.get(0) * this.rawData.get(13) - this.rawData.get(12) * this.rawData.get(1)) * (this.rawData.get(6) * this.rawData.get(11) - this.rawData.get(10) * this.rawData.get(7)) + (this.rawData.get(4) * this.rawData.get(9) - this.rawData.get(8) * this.rawData.get(5)) * (this.rawData.get(2) * this.rawData.get(15) - this.rawData.get(14) * this.rawData.get(3)) - (this.rawData.get(4) * this.rawData.get(13) - this.rawData.get(12) * this.rawData.get(5)) * (this.rawData.get(2) * this.rawData.get(11) - this.rawData.get(10) * this.rawData.get(3)) + (this.rawData.get(8) * this.rawData.get(13) - this.rawData.get(12) * this.rawData.get(9)) * (this.rawData.get(2) * this.rawData.get(7) - this.rawData.get(6) * this.rawData.get(3));
-	}
-	,get_position: function() {
-		return new openfl_geom_Vector3D(this.rawData.get(12),this.rawData.get(13),this.rawData.get(14));
-	}
-	,set_position: function(val) {
-		this.rawData.set(12,val.x);
-		this.rawData.set(13,val.y);
-		this.rawData.set(14,val.z);
-		return val;
-	}
-	,__class__: openfl_geom_Matrix3D
-	,__properties__: {set_position:"set_position",get_position:"get_position",get_determinant:"get_determinant"}
-};
-var lime_utils_ObjectPool_$openfl_$geom_$Point = function(create,clean,size) {
-	if(create != null) {
-		this.create = create;
-	}
-	if(clean != null) {
-		this.clean = clean;
-	}
-	if(size != null) {
-		this.set_size(size);
-	}
-	this.__pool = new haxe_ds_ObjectMap();
-	this.activeObjects = 0;
-	this.inactiveObjects = 0;
-	this.__inactiveObject0 = null;
-	this.__inactiveObject1 = null;
-	this.__inactiveObjectList = new List();
-};
-$hxClasses["lime.utils.ObjectPool_openfl_geom_Point"] = lime_utils_ObjectPool_$openfl_$geom_$Point;
-lime_utils_ObjectPool_$openfl_$geom_$Point.__name__ = ["lime","utils","ObjectPool_openfl_geom_Point"];
-lime_utils_ObjectPool_$openfl_$geom_$Point.prototype = {
-	activeObjects: null
-	,inactiveObjects: null
-	,__inactiveObject0: null
-	,__inactiveObject1: null
-	,__inactiveObjectList: null
-	,__pool: null
-	,__size: null
-	,add: function(object) {
-		if(!this.__pool.exists(object)) {
-			this.__pool.set(object,false);
-			this.clean(object);
-			if(this.__inactiveObject0 == null) {
-				this.__inactiveObject0 = object;
-			} else if(this.__inactiveObject1 == null) {
-				this.__inactiveObject1 = object;
-			} else {
-				this.__inactiveObjectList.add(object);
-			}
-			this.inactiveObjects++;
-		}
-	}
-	,clean: function(object) {
-	}
-	,clear: function() {
-		this.__pool = new haxe_ds_ObjectMap();
-		this.activeObjects = 0;
-		this.inactiveObjects = 0;
-		this.__inactiveObject0 = null;
-		this.__inactiveObject1 = null;
-		this.__inactiveObjectList.clear();
-	}
-	,create: function() {
-		return null;
-	}
-	,get: function() {
-		var object = null;
-		if(this.inactiveObjects > 0) {
-			var object1 = null;
-			if(this.__inactiveObject0 != null) {
-				object1 = this.__inactiveObject0;
-				this.__inactiveObject0 = null;
-			} else if(this.__inactiveObject1 != null) {
-				object1 = this.__inactiveObject1;
-				this.__inactiveObject1 = null;
-			} else {
-				object1 = this.__inactiveObjectList.pop();
-				if(this.__inactiveObjectList.length > 0) {
-					this.__inactiveObject0 = this.__inactiveObjectList.pop();
-				}
-				if(this.__inactiveObjectList.length > 0) {
-					this.__inactiveObject1 = this.__inactiveObjectList.pop();
-				}
-			}
-			this.inactiveObjects--;
-			this.activeObjects++;
-			object = object1;
-		} else if(this.__size == null || this.activeObjects < this.__size) {
-			object = this.create();
-			if(object != null) {
-				this.__pool.set(object,true);
-				this.activeObjects++;
-			}
-		}
-		return object;
-	}
-	,release: function(object) {
-		this.activeObjects--;
-		if(this.__size == null || this.activeObjects + this.inactiveObjects < this.__size) {
-			this.clean(object);
-			if(this.__inactiveObject0 == null) {
-				this.__inactiveObject0 = object;
-			} else if(this.__inactiveObject1 == null) {
-				this.__inactiveObject1 = object;
-			} else {
-				this.__inactiveObjectList.add(object);
-			}
-			this.inactiveObjects++;
-		} else {
-			this.__pool.remove(object);
-		}
-	}
-	,__addInactive: function(object) {
-		if(this.__inactiveObject0 == null) {
-			this.__inactiveObject0 = object;
-		} else if(this.__inactiveObject1 == null) {
-			this.__inactiveObject1 = object;
-		} else {
-			this.__inactiveObjectList.add(object);
-		}
-		this.inactiveObjects++;
-	}
-	,__getInactive: function() {
-		var object = null;
-		if(this.__inactiveObject0 != null) {
-			object = this.__inactiveObject0;
-			this.__inactiveObject0 = null;
-		} else if(this.__inactiveObject1 != null) {
-			object = this.__inactiveObject1;
-			this.__inactiveObject1 = null;
-		} else {
-			object = this.__inactiveObjectList.pop();
-			if(this.__inactiveObjectList.length > 0) {
-				this.__inactiveObject0 = this.__inactiveObjectList.pop();
-			}
-			if(this.__inactiveObjectList.length > 0) {
-				this.__inactiveObject1 = this.__inactiveObjectList.pop();
-			}
-		}
-		this.inactiveObjects--;
-		this.activeObjects++;
-		return object;
-	}
-	,__removeInactive: function(count) {
-		if(count <= 0 || this.inactiveObjects == 0) {
-			return;
-		}
-		if(this.__inactiveObject0 != null) {
-			this.__pool.remove(this.__inactiveObject0);
-			this.__inactiveObject0 = null;
-			this.inactiveObjects--;
-			--count;
-		}
-		if(count == 0 || this.inactiveObjects == 0) {
-			return;
-		}
-		if(this.__inactiveObject1 != null) {
-			this.__pool.remove(this.__inactiveObject1);
-			this.__inactiveObject1 = null;
-			this.inactiveObjects--;
-			--count;
-		}
-		if(count == 0 || this.inactiveObjects == 0) {
-			return;
-		}
-		var _g_head = this.__inactiveObjectList.h;
-		while(_g_head != null) {
-			var val = _g_head.item;
-			_g_head = _g_head.next;
-			var object = val;
-			this.__pool.remove(object);
-			this.__inactiveObjectList.remove(object);
-			this.inactiveObjects--;
-			--count;
-			if(count == 0 || this.inactiveObjects == 0) {
-				return;
-			}
-		}
-	}
-	,get_size: function() {
-		return this.__size;
-	}
-	,set_size: function(value) {
-		if(value == null) {
-			this.__size = null;
-		} else {
-			var current = this.inactiveObjects + this.activeObjects;
-			this.__size = value;
-			if(current > value) {
-				this.__removeInactive(current - value);
-			} else if(value > current) {
-				var object;
-				var _g1 = 0;
-				var _g = value - current;
-				while(_g1 < _g) {
-					var i = _g1++;
-					object = this.create();
-					if(object != null) {
-						this.__pool.set(object,false);
-						this.__inactiveObjectList.add(object);
-						this.inactiveObjects++;
-					} else {
-						break;
-					}
-				}
-			}
-		}
-		return value;
-	}
-	,__class__: lime_utils_ObjectPool_$openfl_$geom_$Point
-	,__properties__: {set_size:"set_size",get_size:"get_size"}
-};
-var openfl_geom_Point = function(x,y) {
-	if(y == null) {
-		y = 0;
-	}
-	if(x == null) {
-		x = 0;
-	}
-	this.x = x;
-	this.y = y;
-};
-$hxClasses["openfl.geom.Point"] = openfl_geom_Point;
-openfl_geom_Point.__name__ = ["openfl","geom","Point"];
-openfl_geom_Point.distance = function(pt1,pt2) {
-	var dx = pt1.x - pt2.x;
-	var dy = pt1.y - pt2.y;
-	return Math.sqrt(dx * dx + dy * dy);
-};
-openfl_geom_Point.interpolate = function(pt1,pt2,f) {
-	return new openfl_geom_Point(pt2.x + f * (pt1.x - pt2.x),pt2.y + f * (pt1.y - pt2.y));
-};
-openfl_geom_Point.polar = function(len,angle) {
-	return new openfl_geom_Point(len * Math.cos(angle),len * Math.sin(angle));
-};
-openfl_geom_Point.prototype = {
-	x: null
-	,y: null
-	,add: function(v) {
-		return new openfl_geom_Point(v.x + this.x,v.y + this.y);
-	}
-	,clone: function() {
-		return new openfl_geom_Point(this.x,this.y);
-	}
-	,copyFrom: function(sourcePoint) {
-		this.x = sourcePoint.x;
-		this.y = sourcePoint.y;
-	}
-	,equals: function(toCompare) {
-		if(toCompare != null && toCompare.x == this.x) {
-			return toCompare.y == this.y;
-		} else {
-			return false;
-		}
-	}
-	,normalize: function(thickness) {
-		if(this.x == 0 && this.y == 0) {
-			return;
-		} else {
-			var norm = thickness / Math.sqrt(this.x * this.x + this.y * this.y);
-			this.x *= norm;
-			this.y *= norm;
-		}
-	}
-	,offset: function(dx,dy) {
-		this.x += dx;
-		this.y += dy;
-	}
-	,setTo: function(xa,ya) {
-		this.x = xa;
-		this.y = ya;
-	}
-	,subtract: function(v) {
-		return new openfl_geom_Point(this.x - v.x,this.y - v.y);
-	}
-	,toString: function() {
-		return "(x=" + this.x + ", y=" + this.y + ")";
-	}
-	,__toLimeVector2: function() {
-		if(openfl_geom_Point.__limeVector2 == null) {
-			openfl_geom_Point.__limeVector2 = new lime_math_Vector2();
-		}
-		var _this = openfl_geom_Point.__limeVector2;
-		_this.x = this.x;
-		_this.y = this.y;
-		return openfl_geom_Point.__limeVector2;
-	}
-	,get_length: function() {
-		return Math.sqrt(this.x * this.x + this.y * this.y);
-	}
-	,__class__: openfl_geom_Point
-	,__properties__: {get_length:"get_length"}
-};
-var openfl_geom_Vector3D = function(x,y,z,w) {
-	if(w == null) {
-		w = 0;
-	}
-	if(z == null) {
-		z = 0;
-	}
-	if(y == null) {
-		y = 0;
-	}
-	if(x == null) {
-		x = 0;
-	}
-	this.w = w;
-	this.x = x;
-	this.y = y;
-	this.z = z;
-};
-$hxClasses["openfl.geom.Vector3D"] = openfl_geom_Vector3D;
-openfl_geom_Vector3D.__name__ = ["openfl","geom","Vector3D"];
-openfl_geom_Vector3D.__properties__ = {get_Z_AXIS:"get_Z_AXIS",get_Y_AXIS:"get_Y_AXIS",get_X_AXIS:"get_X_AXIS"};
-openfl_geom_Vector3D.angleBetween = function(a,b) {
-	var la = a.get_length();
-	var lb = b.get_length();
-	var dot = a.dotProduct(b);
-	if(la != 0) {
-		dot /= la;
-	}
-	if(lb != 0) {
-		dot /= lb;
-	}
-	return Math.acos(dot);
-};
-openfl_geom_Vector3D.distance = function(pt1,pt2) {
-	var x = pt2.x - pt1.x;
-	var y = pt2.y - pt1.y;
-	var z = pt2.z - pt1.z;
-	return Math.sqrt(x * x + y * y + z * z);
-};
-openfl_geom_Vector3D.get_X_AXIS = function() {
-	return new openfl_geom_Vector3D(1,0,0);
-};
-openfl_geom_Vector3D.get_Y_AXIS = function() {
-	return new openfl_geom_Vector3D(0,1,0);
-};
-openfl_geom_Vector3D.get_Z_AXIS = function() {
-	return new openfl_geom_Vector3D(0,0,1);
-};
-openfl_geom_Vector3D.prototype = {
-	w: null
-	,x: null
-	,y: null
-	,z: null
-	,add: function(a) {
-		return new openfl_geom_Vector3D(this.x + a.x,this.y + a.y,this.z + a.z);
-	}
-	,clone: function() {
-		return new openfl_geom_Vector3D(this.x,this.y,this.z,this.w);
-	}
-	,copyFrom: function(sourceVector3D) {
-		this.x = sourceVector3D.x;
-		this.y = sourceVector3D.y;
-		this.z = sourceVector3D.z;
-	}
-	,crossProduct: function(a) {
-		return new openfl_geom_Vector3D(this.y * a.z - this.z * a.y,this.z * a.x - this.x * a.z,this.x * a.y - this.y * a.x,1);
-	}
-	,decrementBy: function(a) {
-		this.x -= a.x;
-		this.y -= a.y;
-		this.z -= a.z;
-	}
-	,dotProduct: function(a) {
-		return this.x * a.x + this.y * a.y + this.z * a.z;
-	}
-	,equals: function(toCompare,allFour) {
-		if(allFour == null) {
-			allFour = false;
-		}
-		if(this.x == toCompare.x && this.y == toCompare.y && this.z == toCompare.z) {
-			if(!(!allFour)) {
-				return this.w == toCompare.w;
-			} else {
-				return true;
-			}
-		} else {
-			return false;
-		}
-	}
-	,incrementBy: function(a) {
-		this.x += a.x;
-		this.y += a.y;
-		this.z += a.z;
-	}
-	,nearEquals: function(toCompare,tolerance,allFour) {
-		if(allFour == null) {
-			allFour = false;
-		}
-		if(Math.abs(this.x - toCompare.x) < tolerance && Math.abs(this.y - toCompare.y) < tolerance && Math.abs(this.z - toCompare.z) < tolerance) {
-			if(!(!allFour)) {
-				return Math.abs(this.w - toCompare.w) < tolerance;
-			} else {
-				return true;
-			}
-		} else {
-			return false;
-		}
-	}
-	,negate: function() {
-		this.x *= -1;
-		this.y *= -1;
-		this.z *= -1;
-	}
-	,normalize: function() {
-		var l = this.get_length();
-		if(l != 0) {
-			this.x /= l;
-			this.y /= l;
-			this.z /= l;
-		}
-		return l;
-	}
-	,project: function() {
-		this.x /= this.w;
-		this.y /= this.w;
-		this.z /= this.w;
-	}
-	,scaleBy: function(s) {
-		this.x *= s;
-		this.y *= s;
-		this.z *= s;
-	}
-	,setTo: function(xa,ya,za) {
-		this.x = xa;
-		this.y = ya;
-		this.z = za;
-	}
-	,subtract: function(a) {
-		return new openfl_geom_Vector3D(this.x - a.x,this.y - a.y,this.z - a.z);
-	}
-	,toString: function() {
-		return "Vector3D(" + this.x + ", " + this.y + ", " + this.z + ")";
-	}
-	,get_length: function() {
-		return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-	}
-	,get_lengthSquared: function() {
-		return this.x * this.x + this.y * this.y + this.z * this.z;
-	}
-	,__class__: openfl_geom_Vector3D
-	,__properties__: {get_lengthSquared:"get_lengthSquared",get_length:"get_length"}
-};
-var lime_utils_ObjectPool_$openfl_$geom_$Rectangle = function(create,clean,size) {
-	if(create != null) {
-		this.create = create;
-	}
-	if(clean != null) {
-		this.clean = clean;
-	}
-	if(size != null) {
-		this.set_size(size);
-	}
-	this.__pool = new haxe_ds_ObjectMap();
-	this.activeObjects = 0;
-	this.inactiveObjects = 0;
-	this.__inactiveObject0 = null;
-	this.__inactiveObject1 = null;
-	this.__inactiveObjectList = new List();
-};
-$hxClasses["lime.utils.ObjectPool_openfl_geom_Rectangle"] = lime_utils_ObjectPool_$openfl_$geom_$Rectangle;
-lime_utils_ObjectPool_$openfl_$geom_$Rectangle.__name__ = ["lime","utils","ObjectPool_openfl_geom_Rectangle"];
-lime_utils_ObjectPool_$openfl_$geom_$Rectangle.prototype = {
-	activeObjects: null
-	,inactiveObjects: null
-	,__inactiveObject0: null
-	,__inactiveObject1: null
-	,__inactiveObjectList: null
-	,__pool: null
-	,__size: null
-	,add: function(object) {
-		if(!this.__pool.exists(object)) {
-			this.__pool.set(object,false);
-			this.clean(object);
-			if(this.__inactiveObject0 == null) {
-				this.__inactiveObject0 = object;
-			} else if(this.__inactiveObject1 == null) {
-				this.__inactiveObject1 = object;
-			} else {
-				this.__inactiveObjectList.add(object);
-			}
-			this.inactiveObjects++;
-		}
-	}
-	,clean: function(object) {
-	}
-	,clear: function() {
-		this.__pool = new haxe_ds_ObjectMap();
-		this.activeObjects = 0;
-		this.inactiveObjects = 0;
-		this.__inactiveObject0 = null;
-		this.__inactiveObject1 = null;
-		this.__inactiveObjectList.clear();
-	}
-	,create: function() {
-		return null;
-	}
-	,get: function() {
-		var object = null;
-		if(this.inactiveObjects > 0) {
-			var object1 = null;
-			if(this.__inactiveObject0 != null) {
-				object1 = this.__inactiveObject0;
-				this.__inactiveObject0 = null;
-			} else if(this.__inactiveObject1 != null) {
-				object1 = this.__inactiveObject1;
-				this.__inactiveObject1 = null;
-			} else {
-				object1 = this.__inactiveObjectList.pop();
-				if(this.__inactiveObjectList.length > 0) {
-					this.__inactiveObject0 = this.__inactiveObjectList.pop();
-				}
-				if(this.__inactiveObjectList.length > 0) {
-					this.__inactiveObject1 = this.__inactiveObjectList.pop();
-				}
-			}
-			this.inactiveObjects--;
-			this.activeObjects++;
-			object = object1;
-		} else if(this.__size == null || this.activeObjects < this.__size) {
-			object = this.create();
-			if(object != null) {
-				this.__pool.set(object,true);
-				this.activeObjects++;
-			}
-		}
-		return object;
-	}
-	,release: function(object) {
-		this.activeObjects--;
-		if(this.__size == null || this.activeObjects + this.inactiveObjects < this.__size) {
-			this.clean(object);
-			if(this.__inactiveObject0 == null) {
-				this.__inactiveObject0 = object;
-			} else if(this.__inactiveObject1 == null) {
-				this.__inactiveObject1 = object;
-			} else {
-				this.__inactiveObjectList.add(object);
-			}
-			this.inactiveObjects++;
-		} else {
-			this.__pool.remove(object);
-		}
-	}
-	,__addInactive: function(object) {
-		if(this.__inactiveObject0 == null) {
-			this.__inactiveObject0 = object;
-		} else if(this.__inactiveObject1 == null) {
-			this.__inactiveObject1 = object;
-		} else {
-			this.__inactiveObjectList.add(object);
-		}
-		this.inactiveObjects++;
-	}
-	,__getInactive: function() {
-		var object = null;
-		if(this.__inactiveObject0 != null) {
-			object = this.__inactiveObject0;
-			this.__inactiveObject0 = null;
-		} else if(this.__inactiveObject1 != null) {
-			object = this.__inactiveObject1;
-			this.__inactiveObject1 = null;
-		} else {
-			object = this.__inactiveObjectList.pop();
-			if(this.__inactiveObjectList.length > 0) {
-				this.__inactiveObject0 = this.__inactiveObjectList.pop();
-			}
-			if(this.__inactiveObjectList.length > 0) {
-				this.__inactiveObject1 = this.__inactiveObjectList.pop();
-			}
-		}
-		this.inactiveObjects--;
-		this.activeObjects++;
-		return object;
-	}
-	,__removeInactive: function(count) {
-		if(count <= 0 || this.inactiveObjects == 0) {
-			return;
-		}
-		if(this.__inactiveObject0 != null) {
-			this.__pool.remove(this.__inactiveObject0);
-			this.__inactiveObject0 = null;
-			this.inactiveObjects--;
-			--count;
-		}
-		if(count == 0 || this.inactiveObjects == 0) {
-			return;
-		}
-		if(this.__inactiveObject1 != null) {
-			this.__pool.remove(this.__inactiveObject1);
-			this.__inactiveObject1 = null;
-			this.inactiveObjects--;
-			--count;
-		}
-		if(count == 0 || this.inactiveObjects == 0) {
-			return;
-		}
-		var _g_head = this.__inactiveObjectList.h;
-		while(_g_head != null) {
-			var val = _g_head.item;
-			_g_head = _g_head.next;
-			var object = val;
-			this.__pool.remove(object);
-			this.__inactiveObjectList.remove(object);
-			this.inactiveObjects--;
-			--count;
-			if(count == 0 || this.inactiveObjects == 0) {
-				return;
-			}
-		}
-	}
-	,get_size: function() {
-		return this.__size;
-	}
-	,set_size: function(value) {
-		if(value == null) {
-			this.__size = null;
-		} else {
-			var current = this.inactiveObjects + this.activeObjects;
-			this.__size = value;
-			if(current > value) {
-				this.__removeInactive(current - value);
-			} else if(value > current) {
-				var object;
-				var _g1 = 0;
-				var _g = value - current;
-				while(_g1 < _g) {
-					var i = _g1++;
-					object = this.create();
-					if(object != null) {
-						this.__pool.set(object,false);
-						this.__inactiveObjectList.add(object);
-						this.inactiveObjects++;
-					} else {
-						break;
-					}
-				}
-			}
-		}
-		return value;
-	}
-	,__class__: lime_utils_ObjectPool_$openfl_$geom_$Rectangle
-	,__properties__: {set_size:"set_size",get_size:"get_size"}
-};
-var openfl_geom_Rectangle = function(x,y,width,height) {
-	if(height == null) {
-		height = 0;
-	}
-	if(width == null) {
-		width = 0;
-	}
-	if(y == null) {
-		y = 0;
-	}
-	if(x == null) {
-		x = 0;
-	}
-	this.x = x;
-	this.y = y;
-	this.width = width;
-	this.height = height;
-};
-$hxClasses["openfl.geom.Rectangle"] = openfl_geom_Rectangle;
-openfl_geom_Rectangle.__name__ = ["openfl","geom","Rectangle"];
-openfl_geom_Rectangle.prototype = {
-	height: null
-	,width: null
-	,x: null
-	,y: null
-	,clone: function() {
-		return new openfl_geom_Rectangle(this.x,this.y,this.width,this.height);
-	}
-	,contains: function(x,y) {
-		if(x >= this.x && y >= this.y && x < this.get_right()) {
-			return y < this.get_bottom();
-		} else {
-			return false;
-		}
-	}
-	,containsPoint: function(point) {
-		return this.contains(point.x,point.y);
-	}
-	,containsRect: function(rect) {
-		if(rect.width <= 0 || rect.height <= 0) {
-			if(rect.x > this.x && rect.y > this.y && rect.get_right() < this.get_right()) {
-				return rect.get_bottom() < this.get_bottom();
-			} else {
-				return false;
-			}
-		} else if(rect.x >= this.x && rect.y >= this.y && rect.get_right() <= this.get_right()) {
-			return rect.get_bottom() <= this.get_bottom();
-		} else {
-			return false;
-		}
-	}
-	,copyFrom: function(sourceRect) {
-		this.x = sourceRect.x;
-		this.y = sourceRect.y;
-		this.width = sourceRect.width;
-		this.height = sourceRect.height;
-	}
-	,equals: function(toCompare) {
-		if(toCompare == this) {
-			return true;
-		} else if(toCompare != null && this.x == toCompare.x && this.y == toCompare.y && this.width == toCompare.width) {
-			return this.height == toCompare.height;
-		} else {
-			return false;
-		}
-	}
-	,inflate: function(dx,dy) {
-		this.x -= dx;
-		this.width += dx * 2;
-		this.y -= dy;
-		this.height += dy * 2;
-	}
-	,inflatePoint: function(point) {
-		this.inflate(point.x,point.y);
-	}
-	,intersection: function(toIntersect) {
-		var x0 = this.x < toIntersect.x ? toIntersect.x : this.x;
-		var x1 = this.get_right() > toIntersect.get_right() ? toIntersect.get_right() : this.get_right();
-		if(x1 <= x0) {
-			return new openfl_geom_Rectangle();
-		}
-		var y0 = this.y < toIntersect.y ? toIntersect.y : this.y;
-		var y1 = this.get_bottom() > toIntersect.get_bottom() ? toIntersect.get_bottom() : this.get_bottom();
-		if(y1 <= y0) {
-			return new openfl_geom_Rectangle();
-		}
-		return new openfl_geom_Rectangle(x0,y0,x1 - x0,y1 - y0);
-	}
-	,intersects: function(toIntersect) {
-		var x0 = this.x < toIntersect.x ? toIntersect.x : this.x;
-		var x1 = this.get_right() > toIntersect.get_right() ? toIntersect.get_right() : this.get_right();
-		if(x1 <= x0) {
-			return false;
-		}
-		var y0 = this.y < toIntersect.y ? toIntersect.y : this.y;
-		var y1 = this.get_bottom() > toIntersect.get_bottom() ? toIntersect.get_bottom() : this.get_bottom();
-		return y1 > y0;
-	}
-	,isEmpty: function() {
-		if(!(this.width <= 0)) {
-			return this.height <= 0;
-		} else {
-			return true;
-		}
-	}
-	,offset: function(dx,dy) {
-		this.x += dx;
-		this.y += dy;
-	}
-	,offsetPoint: function(point) {
-		this.x += point.x;
-		this.y += point.y;
-	}
-	,setEmpty: function() {
-		this.x = this.y = this.width = this.height = 0;
-	}
-	,setTo: function(xa,ya,widtha,heighta) {
-		this.x = xa;
-		this.y = ya;
-		this.width = widtha;
-		this.height = heighta;
-	}
-	,toString: function() {
-		return "(x=" + this.x + ", y=" + this.y + ", width=" + this.width + ", height=" + this.height + ")";
-	}
-	,union: function(toUnion) {
-		if(this.width == 0 || this.height == 0) {
-			return toUnion.clone();
-		} else if(toUnion.width == 0 || toUnion.height == 0) {
-			return this.clone();
-		}
-		var x0 = this.x > toUnion.x ? toUnion.x : this.x;
-		var x1 = this.get_right() < toUnion.get_right() ? toUnion.get_right() : this.get_right();
-		var y0 = this.y > toUnion.y ? toUnion.y : this.y;
-		var y1 = this.get_bottom() < toUnion.get_bottom() ? toUnion.get_bottom() : this.get_bottom();
-		return new openfl_geom_Rectangle(x0,y0,x1 - x0,y1 - y0);
-	}
-	,__contract: function(x,y,width,height) {
-		if(this.width == 0 && this.height == 0) {
-			return;
-		}
-		var offsetX = 0.0;
-		var offsetY = 0.0;
-		var offsetRight = 0.0;
-		var offsetBottom = 0.0;
-		if(this.x < x) {
-			offsetX = x - this.x;
-		}
-		if(this.y < y) {
-			offsetY = y - this.y;
-		}
-		if(this.get_right() > x + width) {
-			offsetRight = x + width - this.get_right();
-		}
-		if(this.get_bottom() > y + height) {
-			offsetBottom = y + height - this.get_bottom();
-		}
-		this.x += offsetX;
-		this.y += offsetY;
-		this.width += offsetRight - offsetX;
-		this.height += offsetBottom - offsetY;
-	}
-	,__expand: function(x,y,width,height) {
-		if(this.width == 0 && this.height == 0) {
-			this.x = x;
-			this.y = y;
-			this.width = width;
-			this.height = height;
-			return;
-		}
-		var cacheRight = this.get_right();
-		var cacheBottom = this.get_bottom();
-		if(this.x > x) {
-			this.x = x;
-			this.width = cacheRight - x;
-		}
-		if(this.y > y) {
-			this.y = y;
-			this.height = cacheBottom - y;
-		}
-		if(cacheRight < x + width) {
-			this.width = x + width - this.x;
-		}
-		if(cacheBottom < y + height) {
-			this.height = y + height - this.y;
-		}
-	}
-	,__toLimeRectangle: function() {
-		if(openfl_geom_Rectangle.__limeRectangle == null) {
-			openfl_geom_Rectangle.__limeRectangle = new lime_math_Rectangle();
-		}
-		openfl_geom_Rectangle.__limeRectangle.setTo(this.x,this.y,this.width,this.height);
-		return openfl_geom_Rectangle.__limeRectangle;
-	}
-	,__transform: function(rect,m) {
-		var tx0 = m.a * this.x + m.c * this.y;
-		var tx1 = tx0;
-		var ty0 = m.b * this.x + m.d * this.y;
-		var ty1 = ty0;
-		var tx = m.a * (this.x + this.width) + m.c * this.y;
-		var ty = m.b * (this.x + this.width) + m.d * this.y;
-		if(tx < tx0) {
-			tx0 = tx;
-		}
-		if(ty < ty0) {
-			ty0 = ty;
-		}
-		if(tx > tx1) {
-			tx1 = tx;
-		}
-		if(ty > ty1) {
-			ty1 = ty;
-		}
-		tx = m.a * (this.x + this.width) + m.c * (this.y + this.height);
-		ty = m.b * (this.x + this.width) + m.d * (this.y + this.height);
-		if(tx < tx0) {
-			tx0 = tx;
-		}
-		if(ty < ty0) {
-			ty0 = ty;
-		}
-		if(tx > tx1) {
-			tx1 = tx;
-		}
-		if(ty > ty1) {
-			ty1 = ty;
-		}
-		tx = m.a * this.x + m.c * (this.y + this.height);
-		ty = m.b * this.x + m.d * (this.y + this.height);
-		if(tx < tx0) {
-			tx0 = tx;
-		}
-		if(ty < ty0) {
-			ty0 = ty;
-		}
-		if(tx > tx1) {
-			tx1 = tx;
-		}
-		if(ty > ty1) {
-			ty1 = ty;
-		}
-		rect.setTo(tx0 + m.tx,ty0 + m.ty,tx1 - tx0,ty1 - ty0);
-	}
-	,get_bottom: function() {
-		return this.y + this.height;
-	}
-	,set_bottom: function(b) {
-		this.height = b - this.y;
-		return b;
-	}
-	,get_bottomRight: function() {
-		return new openfl_geom_Point(this.x + this.width,this.y + this.height);
-	}
-	,set_bottomRight: function(p) {
-		this.width = p.x - this.x;
-		this.height = p.y - this.y;
-		return p.clone();
-	}
-	,get_left: function() {
-		return this.x;
-	}
-	,set_left: function(l) {
-		this.width -= l - this.x;
-		this.x = l;
-		return l;
-	}
-	,get_right: function() {
-		return this.x + this.width;
-	}
-	,set_right: function(r) {
-		this.width = r - this.x;
-		return r;
-	}
-	,get_size: function() {
-		return new openfl_geom_Point(this.width,this.height);
-	}
-	,set_size: function(p) {
-		this.width = p.x;
-		this.height = p.y;
-		return p.clone();
-	}
-	,get_top: function() {
-		return this.y;
-	}
-	,set_top: function(t) {
-		this.height -= t - this.y;
-		this.y = t;
-		return t;
-	}
-	,get_topLeft: function() {
-		return new openfl_geom_Point(this.x,this.y);
-	}
-	,set_topLeft: function(p) {
-		this.x = p.x;
-		this.y = p.y;
-		return p.clone();
-	}
-	,__class__: openfl_geom_Rectangle
-	,__properties__: {set_topLeft:"set_topLeft",get_topLeft:"get_topLeft",set_top:"set_top",get_top:"get_top",set_size:"set_size",get_size:"get_size",set_right:"set_right",get_right:"get_right",set_left:"set_left",get_left:"get_left",set_bottomRight:"set_bottomRight",get_bottomRight:"get_bottomRight",set_bottom:"set_bottom",get_bottom:"get_bottom"}
-};
-var starling_display_DisplayObject = function() {
-	starling_events_EventDispatcher.call(this);
-	this.mX = this.mY = this.mPivotX = this.mPivotY = this.mRotation = this.mSkewX = this.mSkewY = 0.0;
-	this.mScaleX = this.mScaleY = this.mAlpha = 1.0;
-	this.mVisible = this.mTouchable = true;
-	this.mBlendMode = "auto";
-	this.mTransformationMatrix = new openfl_geom_Matrix();
-	this.mOrientationChanged = this.mUseHandCursor = false;
-};
-$hxClasses["starling.display.DisplayObject"] = starling_display_DisplayObject;
-starling_display_DisplayObject.__name__ = ["starling","display","DisplayObject"];
-starling_display_DisplayObject.__super__ = starling_events_EventDispatcher;
-starling_display_DisplayObject.prototype = $extend(starling_events_EventDispatcher.prototype,{
-	mX: null
-	,mY: null
-	,mPivotX: null
-	,mPivotY: null
-	,mScaleX: null
-	,mScaleY: null
-	,mSkewX: null
-	,mSkewY: null
-	,mRotation: null
-	,mAlpha: null
-	,mVisible: null
-	,mTouchable: null
-	,mBlendMode: null
-	,mName: null
-	,mUseHandCursor: null
-	,mParent: null
-	,mTransformationMatrix: null
-	,mTransformationMatrix3D: null
-	,mOrientationChanged: null
-	,mFilter: null
-	,mIs3D: null
-	,mMask: null
-	,mIsMask: null
-	,dispose: function() {
-		if(this.mFilter != null) {
-			this.mFilter.dispose();
-		}
-		if(this.mMask != null) {
-			this.mMask.dispose();
-		}
-		this.removeEventListeners();
-		this.set_mask(null);
-	}
-	,removeFromParent: function(dispose) {
-		if(dispose == null) {
-			dispose = false;
-		}
-		if(this.mParent != null) {
-			this.mParent.removeChild(this,dispose);
-		} else if(dispose) {
-			this.dispose();
-		}
-	}
-	,getTransformationMatrix: function(targetSpace,resultMatrix) {
-		var commonParent;
-		var currentObject;
-		if(resultMatrix != null) {
-			resultMatrix.identity();
-		} else {
-			resultMatrix = new openfl_geom_Matrix();
-		}
-		if(targetSpace == this) {
-			return resultMatrix;
-		} else if(targetSpace == this.mParent || targetSpace == null && this.mParent == null) {
-			resultMatrix.copyFrom(this.get_transformationMatrix());
-			return resultMatrix;
-		} else if(targetSpace == null || targetSpace == this.get_base()) {
-			currentObject = this;
-			while(currentObject != targetSpace) {
-				resultMatrix.concat(currentObject.get_transformationMatrix());
-				currentObject = currentObject.mParent;
-			}
-			return resultMatrix;
-		} else if(targetSpace.mParent == this) {
-			targetSpace.getTransformationMatrix(this,resultMatrix);
-			resultMatrix.invert();
-			return resultMatrix;
-		}
-		commonParent = this.findCommonParent(this,targetSpace);
-		currentObject = this;
-		while(currentObject != commonParent) {
-			resultMatrix.concat(currentObject.get_transformationMatrix());
-			currentObject = currentObject.mParent;
-		}
-		if(commonParent == targetSpace) {
-			return resultMatrix;
-		}
-		starling_display_DisplayObject.sHelperMatrix.identity();
-		currentObject = targetSpace;
-		while(currentObject != commonParent) {
-			starling_display_DisplayObject.sHelperMatrix.concat(currentObject.get_transformationMatrix());
-			currentObject = currentObject.mParent;
-		}
-		starling_display_DisplayObject.sHelperMatrix.invert();
-		resultMatrix.concat(starling_display_DisplayObject.sHelperMatrix);
-		return resultMatrix;
-	}
-	,getBounds: function(targetSpace,resultRect) {
-		throw new js__$Boot_HaxeError(new starling_errors_AbstractMethodError());
-	}
-	,hitTest: function(localPoint,forTouch) {
-		if(forTouch == null) {
-			forTouch = false;
-		}
-		if(forTouch && (!this.mVisible || !this.mTouchable)) {
-			return null;
-		}
-		if(this.mMask != null && !this.hitTestMask(localPoint)) {
-			return null;
-		}
-		if(this.getBounds(this,starling_display_DisplayObject.sHelperRect).containsPoint(localPoint)) {
-			return this;
-		} else {
-			return null;
-		}
-	}
-	,hitTestMask: function(localPoint) {
-		if(this.mMask != null) {
-			if(this.mMask.get_stage() != null) {
-				this.getTransformationMatrix(this.mMask,starling_display_DisplayObject.sHelperMatrixAlt);
-			} else {
-				starling_display_DisplayObject.sHelperMatrixAlt.copyFrom(this.mMask.get_transformationMatrix());
-				starling_display_DisplayObject.sHelperMatrixAlt.invert();
-			}
-			var helperPoint = localPoint == starling_display_DisplayObject.sHelperPoint ? new openfl_geom_Point() : starling_display_DisplayObject.sHelperPoint;
-			starling_utils_MatrixUtil.transformPoint(starling_display_DisplayObject.sHelperMatrixAlt,localPoint,helperPoint);
-			return this.mMask.hitTest(helperPoint,true) != null;
-		} else {
-			return true;
-		}
-	}
-	,localToGlobal: function(localPoint,resultPoint) {
-		if(this.get_is3D()) {
-			starling_display_DisplayObject.sHelperPoint3D.setTo(localPoint.x,localPoint.y,0);
-			return this.local3DToGlobal(starling_display_DisplayObject.sHelperPoint3D,resultPoint);
-		} else {
-			this.getTransformationMatrix(this.get_base(),starling_display_DisplayObject.sHelperMatrixAlt);
-			return starling_utils_MatrixUtil.transformPoint(starling_display_DisplayObject.sHelperMatrixAlt,localPoint,resultPoint);
-		}
-	}
-	,globalToLocal: function(globalPoint,resultPoint) {
-		if(this.get_is3D()) {
-			this.globalToLocal3D(globalPoint,starling_display_DisplayObject.sHelperPoint3D);
-			this.get_stage().getCameraPosition(this,starling_display_DisplayObject.sHelperPointAlt3D);
-			return starling_utils_MathUtil.intersectLineWithXYPlane(starling_display_DisplayObject.sHelperPointAlt3D,starling_display_DisplayObject.sHelperPoint3D,resultPoint);
-		} else {
-			this.getTransformationMatrix(this.get_base(),starling_display_DisplayObject.sHelperMatrixAlt);
-			starling_display_DisplayObject.sHelperMatrixAlt.invert();
-			return starling_utils_MatrixUtil.transformPoint(starling_display_DisplayObject.sHelperMatrixAlt,globalPoint,resultPoint);
-		}
-	}
-	,render: function(support,parentAlpha) {
-		throw new js__$Boot_HaxeError(new starling_errors_AbstractMethodError());
-	}
-	,get_hasVisibleArea: function() {
-		if(this.mAlpha != 0.0 && this.mVisible && !this.mIsMask && this.mScaleX != 0.0) {
-			return this.mScaleY != 0.0;
-		} else {
-			return false;
-		}
-	}
-	,alignPivot: function(hAlign,vAlign) {
-		if(vAlign == null) {
-			vAlign = "center";
-		}
-		if(hAlign == null) {
-			hAlign = "center";
-		}
-		var bounds = this.getBounds(this,starling_display_DisplayObject.sHelperRect);
-		this.mOrientationChanged = true;
-		if(hAlign == "left") {
-			this.mPivotX = bounds.x;
-		} else if(hAlign == "center") {
-			this.mPivotX = bounds.x + bounds.width / 2.0;
-		} else if(hAlign == "right") {
-			this.mPivotX = bounds.x + bounds.width;
-		} else {
-			throw new js__$Boot_HaxeError(new openfl_errors_ArgumentError("Invalid horizontal alignment: " + hAlign));
-		}
-		if(vAlign == "top") {
-			this.mPivotY = bounds.y;
-		} else if(vAlign == "center") {
-			this.mPivotY = bounds.y + bounds.height / 2.0;
-		} else if(vAlign == "bottom") {
-			this.mPivotY = bounds.y + bounds.height;
-		} else {
-			throw new js__$Boot_HaxeError(new openfl_errors_ArgumentError("Invalid vertical alignment: " + vAlign));
-		}
-	}
-	,getTransformationMatrix3D: function(targetSpace,resultMatrix) {
-		var commonParent;
-		var currentObject;
-		if(resultMatrix != null) {
-			resultMatrix.identity();
-		} else {
-			resultMatrix = new openfl_geom_Matrix3D();
-		}
-		if(targetSpace == this) {
-			return resultMatrix;
-		} else if(targetSpace == this.mParent || targetSpace == null && this.mParent == null) {
-			resultMatrix.copyFrom(this.get_transformationMatrix3D());
-			return resultMatrix;
-		} else if(targetSpace == null || targetSpace == this.get_base()) {
-			currentObject = this;
-			while(currentObject != targetSpace) {
-				resultMatrix.append(currentObject.get_transformationMatrix3D());
-				currentObject = currentObject.mParent;
-			}
-			return resultMatrix;
-		} else if(targetSpace.mParent == this) {
-			targetSpace.getTransformationMatrix3D(this,resultMatrix);
-			resultMatrix.invert();
-			return resultMatrix;
-		}
-		commonParent = this.findCommonParent(this,targetSpace);
-		currentObject = this;
-		while(currentObject != commonParent) {
-			resultMatrix.append(currentObject.get_transformationMatrix3D());
-			currentObject = currentObject.mParent;
-		}
-		if(commonParent == targetSpace) {
-			return resultMatrix;
-		}
-		starling_display_DisplayObject.sHelperMatrix3D.identity();
-		currentObject = targetSpace;
-		while(currentObject != commonParent) {
-			starling_display_DisplayObject.sHelperMatrix3D.append(currentObject.get_transformationMatrix3D());
-			currentObject = currentObject.mParent;
-		}
-		starling_display_DisplayObject.sHelperMatrix3D.invert();
-		resultMatrix.append(starling_display_DisplayObject.sHelperMatrix3D);
-		return resultMatrix;
-	}
-	,local3DToGlobal: function(localPoint,resultPoint) {
-		var stage = this.get_stage();
-		if(stage == null) {
-			throw new js__$Boot_HaxeError(new openfl_errors_IllegalOperationError("Object not connected to stage"));
-		}
-		this.getTransformationMatrix3D(stage,starling_display_DisplayObject.sHelperMatrixAlt3D);
-		starling_utils_MatrixUtil.transformPoint3D(starling_display_DisplayObject.sHelperMatrixAlt3D,localPoint,starling_display_DisplayObject.sHelperPoint3D);
-		return starling_utils_MathUtil.intersectLineWithXYPlane(stage.get_cameraPosition(),starling_display_DisplayObject.sHelperPoint3D,resultPoint);
-	}
-	,globalToLocal3D: function(globalPoint,resultPoint) {
-		var stage = this.get_stage();
-		if(stage == null) {
-			throw new js__$Boot_HaxeError(new openfl_errors_IllegalOperationError("Object not connected to stage"));
-		}
-		this.getTransformationMatrix3D(stage,starling_display_DisplayObject.sHelperMatrixAlt3D);
-		starling_display_DisplayObject.sHelperMatrixAlt3D.invert();
-		return starling_utils_MatrixUtil.transformCoords3D(starling_display_DisplayObject.sHelperMatrixAlt3D,globalPoint.x,globalPoint.y,0,resultPoint);
-	}
-	,setParent: function(value) {
-		var ancestor = value;
-		while(ancestor != this && ancestor != null) ancestor = ancestor.mParent;
-		if(ancestor == this) {
-			throw new js__$Boot_HaxeError(new openfl_errors_ArgumentError("An object cannot be added as a child to itself or one " + "of its children (or children's children, etc.)"));
-		} else {
-			this.mParent = value;
-		}
-	}
-	,setIs3D: function(value) {
-		this.mIs3D = value;
-	}
-	,get_isMask: function() {
-		return this.mIsMask;
-	}
-	,isEquivalent: function(a,b,epsilon) {
-		if(epsilon == null) {
-			epsilon = 0.0001;
-		}
-		if(a - epsilon < b) {
-			return a + epsilon > b;
-		} else {
-			return false;
-		}
-	}
-	,findCommonParent: function(object1,object2) {
-		var currentObject = object1;
-		while(currentObject != null) {
-			starling_display_DisplayObject.sAncestors.set(starling_display_DisplayObject.sAncestors.get_length(),currentObject);
-			currentObject = currentObject.mParent;
-		}
-		currentObject = object2;
-		while(currentObject != null && starling_display_DisplayObject.sAncestors.indexOf(currentObject,0) == -1) currentObject = currentObject.mParent;
-		starling_display_DisplayObject.sAncestors.set_length(0);
-		if(currentObject != null) {
-			return currentObject;
-		} else {
-			throw new js__$Boot_HaxeError(new openfl_errors_ArgumentError("Object not connected to target"));
-		}
-	}
-	,dispatchEvent: function(event) {
-		if(event.type == "removedFromStage" && this.get_stage() == null) {
-			return;
-		} else {
-			starling_events_EventDispatcher.prototype.dispatchEvent.call(this,event);
-		}
-	}
-	,addEventListener: function(type,listener) {
-		if(type == "enterFrame" && !this.hasEventListener(type)) {
-			this.addEventListener("addedToStage",$bind(this,this.addEnterFrameListenerToStage));
-			this.addEventListener("removedFromStage",$bind(this,this.removeEnterFrameListenerFromStage));
-			if(this.get_stage() != null) {
-				this.addEnterFrameListenerToStage();
-			}
-		}
-		starling_events_EventDispatcher.prototype.addEventListener.call(this,type,listener);
-	}
-	,removeEventListener: function(type,listener) {
-		starling_events_EventDispatcher.prototype.removeEventListener.call(this,type,listener);
-		if(type == "enterFrame" && !this.hasEventListener(type)) {
-			this.removeEventListener("addedToStage",$bind(this,this.addEnterFrameListenerToStage));
-			this.removeEventListener("removedFromStage",$bind(this,this.removeEnterFrameListenerFromStage));
-			this.removeEnterFrameListenerFromStage();
-		}
-	}
-	,removeEventListeners: function(type) {
-		if((type == null || type == "enterFrame") && this.hasEventListener("enterFrame")) {
-			this.removeEventListener("addedToStage",$bind(this,this.addEnterFrameListenerToStage));
-			this.removeEventListener("removedFromStage",$bind(this,this.removeEnterFrameListenerFromStage));
-			this.removeEnterFrameListenerFromStage();
-		}
-		starling_events_EventDispatcher.prototype.removeEventListeners.call(this,type);
-	}
-	,addEnterFrameListenerToStage: function(e) {
-		starling_core_Starling.get_current().get_stage().addEnterFrameListener(this);
-	}
-	,removeEnterFrameListenerFromStage: function(e) {
-		starling_core_Starling.get_current().get_stage().removeEnterFrameListener(this);
-	}
-	,get_transformationMatrix: function() {
-		if(this.mOrientationChanged) {
-			this.mOrientationChanged = false;
-			if(this.mSkewX == 0.0 && this.mSkewY == 0.0) {
-				if(this.mRotation == 0.0) {
-					this.mTransformationMatrix.setTo(this.mScaleX,0.0,0.0,this.mScaleY,this.mX - this.mPivotX * this.mScaleX,this.mY - this.mPivotY * this.mScaleY);
-				} else {
-					var cos = Math.cos(this.mRotation);
-					var sin = Math.sin(this.mRotation);
-					var a = this.mScaleX * cos;
-					var b = this.mScaleX * sin;
-					var c = this.mScaleY * -sin;
-					var d = this.mScaleY * cos;
-					var tx = this.mX - this.mPivotX * a - this.mPivotY * c;
-					var ty = this.mY - this.mPivotX * b - this.mPivotY * d;
-					this.mTransformationMatrix.setTo(a,b,c,d,tx,ty);
-				}
-			} else {
-				this.mTransformationMatrix.identity();
-				this.mTransformationMatrix.scale(this.mScaleX,this.mScaleY);
-				starling_utils_MatrixUtil.skew(this.mTransformationMatrix,this.mSkewX,this.mSkewY);
-				this.mTransformationMatrix.rotate(this.mRotation);
-				this.mTransformationMatrix.translate(this.mX,this.mY);
-				if(this.mPivotX != 0.0 || this.mPivotY != 0.0) {
-					this.mTransformationMatrix.tx = this.mX - this.mTransformationMatrix.a * this.mPivotX - this.mTransformationMatrix.c * this.mPivotY;
-					this.mTransformationMatrix.ty = this.mY - this.mTransformationMatrix.b * this.mPivotX - this.mTransformationMatrix.d * this.mPivotY;
-				}
-			}
-		}
-		return this.mTransformationMatrix;
-	}
-	,set_transformationMatrix: function(matrix) {
-		var PI_Q = Math.PI / 4.0;
-		this.mOrientationChanged = false;
-		this.mTransformationMatrix.copyFrom(matrix);
-		this.mPivotX = this.mPivotY = 0;
-		this.mX = matrix.tx;
-		this.mY = matrix.ty;
-		this.mSkewX = Math.atan(-matrix.c / matrix.d);
-		this.mSkewY = Math.atan(matrix.b / matrix.a);
-		if(this.mSkewX != this.mSkewX) {
-			this.mSkewX = 0.0;
-		}
-		if(this.mSkewY != this.mSkewY) {
-			this.mSkewY = 0.0;
-		}
-		this.mScaleY = this.mSkewX > -PI_Q && this.mSkewX < PI_Q ? matrix.d / Math.cos(this.mSkewX) : -matrix.c / Math.sin(this.mSkewX);
-		this.mScaleX = this.mSkewY > -PI_Q && this.mSkewY < PI_Q ? matrix.a / Math.cos(this.mSkewY) : matrix.b / Math.sin(this.mSkewY);
-		if(this.isEquivalent(this.mSkewX,this.mSkewY)) {
-			this.mRotation = this.mSkewX;
-			this.mSkewX = this.mSkewY = 0;
-		} else {
-			this.mRotation = 0;
-		}
-		return this.mTransformationMatrix;
-	}
-	,get_transformationMatrix3D: function() {
-		if(this.mTransformationMatrix3D == null) {
-			this.mTransformationMatrix3D = new openfl_geom_Matrix3D();
-		}
-		return starling_utils_MatrixUtil.convertTo3D(this.get_transformationMatrix(),this.mTransformationMatrix3D);
-	}
-	,get_is3D: function() {
-		return this.mIs3D;
-	}
-	,get_useHandCursor: function() {
-		return this.mUseHandCursor;
-	}
-	,set_useHandCursor: function(value) {
-		if(value == this.mUseHandCursor) {
-			return this.mUseHandCursor;
-		}
-		this.mUseHandCursor = value;
-		if(this.mUseHandCursor) {
-			this.addEventListener("touch",$bind(this,this.onTouch));
-		} else {
-			this.removeEventListener("touch",$bind(this,this.onTouch));
-		}
-		return this.mUseHandCursor;
-	}
-	,onTouch: function(event) {
-		openfl_ui_Mouse.set_cursor(event.interactsWith(this) ? "button" : "auto");
-	}
-	,get_bounds: function() {
-		return this.getBounds(this.mParent);
-	}
-	,get_width: function() {
-		return this.getBounds(this.mParent,starling_display_DisplayObject.sHelperRect).width;
-	}
-	,set_width: function(value) {
-		this.set_scaleX(1.0);
-		var actualWidth = this.get_width();
-		if(actualWidth != 0.0) {
-			this.set_scaleX(value / actualWidth);
-		}
-		return this.getBounds(this.mParent,starling_display_DisplayObject.sHelperRect).width;
-	}
-	,get_height: function() {
-		return this.getBounds(this.mParent,starling_display_DisplayObject.sHelperRect).height;
-	}
-	,set_height: function(value) {
-		this.set_scaleY(1.0);
-		var actualHeight = this.get_height();
-		if(actualHeight != 0.0) {
-			this.set_scaleY(value / actualHeight);
-		}
-		return this.getBounds(this.mParent,starling_display_DisplayObject.sHelperRect).height;
-	}
-	,get_x: function() {
-		return this.mX;
-	}
-	,set_x: function(value) {
-		if(this.mX != value) {
-			this.mX = value;
-			this.mOrientationChanged = true;
-		}
-		return this.mX;
-	}
-	,get_y: function() {
-		return this.mY;
-	}
-	,set_y: function(value) {
-		if(this.mY != value) {
-			this.mY = value;
-			this.mOrientationChanged = true;
-		}
-		return this.mY;
-	}
-	,get_pivotX: function() {
-		return this.mPivotX;
-	}
-	,set_pivotX: function(value) {
-		if(this.mPivotX != value) {
-			this.mPivotX = value;
-			this.mOrientationChanged = true;
-		}
-		return this.mPivotX;
-	}
-	,get_pivotY: function() {
-		return this.mPivotY;
-	}
-	,set_pivotY: function(value) {
-		if(this.mPivotY != value) {
-			this.mPivotY = value;
-			this.mOrientationChanged = true;
-		}
-		return this.mPivotY;
-	}
-	,get_scaleX: function() {
-		return this.mScaleX;
-	}
-	,set_scaleX: function(value) {
-		if(this.mScaleX != value) {
-			this.mScaleX = value;
-			this.mOrientationChanged = true;
-		}
-		return this.mScaleX;
-	}
-	,get_scaleY: function() {
-		return this.mScaleY;
-	}
-	,set_scaleY: function(value) {
-		if(this.mScaleY != value) {
-			this.mScaleY = value;
-			this.mOrientationChanged = true;
-		}
-		return this.mScaleY;
-	}
-	,get_scale: function() {
-		return this.get_scaleX();
-	}
-	,set_scale: function(value) {
-		return this.set_scaleX(this.set_scaleY(value));
-	}
-	,get_skewX: function() {
-		return this.mSkewX;
-	}
-	,set_skewX: function(value) {
-		value = starling_utils_MathUtil.normalizeAngle(value);
-		if(this.mSkewX != value) {
-			this.mSkewX = value;
-			this.mOrientationChanged = true;
-		}
-		return this.mSkewX;
-	}
-	,get_skewY: function() {
-		return this.mSkewY;
-	}
-	,set_skewY: function(value) {
-		value = starling_utils_MathUtil.normalizeAngle(value);
-		if(this.mSkewY != value) {
-			this.mSkewY = value;
-			this.mOrientationChanged = true;
-		}
-		return this.mSkewY;
-	}
-	,get_rotation: function() {
-		return this.mRotation;
-	}
-	,set_rotation: function(value) {
-		value = starling_utils_MathUtil.normalizeAngle(value);
-		if(this.mRotation != value) {
-			this.mRotation = value;
-			this.mOrientationChanged = true;
-		}
-		return this.mRotation;
-	}
-	,get_alpha: function() {
-		return this.mAlpha;
-	}
-	,set_alpha: function(value) {
-		this.mAlpha = value < 0.0 ? 0.0 : value > 1.0 ? 1.0 : value;
-		return this.mAlpha;
-	}
-	,get_visible: function() {
-		return this.mVisible;
-	}
-	,set_visible: function(value) {
-		return this.mVisible = value;
-	}
-	,get_touchable: function() {
-		return this.mTouchable;
-	}
-	,set_touchable: function(value) {
-		return this.mTouchable = value;
-	}
-	,get_blendMode: function() {
-		return this.mBlendMode;
-	}
-	,set_blendMode: function(value) {
-		return this.mBlendMode = value;
-	}
-	,get_name: function() {
-		return this.mName;
-	}
-	,set_name: function(value) {
-		return this.mName = value;
-	}
-	,get_filter: function() {
-		return this.mFilter;
-	}
-	,set_filter: function(value) {
-		return this.mFilter = value;
-	}
-	,get_mask: function() {
-		return this.mMask;
-	}
-	,set_mask: function(value) {
-		if(this.mMask != value) {
-			if(this.mMask != null) {
-				this.mMask.mIsMask = false;
-			}
-			if(value != null) {
-				value.mIsMask = true;
-			}
-			this.mMask = value;
-		}
-		return this.mMask;
-	}
-	,get_parent: function() {
-		return this.mParent;
-	}
-	,get_base: function() {
-		var currentObject = this;
-		while(currentObject.mParent != null) currentObject = currentObject.mParent;
-		return currentObject;
-	}
-	,get_root: function() {
-		var currentObject = this;
-		while(currentObject.mParent != null) if(js_Boot.__instanceof(currentObject.mParent,starling_display_Stage)) {
-			return currentObject;
-		} else {
-			currentObject = currentObject.get_parent();
-		}
-		return null;
-	}
-	,get_stage: function() {
-		if(js_Boot.__instanceof(this.get_base(),starling_display_Stage)) {
-			return this.get_base();
-		} else {
-			return null;
-		}
-	}
-	,__class__: starling_display_DisplayObject
-	,__properties__: {get_stage:"get_stage",get_root:"get_root",get_base:"get_base",get_parent:"get_parent",set_mask:"set_mask",get_mask:"get_mask",set_filter:"set_filter",get_filter:"get_filter",set_name:"set_name",get_name:"get_name",set_blendMode:"set_blendMode",get_blendMode:"get_blendMode",set_touchable:"set_touchable",get_touchable:"get_touchable",set_visible:"set_visible",get_visible:"get_visible",set_alpha:"set_alpha",get_alpha:"get_alpha",set_rotation:"set_rotation",get_rotation:"get_rotation",set_skewY:"set_skewY",get_skewY:"get_skewY",set_skewX:"set_skewX",get_skewX:"get_skewX",set_scale:"set_scale",get_scale:"get_scale",set_scaleY:"set_scaleY",get_scaleY:"get_scaleY",set_scaleX:"set_scaleX",get_scaleX:"get_scaleX",set_pivotY:"set_pivotY",get_pivotY:"get_pivotY",set_pivotX:"set_pivotX",get_pivotX:"get_pivotX",set_y:"set_y",get_y:"get_y",set_x:"set_x",get_x:"get_x",set_height:"set_height",get_height:"get_height",set_width:"set_width",get_width:"get_width",get_bounds:"get_bounds",set_useHandCursor:"set_useHandCursor",get_useHandCursor:"get_useHandCursor",get_is3D:"get_is3D",get_transformationMatrix3D:"get_transformationMatrix3D",set_transformationMatrix:"set_transformationMatrix",get_transformationMatrix:"get_transformationMatrix",get_isMask:"get_isMask",get_hasVisibleArea:"get_hasVisibleArea"}
-});
 var starling_display_DisplayObjectContainer = function() {
 	starling_display_DisplayObject.call(this);
 	this.mChildren = openfl__$Vector_Vector_$Impl_$.toObjectVector(null);
@@ -12146,2061 +14268,6 @@ haxegon_HaxegonTileset.prototype = {
 	,height: null
 	,sharedatlas: null
 	,__class__: haxegon_HaxegonTileset
-};
-var starling_display_Quad = function(width,height,color,premultipliedAlpha) {
-	if(premultipliedAlpha == null) {
-		premultipliedAlpha = true;
-	}
-	if(color == null) {
-		color = 16777215;
-	}
-	starling_display_DisplayObject.call(this);
-	if(width == 0.0 || height == 0.0) {
-		throw new js__$Boot_HaxeError(new openfl_errors_ArgumentError("Invalid size: width and height must not be zero"));
-	}
-	this.mTinted = color != 16777215;
-	this.mVertexData = new starling_utils_VertexData(4,premultipliedAlpha);
-	this.mVertexData.setPosition(0,0.0,0.0);
-	this.mVertexData.setPosition(1,width,0.0);
-	this.mVertexData.setPosition(2,0.0,height);
-	this.mVertexData.setPosition(3,width,height);
-	this.mVertexData.setUniformColor(color);
-	this.onVertexDataChanged();
-};
-$hxClasses["starling.display.Quad"] = starling_display_Quad;
-starling_display_Quad.__name__ = ["starling","display","Quad"];
-starling_display_Quad.__super__ = starling_display_DisplayObject;
-starling_display_Quad.prototype = $extend(starling_display_DisplayObject.prototype,{
-	mTinted: null
-	,mVertexData: null
-	,setWidthHeight: function(width,height) {
-		this.mVertexData.setPosition(0,0.0,0.0);
-		this.mVertexData.setPosition(1,width,0.0);
-		this.mVertexData.setPosition(2,0.0,height);
-		this.mVertexData.setPosition(3,width,height);
-		this.onVertexDataChanged();
-	}
-	,onVertexDataChanged: function() {
-	}
-	,getBounds: function(targetSpace,resultRect) {
-		if(resultRect == null) {
-			resultRect = new openfl_geom_Rectangle();
-		}
-		if(targetSpace == this) {
-			this.mVertexData.getPosition(3,starling_display_Quad.sHelperPoint);
-			resultRect.setTo(0.0,0.0,starling_display_Quad.sHelperPoint.x,starling_display_Quad.sHelperPoint.y);
-		} else if(targetSpace == this.get_parent() && this.get_rotation() == 0.0) {
-			var scaleX = this.get_scaleX();
-			var scaleY = this.get_scaleY();
-			this.mVertexData.getPosition(3,starling_display_Quad.sHelperPoint);
-			resultRect.setTo(this.get_x() - this.get_pivotX() * scaleX,this.get_y() - this.get_pivotY() * scaleY,starling_display_Quad.sHelperPoint.x * scaleX,starling_display_Quad.sHelperPoint.y * scaleY);
-			if(scaleX < 0) {
-				resultRect.width *= -1;
-				resultRect.x -= resultRect.width;
-			}
-			if(scaleY < 0) {
-				resultRect.height *= -1;
-				resultRect.y -= resultRect.height;
-			}
-		} else if(this.get_is3D() && this.get_stage() != null) {
-			this.get_stage().getCameraPosition(targetSpace,starling_display_Quad.sHelperPoint3D);
-			this.getTransformationMatrix3D(targetSpace,starling_display_Quad.sHelperMatrix3D);
-			this.mVertexData.getBoundsProjected(starling_display_Quad.sHelperMatrix3D,starling_display_Quad.sHelperPoint3D,0,4,resultRect);
-		} else {
-			this.getTransformationMatrix(targetSpace,starling_display_Quad.sHelperMatrix);
-			this.mVertexData.getBounds(starling_display_Quad.sHelperMatrix,0,4,resultRect);
-		}
-		return resultRect;
-	}
-	,getVertexColor: function(vertexID) {
-		return this.mVertexData.getColor(vertexID);
-	}
-	,setVertexColor: function(vertexID,color) {
-		this.mVertexData.setColor(vertexID,color);
-		this.onVertexDataChanged();
-		if(color != 16777215) {
-			this.mTinted = true;
-		} else {
-			this.mTinted = this.mVertexData.get_tinted();
-		}
-	}
-	,getVertexAlpha: function(vertexID) {
-		return this.mVertexData.getAlpha(vertexID);
-	}
-	,setVertexAlpha: function(vertexID,alpha) {
-		this.mVertexData.setAlpha(vertexID,alpha);
-		this.onVertexDataChanged();
-		if(alpha != 1.0) {
-			this.mTinted = true;
-		} else {
-			this.mTinted = this.mVertexData.get_tinted();
-		}
-	}
-	,get_color: function() {
-		return this.mVertexData.getColor(0);
-	}
-	,set_color: function(value) {
-		this.mVertexData.setUniformColor(value);
-		this.onVertexDataChanged();
-		if(value != 16777215 || this.get_alpha() != 1.0) {
-			this.mTinted = true;
-		} else {
-			this.mTinted = this.mVertexData.get_tinted();
-		}
-		return this.mVertexData.getColor(0);
-	}
-	,set_alpha: function(value) {
-		starling_display_DisplayObject.prototype.set_alpha.call(this,value);
-		if(value < 1.0) {
-			this.mTinted = true;
-		} else {
-			this.mTinted = this.mVertexData.get_tinted();
-		}
-		return this.mAlpha;
-	}
-	,copyVertexDataTo: function(targetData,targetVertexID) {
-		if(targetVertexID == null) {
-			targetVertexID = 0;
-		}
-		this.mVertexData.copyTo(targetData,targetVertexID);
-	}
-	,copyVertexDataTransformedTo: function(targetData,targetVertexID,matrix) {
-		if(targetVertexID == null) {
-			targetVertexID = 0;
-		}
-		this.mVertexData.copyTransformedTo(targetData,targetVertexID,matrix,0,4);
-	}
-	,render: function(support,parentAlpha) {
-		support.batchQuad(this,parentAlpha);
-	}
-	,get_tinted: function() {
-		return this.mTinted;
-	}
-	,get_premultipliedAlpha: function() {
-		return this.mVertexData.get_premultipliedAlpha();
-	}
-	,__class__: starling_display_Quad
-	,__properties__: $extend(starling_display_DisplayObject.prototype.__properties__,{get_premultipliedAlpha:"get_premultipliedAlpha",get_tinted:"get_tinted",set_color:"set_color",get_color:"get_color"})
-});
-var starling_display_Poly4 = function(x1,y1,x2,y2,x3,y3,x4,y4,color,premultipliedAlpha) {
-	if(premultipliedAlpha == null) {
-		premultipliedAlpha = true;
-	}
-	if(color == null) {
-		color = 16777215;
-	}
-	if(y4 == null) {
-		y4 = 0;
-	}
-	if(x4 == null) {
-		x4 = 0;
-	}
-	if(y3 == null) {
-		y3 = 0;
-	}
-	if(x3 == null) {
-		x3 = 0;
-	}
-	if(y2 == null) {
-		y2 = 0;
-	}
-	if(x2 == null) {
-		x2 = 0;
-	}
-	if(y1 == null) {
-		y1 = 0;
-	}
-	if(x1 == null) {
-		x1 = 0;
-	}
-	this._lowerRight = new openfl_geom_Point(0,0);
-	this.ymax = 0;
-	this.ymin = 0;
-	this.xmax = 0;
-	this.xmin = 0;
-	this.p4 = new openfl_geom_Point(0,0);
-	this.p3 = new openfl_geom_Point(0,0);
-	this.p2 = new openfl_geom_Point(0,0);
-	this.p1 = new openfl_geom_Point(0,0);
-	this.p1.setTo(x1,y1);
-	this.p2.setTo(x2,y2);
-	this.p3.setTo(x3,y3);
-	this.p4.setTo(x4,y4);
-	this.xmin = Math.min(this.p1.x,Math.min(this.p2.x,Math.min(this.p3.x,this.p4.x)));
-	this.ymin = Math.min(this.p1.y,Math.min(this.p2.y,Math.min(this.p3.y,this.p4.y)));
-	this.xmax = Math.max(this.p1.x,Math.max(this.p2.x,Math.max(this.p3.x,this.p4.x)));
-	this.ymax = Math.max(this.p1.y,Math.max(this.p2.y,Math.max(this.p3.y,this.p4.y)));
-	starling_display_Quad.call(this,this.xmax - this.xmin,this.ymax - this.ymin,color,premultipliedAlpha);
-	this.mVertexData.setPosition(0,this.p1.x - this.xmin,this.p1.y - this.ymin);
-	this.mVertexData.setPosition(1,this.p2.x - this.xmin,this.p2.y - this.ymin);
-	this.mVertexData.setPosition(2,this.p3.x - this.xmin,this.p3.y - this.ymin);
-	this.mVertexData.setPosition(3,this.p4.x - this.xmin,this.p4.y - this.ymin);
-	this.onVertexDataChanged();
-	this.set_x(this.xmin);
-	this.set_y(this.ymin);
-	this._lowerRight.setTo(this.xmax - this.xmin,this.ymax - this.ymin);
-};
-$hxClasses["starling.display.Poly4"] = starling_display_Poly4;
-starling_display_Poly4.__name__ = ["starling","display","Poly4"];
-starling_display_Poly4.__super__ = starling_display_Quad;
-starling_display_Poly4.prototype = $extend(starling_display_Quad.prototype,{
-	p1: null
-	,p2: null
-	,p3: null
-	,p4: null
-	,xmin: null
-	,xmax: null
-	,ymin: null
-	,ymax: null
-	,setVertexPositions: function(x1,y1,x2,y2,x3,y3,x4,y4) {
-		if(y4 == null) {
-			y4 = 0;
-		}
-		if(x4 == null) {
-			x4 = 0;
-		}
-		if(y3 == null) {
-			y3 = 0;
-		}
-		if(x3 == null) {
-			x3 = 0;
-		}
-		if(y2 == null) {
-			y2 = 0;
-		}
-		if(x2 == null) {
-			x2 = 0;
-		}
-		if(y1 == null) {
-			y1 = 0;
-		}
-		if(x1 == null) {
-			x1 = 0;
-		}
-		this.p1.setTo(x1,y1);
-		this.p2.setTo(x2,y2);
-		this.p3.setTo(x3,y3);
-		this.p4.setTo(x4,y4);
-		this.xmin = Math.min(this.p1.x,Math.min(this.p2.x,Math.min(this.p3.x,this.p4.x)));
-		this.ymin = Math.min(this.p1.y,Math.min(this.p2.y,Math.min(this.p3.y,this.p4.y)));
-		this.xmax = Math.max(this.p1.x,Math.max(this.p2.x,Math.max(this.p3.x,this.p4.x)));
-		this.ymax = Math.max(this.p1.y,Math.max(this.p2.y,Math.max(this.p3.y,this.p4.y)));
-		this.setWidthHeight(this.xmax - this.xmin,this.ymax - this.ymin);
-		this.mVertexData.setPosition(0,this.p1.x - this.xmin,this.p1.y - this.ymin);
-		this.mVertexData.setPosition(1,this.p2.x - this.xmin,this.p2.y - this.ymin);
-		this.mVertexData.setPosition(2,this.p3.x - this.xmin,this.p3.y - this.ymin);
-		this.mVertexData.setPosition(3,this.p4.x - this.xmin,this.p4.y - this.ymin);
-		this.onVertexDataChanged();
-		this.set_x(this.xmin);
-		this.set_y(this.ymin);
-		this._lowerRight.setTo(this.xmax - this.xmin,this.ymax - this.ymin);
-	}
-	,_lowerRight: null
-	,min4: function(a,b,c,d) {
-		return Math.min(a,Math.min(b,Math.min(c,d)));
-	}
-	,max4: function(a,b,c,d) {
-		return Math.max(a,Math.max(b,Math.max(c,d)));
-	}
-	,getBounds: function(targetSpace,resultRect) {
-		if(resultRect == null) {
-			resultRect = new openfl_geom_Rectangle();
-		}
-		if(targetSpace == this) {
-			resultRect.setTo(0.0,0.0,this._lowerRight.x,this._lowerRight.y);
-		} else if(targetSpace == this.get_parent() && this.get_rotation() == 0.0) {
-			var scaleX = this.get_scaleX();
-			var scaleY = this.get_scaleY();
-			resultRect.setTo(this.get_x() - this.get_pivotX() * scaleX,this.get_y() - this.get_pivotY() * scaleY,this._lowerRight.x * scaleX,this._lowerRight.y * scaleY);
-			if(scaleX < 0) {
-				resultRect.width *= -1;
-				resultRect.x -= resultRect.width;
-			}
-			if(scaleY < 0) {
-				resultRect.height *= -1;
-				resultRect.y -= resultRect.height;
-			}
-		} else {
-			resultRect = starling_display_Quad.prototype.getBounds.call(this,targetSpace,resultRect);
-		}
-		return resultRect;
-	}
-	,__class__: starling_display_Poly4
-});
-var starling_display_Line = function(x1,y1,x2,y2,thickness,color,premultipliedAlpha) {
-	if(premultipliedAlpha == null) {
-		premultipliedAlpha = true;
-	}
-	this.l4 = new openfl_geom_Point(0,0);
-	this.l3 = new openfl_geom_Point(0,0);
-	this.l2 = new openfl_geom_Point(0,0);
-	this.l1 = new openfl_geom_Point(0,0);
-	this.to = new openfl_geom_Point(0,0);
-	this.from = new openfl_geom_Point(0,0);
-	this.from.setTo(x1,y1);
-	this.to.setTo(x2,y2);
-	this.thickness = thickness;
-	var dx = this.to.x - this.from.x;
-	var dy = this.to.y - this.from.y;
-	var l = Math.sqrt(dx * dx + dy * dy);
-	var u = new openfl_geom_Point(dx / l,dy / l);
-	var v = new openfl_geom_Point(u.y,-u.x);
-	var halfT = thickness * 0.5;
-	this.l1 = this.from.clone();
-	this.l1.offset(v.x * halfT,v.y * halfT);
-	this.l1.offset(-u.x * halfT,-u.y * halfT);
-	this.l2 = this.from.clone();
-	this.l2.offset(-v.x * halfT,-v.y * halfT);
-	this.l2.offset(-u.x * halfT,-u.y * halfT);
-	this.l3 = this.to.clone();
-	this.l3.offset(v.x * halfT,v.y * halfT);
-	this.l3.offset(u.x * halfT,u.y * halfT);
-	this.l4 = this.to.clone();
-	this.l4.offset(-v.x * halfT,-v.y * halfT);
-	this.l4.offset(u.x * halfT,u.y * halfT);
-	starling_display_Poly4.call(this,this.l1.x,this.l1.y,this.l2.x,this.l2.y,this.l3.x,this.l3.y,this.l4.x,this.l4.y,color,premultipliedAlpha);
-};
-$hxClasses["starling.display.Line"] = starling_display_Line;
-starling_display_Line.__name__ = ["starling","display","Line"];
-starling_display_Line.__super__ = starling_display_Poly4;
-starling_display_Line.prototype = $extend(starling_display_Poly4.prototype,{
-	from: null
-	,to: null
-	,l1: null
-	,l2: null
-	,l3: null
-	,l4: null
-	,thickness: null
-	,setPosition: function(x1,y1,x2,y2) {
-		this.from.setTo(x1,y1);
-		this.to.setTo(x2,y2);
-		var dx = this.to.x - this.from.x;
-		var dy = this.to.y - this.from.y;
-		var l = Math.sqrt(dx * dx + dy * dy);
-		var u = new openfl_geom_Point(dx / l,dy / l);
-		var v = new openfl_geom_Point(u.y,-u.x);
-		var halfT = this.thickness * 0.5;
-		this.l1 = this.from.clone();
-		this.l1.offset(v.x * halfT,v.y * halfT);
-		this.l1.offset(-u.x * halfT,-u.y * halfT);
-		this.l2 = this.from.clone();
-		this.l2.offset(-v.x * halfT,-v.y * halfT);
-		this.l2.offset(-u.x * halfT,-u.y * halfT);
-		this.l3 = this.to.clone();
-		this.l3.offset(v.x * halfT,v.y * halfT);
-		this.l3.offset(u.x * halfT,u.y * halfT);
-		this.l4 = this.to.clone();
-		this.l4.offset(-v.x * halfT,-v.y * halfT);
-		this.l4.offset(u.x * halfT,u.y * halfT);
-		this.setVertexPositions(this.l1.x,this.l1.y,this.l2.x,this.l2.y,this.l3.x,this.l3.y,this.l4.x,this.l4.y);
-	}
-	,__class__: starling_display_Line
-});
-var openfl_errors_Error = function(message,id) {
-	if(id == null) {
-		id = 0;
-	}
-	if(message == null) {
-		message = "";
-	}
-	this.message = message;
-	this.errorID = id;
-	this.name = "Error";
-};
-$hxClasses["openfl.errors.Error"] = openfl_errors_Error;
-openfl_errors_Error.__name__ = ["openfl","errors","Error"];
-openfl_errors_Error.prototype = {
-	errorID: null
-	,message: null
-	,name: null
-	,getStackTrace: function() {
-		return haxe_CallStack.toString(haxe_CallStack.exceptionStack());
-	}
-	,toString: function() {
-		if(this.message != null) {
-			return this.message;
-		} else {
-			return "Error";
-		}
-	}
-	,__class__: openfl_errors_Error
-};
-var openfl_errors_ArgumentError = function(message) {
-	if(message == null) {
-		message = "";
-	}
-	openfl_errors_Error.call(this,message);
-	this.name = "ArgumentError";
-};
-$hxClasses["openfl.errors.ArgumentError"] = openfl_errors_ArgumentError;
-openfl_errors_ArgumentError.__name__ = ["openfl","errors","ArgumentError"];
-openfl_errors_ArgumentError.__super__ = openfl_errors_Error;
-openfl_errors_ArgumentError.prototype = $extend(openfl_errors_Error.prototype,{
-	__class__: openfl_errors_ArgumentError
-});
-var starling_utils_VertexData = function(numVertices,premultipliedAlpha) {
-	if(premultipliedAlpha == null) {
-		premultipliedAlpha = false;
-	}
-	var a = [];
-	var vector = openfl__$Vector_Vector_$Impl_$.toFloatVector(null);
-	var _g1 = 0;
-	var _g = a.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		vector.set(i,a[i]);
-	}
-	this.mRawData = vector;
-	this.mPremultipliedAlpha = premultipliedAlpha;
-	this.mNumVertices = 0;
-	this.set_numVertices(numVertices);
-};
-$hxClasses["starling.utils.VertexData"] = starling_utils_VertexData;
-starling_utils_VertexData.__name__ = ["starling","utils","VertexData"];
-starling_utils_VertexData.prototype = {
-	mRawData: null
-	,mPremultipliedAlpha: null
-	,mNumVertices: null
-	,clone: function(vertexID,numVertices) {
-		if(numVertices == null) {
-			numVertices = -1;
-		}
-		if(vertexID == null) {
-			vertexID = 0;
-		}
-		if(numVertices < 0 || vertexID + numVertices > this.mNumVertices) {
-			numVertices = this.mNumVertices - vertexID;
-		}
-		var clone = new starling_utils_VertexData(0,this.mPremultipliedAlpha);
-		clone.mNumVertices = numVertices;
-		clone.mRawData = this.mRawData.slice(vertexID * 8,numVertices * 8);
-		clone.mRawData.fixed = true;
-		return clone;
-	}
-	,copyTo: function(targetData,targetVertexID,vertexID,numVertices) {
-		if(numVertices == null) {
-			numVertices = -1;
-		}
-		if(vertexID == null) {
-			vertexID = 0;
-		}
-		if(targetVertexID == null) {
-			targetVertexID = 0;
-		}
-		this.copyTransformedTo(targetData,targetVertexID,null,vertexID,numVertices);
-	}
-	,copyTransformedTo: function(targetData,targetVertexID,matrix,vertexID,numVertices) {
-		if(numVertices == null) {
-			numVertices = -1;
-		}
-		if(vertexID == null) {
-			vertexID = 0;
-		}
-		if(targetVertexID == null) {
-			targetVertexID = 0;
-		}
-		if(numVertices < 0 || vertexID + numVertices > this.mNumVertices) {
-			numVertices = this.mNumVertices - vertexID;
-		}
-		var x;
-		var y;
-		var targetRawData = targetData.mRawData;
-		var targetIndex = targetVertexID * 8;
-		var sourceIndex = vertexID * 8;
-		var sourceEnd = (vertexID + numVertices) * 8;
-		if(matrix != null) {
-			while(sourceIndex < sourceEnd) {
-				x = this.mRawData.get(sourceIndex++);
-				y = this.mRawData.get(sourceIndex++);
-				targetRawData.set(targetIndex++,matrix.a * x + matrix.c * y + matrix.tx);
-				targetRawData.set(targetIndex++,matrix.d * y + matrix.b * x + matrix.ty);
-				targetRawData.set(targetIndex++,this.mRawData.get(sourceIndex++));
-				targetRawData.set(targetIndex++,this.mRawData.get(sourceIndex++));
-				targetRawData.set(targetIndex++,this.mRawData.get(sourceIndex++));
-				targetRawData.set(targetIndex++,this.mRawData.get(sourceIndex++));
-				targetRawData.set(targetIndex++,this.mRawData.get(sourceIndex++));
-				targetRawData.set(targetIndex++,this.mRawData.get(sourceIndex++));
-			}
-		} else {
-			while(sourceIndex < sourceEnd) targetRawData.set(targetIndex++,this.mRawData.get(sourceIndex++));
-		}
-	}
-	,append: function(data) {
-		var targetIndex = this.mRawData.get_length();
-		var rawData = data.mRawData;
-		var rawDataLength = rawData.get_length();
-		var _g1 = 0;
-		var _g = rawDataLength;
-		while(_g1 < _g) {
-			var i = _g1++;
-			this.mRawData.set(targetIndex++,rawData.get(i));
-		}
-		this.mNumVertices += data.get_numVertices();
-		this.mRawData.fixed = true;
-	}
-	,setPosition: function(vertexID,x,y) {
-		var offset = vertexID * 8;
-		this.mRawData.set(offset,x);
-		this.mRawData.set(offset + 1,y);
-	}
-	,getPosition: function(vertexID,position) {
-		var offset = vertexID * 8;
-		position.x = this.mRawData.get(offset);
-		position.y = this.mRawData.get(offset + 1);
-	}
-	,setColorAndAlpha: function(vertexID,color,alpha) {
-		if(alpha < 0.001) {
-			alpha = 0.001;
-		} else if(alpha > 1.0) {
-			alpha = 1.0;
-		}
-		var offset = vertexID * 8 + 2;
-		var multiplier = this.mPremultipliedAlpha ? alpha : 1.0;
-		this.mRawData.set(offset,_$UInt_UInt_$Impl_$.toFloat(color >>> 16 & 255) / 255.0 * multiplier);
-		this.mRawData.set(offset + 1,_$UInt_UInt_$Impl_$.toFloat(color >>> 8 & 255) / 255.0 * multiplier);
-		this.mRawData.set(offset + 2,_$UInt_UInt_$Impl_$.toFloat(color & 255) / 255.0 * multiplier);
-		this.mRawData.set(offset + 3,alpha);
-	}
-	,setColor: function(vertexID,color) {
-		var offset = vertexID * 8 + 2;
-		var multiplier = this.mPremultipliedAlpha ? this.mRawData.get(offset + 3) : 1.0;
-		this.mRawData.set(offset,_$UInt_UInt_$Impl_$.toFloat(color >>> 16 & 255) / 255.0 * multiplier);
-		this.mRawData.set(offset + 1,_$UInt_UInt_$Impl_$.toFloat(color >>> 8 & 255) / 255.0 * multiplier);
-		this.mRawData.set(offset + 2,_$UInt_UInt_$Impl_$.toFloat(color & 255) / 255.0 * multiplier);
-	}
-	,getColor: function(vertexID) {
-		var offset = vertexID * 8 + 2;
-		var divisor = this.mPremultipliedAlpha ? this.mRawData.get(offset + 3) : 1.0;
-		if(divisor == 0) {
-			return 0;
-		} else {
-			var red = this.mRawData.get(offset) / divisor;
-			var green = this.mRawData.get(offset + 1) / divisor;
-			var blue = this.mRawData.get(offset + 2) / divisor;
-			return (red * 255 | 0) << 16 | (green * 255 | 0) << 8 | (blue * 255 | 0);
-		}
-	}
-	,setAlpha: function(vertexID,alpha) {
-		if(this.mPremultipliedAlpha) {
-			this.setColorAndAlpha(vertexID,this.getColor(vertexID),alpha);
-		} else {
-			this.mRawData.set(vertexID * 8 + 2 + 3,alpha);
-		}
-	}
-	,getAlpha: function(vertexID) {
-		var offset = vertexID * 8 + 2 + 3;
-		return this.mRawData.get(offset);
-	}
-	,setTexCoords: function(vertexID,u,v) {
-		var offset = vertexID * 8 + 6;
-		this.mRawData.set(offset,u);
-		this.mRawData.set(offset + 1,v);
-	}
-	,getTexCoords: function(vertexID,texCoords) {
-		var offset = vertexID * 8 + 6;
-		texCoords.x = this.mRawData.get(offset);
-		texCoords.y = this.mRawData.get(offset + 1);
-	}
-	,translateVertex: function(vertexID,deltaX,deltaY) {
-		var offset = vertexID * 8;
-		this.mRawData.set(offset,this.mRawData.get(offset) + deltaX);
-		this.mRawData.set(offset + 1,this.mRawData.get(offset + 1) + deltaY);
-	}
-	,transformVertex: function(vertexID,matrix,numVertices) {
-		if(numVertices == null) {
-			numVertices = 1;
-		}
-		var x;
-		var y;
-		var offset = vertexID * 8;
-		var _g1 = 0;
-		var _g = numVertices;
-		while(_g1 < _g) {
-			var i = _g1++;
-			x = this.mRawData.get(offset);
-			y = this.mRawData.get(offset + 1);
-			this.mRawData.set(offset,matrix.a * x + matrix.c * y + matrix.tx);
-			this.mRawData.set(offset + 1,matrix.d * y + matrix.b * x + matrix.ty);
-			offset += 8;
-		}
-	}
-	,setUniformColor: function(color) {
-		var _g1 = 0;
-		var _g = this.mNumVertices;
-		while(_g1 < _g) {
-			var i = _g1++;
-			this.setColor(i,color);
-		}
-	}
-	,setUniformAlpha: function(alpha) {
-		var _g1 = 0;
-		var _g = this.mNumVertices;
-		while(_g1 < _g) {
-			var i = _g1++;
-			this.setAlpha(i,alpha);
-		}
-	}
-	,scaleAlpha: function(vertexID,factor,numVertices) {
-		if(numVertices == null) {
-			numVertices = 1;
-		}
-		if(factor == 1.0) {
-			return;
-		}
-		if(numVertices < 0 || vertexID + numVertices > this.mNumVertices) {
-			numVertices = this.mNumVertices - vertexID;
-		}
-		var i;
-		if(this.mPremultipliedAlpha) {
-			var _g1 = 0;
-			var _g = numVertices;
-			while(_g1 < _g) {
-				var i1 = _g1++;
-				this.setAlpha(vertexID + i1,this.getAlpha(vertexID + i1) * factor);
-			}
-		} else {
-			var offset = vertexID * 8 + 2 + 3;
-			var _g11 = 0;
-			var _g2 = numVertices;
-			while(_g11 < _g2) {
-				var i2 = _g11++;
-				var idx = offset + i2 * 8 | 0;
-				this.mRawData.set(idx,this.mRawData.get(idx) * factor);
-			}
-		}
-	}
-	,getBounds: function(transformationMatrix,vertexID,numVertices,resultRect) {
-		if(numVertices == null) {
-			numVertices = -1;
-		}
-		if(vertexID == null) {
-			vertexID = 0;
-		}
-		if(resultRect == null) {
-			resultRect = new openfl_geom_Rectangle();
-		}
-		if(numVertices < 0 || vertexID + numVertices > this.mNumVertices) {
-			numVertices = this.mNumVertices - vertexID;
-		}
-		if(numVertices == 0) {
-			if(transformationMatrix == null) {
-				resultRect.setEmpty();
-			} else {
-				starling_utils_MatrixUtil.transformCoords(transformationMatrix,0,0,starling_utils_VertexData.sHelperPoint);
-				resultRect.setTo(starling_utils_VertexData.sHelperPoint.x,starling_utils_VertexData.sHelperPoint.y,0,0);
-			}
-		} else {
-			var minX = 1.79e+308;
-			var maxX = -1.79e+308;
-			var minY = 1.79e+308;
-			var maxY = -1.79e+308;
-			var offset = vertexID * 8;
-			var x;
-			var y;
-			var i;
-			if(transformationMatrix == null) {
-				var _g1 = 0;
-				var _g = numVertices;
-				while(_g1 < _g) {
-					var i1 = _g1++;
-					x = this.mRawData.get(offset);
-					y = this.mRawData.get(offset + 1);
-					offset += 8;
-					if(minX > x) {
-						minX = x;
-					}
-					if(maxX < x) {
-						maxX = x;
-					}
-					if(minY > y) {
-						minY = y;
-					}
-					if(maxY < y) {
-						maxY = y;
-					}
-				}
-			} else {
-				var _g11 = 0;
-				var _g2 = numVertices;
-				while(_g11 < _g2) {
-					var i2 = _g11++;
-					x = this.mRawData.get(offset);
-					y = this.mRawData.get(offset + 1);
-					offset += 8;
-					starling_utils_MatrixUtil.transformCoords(transformationMatrix,x,y,starling_utils_VertexData.sHelperPoint);
-					if(minX > starling_utils_VertexData.sHelperPoint.x) {
-						minX = starling_utils_VertexData.sHelperPoint.x;
-					}
-					if(maxX < starling_utils_VertexData.sHelperPoint.x) {
-						maxX = starling_utils_VertexData.sHelperPoint.x;
-					}
-					if(minY > starling_utils_VertexData.sHelperPoint.y) {
-						minY = starling_utils_VertexData.sHelperPoint.y;
-					}
-					if(maxY < starling_utils_VertexData.sHelperPoint.y) {
-						maxY = starling_utils_VertexData.sHelperPoint.y;
-					}
-				}
-			}
-			resultRect.setTo(minX,minY,maxX - minX,maxY - minY);
-		}
-		return resultRect;
-	}
-	,getBoundsProjected: function(transformationMatrix,camPos,vertexID,numVertices,resultRect) {
-		if(numVertices == null) {
-			numVertices = -1;
-		}
-		if(vertexID == null) {
-			vertexID = 0;
-		}
-		if(camPos == null) {
-			throw new js__$Boot_HaxeError(new openfl_errors_ArgumentError("camPos must not be null"));
-		}
-		if(resultRect == null) {
-			resultRect = new openfl_geom_Rectangle();
-		}
-		if(numVertices < 0 || vertexID + numVertices > this.mNumVertices) {
-			numVertices = this.mNumVertices - vertexID;
-		}
-		if(numVertices == 0) {
-			if(transformationMatrix != null) {
-				starling_utils_MatrixUtil.transformCoords3D(transformationMatrix,0,0,0,starling_utils_VertexData.sHelperPoint3D);
-			} else {
-				starling_utils_VertexData.sHelperPoint3D.setTo(0,0,0);
-			}
-			starling_utils_MathUtil.intersectLineWithXYPlane(camPos,starling_utils_VertexData.sHelperPoint3D,starling_utils_VertexData.sHelperPoint);
-			resultRect.setTo(starling_utils_VertexData.sHelperPoint.x,starling_utils_VertexData.sHelperPoint.y,0,0);
-		} else {
-			var minX = 1.79e+308;
-			var maxX = -1.79e+308;
-			var minY = 1.79e+308;
-			var maxY = -1.79e+308;
-			var offset = vertexID * 8;
-			var x;
-			var y;
-			var i;
-			var _g1 = 0;
-			var _g = numVertices;
-			while(_g1 < _g) {
-				var i1 = _g1++;
-				x = this.mRawData.get(offset);
-				y = this.mRawData.get(offset + 1);
-				offset += 8;
-				if(transformationMatrix != null) {
-					starling_utils_MatrixUtil.transformCoords3D(transformationMatrix,x,y,0,starling_utils_VertexData.sHelperPoint3D);
-				} else {
-					starling_utils_VertexData.sHelperPoint3D.setTo(x,y,0);
-				}
-				starling_utils_MathUtil.intersectLineWithXYPlane(camPos,starling_utils_VertexData.sHelperPoint3D,starling_utils_VertexData.sHelperPoint);
-				if(minX > starling_utils_VertexData.sHelperPoint.x) {
-					minX = starling_utils_VertexData.sHelperPoint.x;
-				}
-				if(maxX < starling_utils_VertexData.sHelperPoint.x) {
-					maxX = starling_utils_VertexData.sHelperPoint.x;
-				}
-				if(minY > starling_utils_VertexData.sHelperPoint.y) {
-					minY = starling_utils_VertexData.sHelperPoint.y;
-				}
-				if(maxY < starling_utils_VertexData.sHelperPoint.y) {
-					maxY = starling_utils_VertexData.sHelperPoint.y;
-				}
-			}
-			resultRect.setTo(minX,minY,maxX - minX,maxY - minY);
-		}
-		return resultRect;
-	}
-	,toString: function() {
-		var result = "[VertexData \n";
-		var position = new openfl_geom_Point();
-		var texCoords = new openfl_geom_Point();
-		var _g1 = 0;
-		var _g = this.get_numVertices();
-		while(_g1 < _g) {
-			var i = _g1++;
-			this.getPosition(i,position);
-			this.getTexCoords(i,texCoords);
-			result += "  [Vertex " + i + ": " + "x=" + (position.x == null ? "null" : "" + position.x) + ", " + "y=" + (position.y == null ? "null" : "" + position.y) + ", " + "rgb=" + StringTools.hex(this.getColor(i)) + ", " + "a=" + Std.string(this.getAlpha(i)) + ", " + "u=" + (texCoords.x == null ? "null" : "" + texCoords.x) + ", " + "v=" + (texCoords.y == null ? "null" : "" + texCoords.y) + "]" + (i == this.get_numVertices() - 1 ? "\n" : ",\n");
-		}
-		return result + "]";
-	}
-	,get_tinted: function() {
-		var offset = 2;
-		var _g1 = 0;
-		var _g = this.mNumVertices;
-		while(_g1 < _g) {
-			var i = _g1++;
-			var _g2 = 0;
-			while(_g2 < 4) {
-				var j = _g2++;
-				if(this.mRawData.get(offset + j) != 1.0) {
-					return true;
-				}
-			}
-			offset += 8;
-		}
-		return false;
-	}
-	,setPremultipliedAlpha: function(value,updateData) {
-		if(updateData == null) {
-			updateData = true;
-		}
-		if(value == this.mPremultipliedAlpha) {
-			return;
-		}
-		if(updateData) {
-			var dataLength = this.mNumVertices * 8;
-			var i = 2;
-			while(i < dataLength) {
-				var alpha = this.mRawData.get(i + 3);
-				var divisor = this.mPremultipliedAlpha ? alpha : 1.0;
-				var multiplier = value ? alpha : 1.0;
-				if(divisor != 0) {
-					this.mRawData.set(i,this.mRawData.get(i) / divisor * multiplier);
-					this.mRawData.set(i + 1,this.mRawData.get(i + 1) / divisor * multiplier);
-					this.mRawData.set(i + 2,this.mRawData.get(i + 2) / divisor * multiplier);
-				}
-				i += 8;
-			}
-		}
-		this.mPremultipliedAlpha = value;
-	}
-	,get_premultipliedAlpha: function() {
-		return this.mPremultipliedAlpha;
-	}
-	,set_premultipliedAlpha: function(value) {
-		this.setPremultipliedAlpha(value);
-		return this.mPremultipliedAlpha;
-	}
-	,get_numVertices: function() {
-		return this.mNumVertices;
-	}
-	,set_numVertices: function(value) {
-		this.mRawData.fixed = false;
-		this.mRawData.set_length(value * 8);
-		var startIndex = this.mNumVertices * 8 + 2 + 3;
-		var endIndex = value * 8;
-		var i = startIndex;
-		while(i < endIndex) {
-			this.mRawData.set(i,1.0);
-			i += 8;
-		}
-		this.mNumVertices = value;
-		this.mRawData.fixed = true;
-		return this.mNumVertices;
-	}
-	,get_rawData: function() {
-		return this.mRawData;
-	}
-	,__class__: starling_utils_VertexData
-	,__properties__: {get_rawData:"get_rawData",set_numVertices:"set_numVertices",get_numVertices:"get_numVertices",set_premultipliedAlpha:"set_premultipliedAlpha",get_premultipliedAlpha:"get_premultipliedAlpha",get_tinted:"get_tinted"}
-};
-var haxegon_Gfx = function() { };
-$hxClasses["haxegon.Gfx"] = haxegon_Gfx;
-haxegon_Gfx.__name__ = ["haxegon","Gfx"];
-haxegon_Gfx.__properties__ = {set_fullscreen:"set_fullscreen",get_fullscreen:"get_fullscreen",set_linethickness:"set_linethickness",get_linethickness:"get_linethickness"};
-haxegon_Gfx.reset = function() {
-	haxegon_Gfx.transform = false;
-	haxegon_Gfx.imagerotate = 0;
-	haxegon_Gfx.imagerotatexpivot = 0;
-	haxegon_Gfx.imagerotateypivot = 0;
-	haxegon_Gfx.imagexscale = 1.0;
-	haxegon_Gfx.imageyscale = 1.0;
-	haxegon_Gfx.imagescalexpivot = 0;
-	haxegon_Gfx.imagescaleypivot = 0;
-	haxegon_Gfx.coltransform = false;
-	haxegon_Gfx.imagealphamult = 1.0;
-	haxegon_Gfx.imagecolormult = 16777215;
-};
-haxegon_Gfx.reset_ifclear = function() {
-	if(haxegon_Gfx.imagerotate == 0) {
-		if(haxegon_Gfx.imagexscale == 1.0) {
-			if(haxegon_Gfx.imageyscale == 1.0) {
-				haxegon_Gfx.transform = false;
-			}
-		}
-	}
-	if(haxegon_Gfx.imagealphamult == 1.0) {
-		if(haxegon_Gfx.imagecolormult == 16777215) {
-			haxegon_Gfx.coltransform = false;
-		}
-	}
-};
-haxegon_Gfx.rotation = function(angle,xpivot,ypivot) {
-	if(ypivot == null) {
-		ypivot = -15000;
-	}
-	if(xpivot == null) {
-		xpivot = -15000;
-	}
-	haxegon_Gfx.imagerotate = angle;
-	haxegon_Gfx.imagerotatexpivot = xpivot;
-	haxegon_Gfx.imagerotateypivot = ypivot;
-	haxegon_Gfx.transform = true;
-	haxegon_Gfx.reset_ifclear();
-};
-haxegon_Gfx.scale = function(xscale,yscale,xpivot,ypivot) {
-	if(ypivot == null) {
-		ypivot = -10000;
-	}
-	if(xpivot == null) {
-		xpivot = -10000;
-	}
-	if(xscale == null && yscale == null) {
-		xscale = 1.0;
-		yscale = 1.0;
-	}
-	if(yscale == null && xscale != null) {
-		yscale = xscale;
-	}
-	haxegon_Gfx.imagexscale = xscale;
-	haxegon_Gfx.imageyscale = yscale;
-	haxegon_Gfx.imagescalexpivot = xpivot;
-	haxegon_Gfx.imagescaleypivot = ypivot;
-	haxegon_Gfx.transform = true;
-	haxegon_Gfx.reset_ifclear();
-};
-haxegon_Gfx.imagealpha = function(alpha) {
-	if(alpha == null) {
-		alpha = 1.0;
-	}
-	haxegon_Gfx.imagealphamult = alpha;
-	haxegon_Gfx.coltransform = true;
-	haxegon_Gfx.reset_ifclear();
-};
-haxegon_Gfx.imagecolor = function(color) {
-	if(color == null) {
-		color = 16777215;
-	}
-	haxegon_Gfx.imagecolormult = color;
-	haxegon_Gfx.coltransform = true;
-	haxegon_Gfx.reset_ifclear();
-};
-haxegon_Gfx.numberoftiles = function(tileset) {
-	haxegon_Gfx.changetileset(tileset);
-	return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.length;
-};
-haxegon_Gfx.changetileset = function(tilesetname) {
-	if(haxegon_Gfx.currenttilesetname != tilesetname) {
-		haxegon_Gfx.drawstate = 0;
-		var _this = haxegon_Gfx.tilesetindex;
-		if(__map_reserved[tilesetname] != null ? _this.existsReserved(tilesetname) : _this.h.hasOwnProperty(tilesetname)) {
-			var _this1 = haxegon_Gfx.tilesetindex;
-			haxegon_Gfx.currenttileset = __map_reserved[tilesetname] != null ? _this1.getReserved(tilesetname) : _this1.h[tilesetname];
-			haxegon_Gfx.currenttilesetname = tilesetname;
-		} else {
-			haxegon_Debug.log("ERROR: Cannot change to tileset \"" + tilesetname + "\", no tileset with that name found.",{ fileName : "Gfx.hx", lineNumber : 161, className : "haxegon.Gfx", methodName : "changetileset"});
-		}
-	}
-};
-haxegon_Gfx.loadtiles = function(imagename,width,height) {
-	var tex;
-	var _this = haxegon_Gfx.imageindex;
-	if(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename)) {
-		tex = haxegon_Gfx.getassetpackedtexture(imagename);
-	} else {
-		if(haxegon_Data.assetexists("data/graphics/" + imagename + ".png")) {
-			tex = starling_textures_Texture.fromBitmapData(haxegon_Data.getgraphicsasset("data/graphics/" + imagename + ".png"),false);
-		} else if(haxegon_Data.assetexists("data/graphics/" + imagename + ".jpg")) {
-			tex = starling_textures_Texture.fromBitmapData(haxegon_Data.getgraphicsasset("data/graphics/" + imagename + ".jpg"),false);
-		} else {
-			haxegon_Debug.log("ERROR: In loadtiles, cannot find \"data/graphics/" + imagename + ".png\" or \"data/graphics/" + imagename + ".jpg\"",{ fileName : "Gfx.hx", lineNumber : 179, className : "haxegon.Gfx", methodName : "loadtiles"});
-			return;
-		}
-		haxegon_Gfx.starlingassets.addTexture(imagename,tex);
-	}
-	var spritesheet = haxegon_Gfx.starlingassets.getTexture(imagename);
-	var tiles_rect = new openfl_geom_Rectangle(0,0,width,height);
-	haxegon_Gfx.tiles.push(new haxegon_HaxegonTileset(imagename,width,height));
-	var value = haxegon_Gfx.tiles.length - 1;
-	var _this1 = haxegon_Gfx.tilesetindex;
-	if(__map_reserved[imagename] != null) {
-		_this1.setReserved(imagename,value);
-	} else {
-		_this1.h[imagename] = value;
-	}
-	haxegon_Gfx.currenttileset = haxegon_Gfx.tiles.length - 1;
-	var tilerows;
-	var tilecolumns = (spritesheet.get_width() - spritesheet.get_width() % width) / width | 0;
-	tilerows = (spritesheet.get_height() - spritesheet.get_height() % height) / height | 0;
-	var framex = 0;
-	var framey = 0;
-	if(spritesheet.get_frame() != null) {
-		framex = spritesheet.get_frame().get_left() | 0;
-		framey = spritesheet.get_frame().get_top() | 0;
-	}
-	var _g1 = 0;
-	var _g = tilerows;
-	while(_g1 < _g) {
-		var j = _g1++;
-		var _g3 = 0;
-		var _g2 = tilecolumns;
-		while(_g3 < _g2) {
-			var i = _g3++;
-			var rect = new openfl_geom_Rectangle(framex + i * width,framey + j * height,width,height);
-			var newtex = starling_textures_Texture.fromTexture(spritesheet,rect);
-			haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.push(new starling_display_Image(newtex));
-			haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.length - 1].set_smoothing("none");
-		}
-	}
-};
-haxegon_Gfx.addblanktiles = function(tilesetname,num) {
-	var tileset = 0;
-	var _this = haxegon_Gfx.tilesetindex;
-	if(__map_reserved[tilesetname] != null ? _this.existsReserved(tilesetname) : _this.h.hasOwnProperty(tilesetname)) {
-		var _this1 = haxegon_Gfx.tilesetindex;
-		if(__map_reserved[tilesetname] != null) {
-			tileset = _this1.getReserved(tilesetname);
-		} else {
-			tileset = _this1.h[tilesetname];
-		}
-	} else {
-		haxegon_Debug.log("ERROR: Cannot add blank tiles to tileset \"" + tilesetname + "\", no tileset with that name found.",{ fileName : "Gfx.hx", lineNumber : 222, className : "haxegon.Gfx", methodName : "addblanktiles"});
-	}
-	var w = haxegon_Gfx.tiles[tileset].tiles[0].get_width() | 0;
-	var h = haxegon_Gfx.tiles[tileset].tiles[0].get_height() | 0;
-	var _g1 = 0;
-	var _g = num;
-	while(_g1 < _g) {
-		var i = _g1++;
-		var tex = starling_textures_Texture.fromBitmapData(new openfl_display_BitmapData(w,h,true,0),false);
-		var img = new starling_display_Image(tex);
-		img.set_touchable(false);
-		haxegon_Gfx.tiles[tileset].tiles.push(img);
-	}
-	haxegon_Gfx.tiles[tileset].sharedatlas = false;
-};
-haxegon_Gfx.createtiles = function(tilesetname,width,height,amount) {
-	var _this = haxegon_Gfx.tilesetindex;
-	var exindex = __map_reserved[tilesetname] != null ? _this.getReserved(tilesetname) : _this.h[tilesetname];
-	if(exindex == null) {
-		haxegon_Gfx.tiles.push(new haxegon_HaxegonTileset(tilesetname,width | 0,height | 0));
-		var value = haxegon_Gfx.tiles.length - 1;
-		var _this1 = haxegon_Gfx.tilesetindex;
-		if(__map_reserved[tilesetname] != null) {
-			_this1.setReserved(tilesetname,value);
-		} else {
-			_this1.h[tilesetname] = value;
-		}
-		haxegon_Gfx.currenttileset = haxegon_Gfx.tiles.length - 1;
-		var _g1 = 0;
-		var _g = amount;
-		while(_g1 < _g) {
-			var i = _g1++;
-			var tex = starling_textures_Texture.fromBitmapData(new openfl_display_BitmapData(Math.floor(width),Math.floor(height),true,0),false);
-			var img = new starling_display_Image(tex);
-			img.set_touchable(false);
-			haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.push(img);
-		}
-		haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].sharedatlas = false;
-		haxegon_Gfx.changetileset(tilesetname);
-	} else {
-		haxegon_Gfx.changetileset(tilesetname);
-		haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].sharedatlas = false;
-		var purge = haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width != Math.floor(width) || haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height != Math.floor(height);
-		haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width = Math.floor(width);
-		haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height = Math.floor(height);
-		while(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.length > (purge ? 0 : amount)) {
-			var extile = haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.pop();
-			extile.set_touchable(false);
-			extile.get_texture().dispose();
-			extile.dispose();
-		}
-		var _g11 = 0;
-		var _g2 = amount;
-		while(_g11 < _g2) {
-			var i1 = _g11++;
-			if(i1 < haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.length && !purge && js_Boot.__instanceof(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[i1].get_texture(),starling_textures_RenderTexture)) {
-				(js_Boot.__cast(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[i1].get_texture() , starling_textures_RenderTexture)).clear();
-			} else {
-				var tex1 = starling_textures_Texture.fromBitmapData(new openfl_display_BitmapData(Math.floor(width),Math.floor(height),true,0),false);
-				var img1 = new starling_display_Image(tex1);
-				img1.set_touchable(false);
-				if(i1 < haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.length) {
-					haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[i1].get_texture().dispose();
-					haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[i1].dispose();
-					haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[i1] = img1;
-				} else {
-					haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles.push(img1);
-				}
-			}
-		}
-	}
-};
-haxegon_Gfx.tilewidth = function(tilesetname) {
-	haxegon_Gfx.changetileset(tilesetname);
-	return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width;
-};
-haxegon_Gfx.tileheight = function(tilesetname) {
-	haxegon_Gfx.changetileset(tilesetname);
-	return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height;
-};
-haxegon_Gfx.getassetpackedtexture = function(imagename) {
-	var bd = null;
-	try {
-		bd = haxegon_Gfx.starlingassets.getTexture(imagename);
-	} catch( e ) {
-		haxe_CallStack.lastException = e;
-		haxegon_Debug.log("ERROR: Cannot find " + imagename + ".png in packed textures.",{ fileName : "Gfx.hx", lineNumber : 309, className : "haxegon.Gfx", methodName : "getassetpackedtexture"});
-	}
-	return bd;
-};
-haxegon_Gfx.loadimagefrompackedtexture = function(imagename,tex) {
-	var value = haxegon_Gfx.images.length;
-	var _this = haxegon_Gfx.imageindex;
-	if(__map_reserved[imagename] != null) {
-		_this.setReserved(imagename,value);
-	} else {
-		_this.h[imagename] = value;
-	}
-	haxegon_Gfx.haxegonimage = new haxegon_HaxegonImage(imagename);
-	haxegon_Gfx.haxegonimage.contents = new starling_display_Image(tex);
-	haxegon_Gfx.haxegonimage.fetchsize();
-	haxegon_Gfx.images.push(haxegon_Gfx.haxegonimage);
-	haxegon_Gfx.images[haxegon_Gfx.images.length - 1].contents.set_smoothing("none");
-};
-haxegon_Gfx.loadimage = function(imagename) {
-	var _this = haxegon_Gfx.imageindex;
-	if(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename)) {
-		return;
-	}
-	var tex;
-	if(haxegon_Data.assetexists("data/graphics/" + imagename + ".png")) {
-		tex = starling_textures_Texture.fromBitmapData(haxegon_Data.getgraphicsasset("data/graphics/" + imagename + ".png"),false);
-	} else if(haxegon_Data.assetexists("data/graphics/" + imagename + ".jpg")) {
-		tex = starling_textures_Texture.fromBitmapData(haxegon_Data.getgraphicsasset("data/graphics/" + imagename + ".jpg"),false);
-	} else {
-		haxegon_Debug.log("ERROR: In loadimage, cannot find \"data/graphics/" + imagename + ".png\" or \"data/graphics/" + imagename + ".jpg\"",{ fileName : "Gfx.hx", lineNumber : 335, className : "haxegon.Gfx", methodName : "loadimage"});
-		return;
-	}
-	haxegon_Gfx.starlingassets.addTexture(imagename,tex);
-	var value = haxegon_Gfx.images.length;
-	var _this1 = haxegon_Gfx.imageindex;
-	if(__map_reserved[imagename] != null) {
-		_this1.setReserved(imagename,value);
-	} else {
-		_this1.h[imagename] = value;
-	}
-	haxegon_Gfx.haxegonimage = new haxegon_HaxegonImage(imagename);
-	var tmp = haxegon_Gfx.starlingassets.getTexture(imagename);
-	haxegon_Gfx.haxegonimage.contents = new starling_display_Image(tmp);
-	haxegon_Gfx.haxegonimage.contents.set_smoothing("none");
-	haxegon_Gfx.haxegonimage.fetchsize();
-	haxegon_Gfx.images.push(haxegon_Gfx.haxegonimage);
-};
-haxegon_Gfx.createimage = function(imagename,width,height) {
-	var tex = starling_textures_Texture.fromBitmapData(new openfl_display_BitmapData(Math.floor(width),Math.floor(height),true,0),false);
-	var img = new starling_display_Image(tex);
-	img.set_touchable(false);
-	img.set_smoothing("none");
-	var _this = haxegon_Gfx.imageindex;
-	var exindex = __map_reserved[imagename] != null ? _this.getReserved(imagename) : _this.h[imagename];
-	if(exindex == null) {
-		var value = haxegon_Gfx.images.length;
-		var _this1 = haxegon_Gfx.imageindex;
-		if(__map_reserved[imagename] != null) {
-			_this1.setReserved(imagename,value);
-		} else {
-			_this1.h[imagename] = value;
-		}
-		haxegon_Gfx.haxegonimage = new haxegon_HaxegonImage(imagename);
-		haxegon_Gfx.haxegonimage.contents = img;
-		haxegon_Gfx.haxegonimage.fetchsize();
-		haxegon_Gfx.images.push(haxegon_Gfx.haxegonimage);
-	} else {
-		haxegon_Gfx.images[exindex].contents.get_texture().dispose();
-		haxegon_Gfx.images[exindex].contents.dispose();
-		haxegon_Gfx.images[exindex].contents = img;
-		haxegon_Gfx.images[exindex].fetchsize();
-	}
-};
-haxegon_Gfx.imagewidth = function(imagename) {
-	var _this = haxegon_Gfx.imageindex;
-	if(!(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename))) {
-		haxegon_Gfx.loadimage(imagename);
-	}
-	var _this1 = haxegon_Gfx.imageindex;
-	var imagenum = __map_reserved[imagename] != null ? _this1.getReserved(imagename) : _this1.h[imagename];
-	return haxegon_Gfx.images[imagenum].width;
-};
-haxegon_Gfx.imageheight = function(imagename) {
-	var _this = haxegon_Gfx.imageindex;
-	if(!(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename))) {
-		haxegon_Gfx.loadimage(imagename);
-	}
-	var _this1 = haxegon_Gfx.imageindex;
-	var imagenum = __map_reserved[imagename] != null ? _this1.getReserved(imagename) : _this1.h[imagename];
-	return haxegon_Gfx.images[imagenum].height;
-};
-haxegon_Gfx.promotetorendertarget = function(image) {
-	if(!js_Boot.__instanceof(image.get_texture(),starling_textures_RenderTexture)) {
-		var newtexture = new starling_textures_RenderTexture(image.get_texture().get_width() | 0,image.get_texture().get_height() | 0);
-		haxegon_Gfx.shapematrix.identity();
-		newtexture.draw(image,haxegon_Gfx.shapematrix);
-		image.get_texture().dispose();
-		image.set_texture(newtexture);
-	}
-};
-haxegon_Gfx.drawtoscreen = function() {
-	haxegon_Gfx.endquadbatch();
-	if(haxegon_Gfx.drawto != null) {
-		haxegon_Gfx.drawto.bundleunlock();
-	}
-	haxegon_Gfx.drawto = haxegon_Gfx.backbuffer;
-	if(haxegon_Gfx.drawto != null) {
-		haxegon_Gfx.drawto.bundlelock();
-	}
-};
-haxegon_Gfx.drawtoimage = function(imagename) {
-	var _this = haxegon_Gfx.imageindex;
-	if(!(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename))) {
-		haxegon_Debug.log("ERROR: In drawtoimage, cannot find image \"" + imagename + "\".",{ fileName : "Gfx.hx", lineNumber : 421, className : "haxegon.Gfx", methodName : "drawtoimage"});
-		return;
-	}
-	haxegon_Gfx.endquadbatch();
-	if(haxegon_Gfx.drawto != null) {
-		haxegon_Gfx.drawto.bundleunlock();
-	}
-	var _this1 = haxegon_Gfx.imageindex;
-	var imagenum = __map_reserved[imagename] != null ? _this1.getReserved(imagename) : _this1.h[imagename];
-	haxegon_Gfx.promotetorendertarget(haxegon_Gfx.images[imagenum].contents);
-	haxegon_Gfx.drawto = js_Boot.__cast(haxegon_Gfx.images[imagenum].contents.get_texture() , starling_textures_RenderTexture);
-	if(haxegon_Gfx.drawto != null) {
-		haxegon_Gfx.drawto.bundlelock();
-	}
-};
-haxegon_Gfx.drawtotile = function(tilesetname,tilenum) {
-	var tileset = 0;
-	var _this = haxegon_Gfx.tilesetindex;
-	if(__map_reserved[tilesetname] != null ? _this.existsReserved(tilesetname) : _this.h.hasOwnProperty(tilesetname)) {
-		var _this1 = haxegon_Gfx.tilesetindex;
-		if(__map_reserved[tilesetname] != null) {
-			tileset = _this1.getReserved(tilesetname);
-		} else {
-			tileset = _this1.h[tilesetname];
-		}
-	} else {
-		haxegon_Debug.log("ERROR: Cannot change to tileset \"" + tilesetname + "\", no tileset with that name found.",{ fileName : "Gfx.hx", lineNumber : 441, className : "haxegon.Gfx", methodName : "drawtotile"});
-	}
-	if(tilenum >= haxegon_Gfx.numberoftiles(tilesetname)) {
-		if(tilenum == haxegon_Gfx.numberoftiles(tilesetname)) {
-			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenum == null ? "null" : "" + tilenum) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\". (Because this includes tile number 0, " + (tilenum == null ? "null" : "" + tilenum) + " is not a valid tile.)",{ fileName : "Gfx.hx", lineNumber : 446, className : "haxegon.Gfx", methodName : "drawtotile"});
-		} else {
-			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenum == null ? "null" : "" + tilenum) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\".",{ fileName : "Gfx.hx", lineNumber : 448, className : "haxegon.Gfx", methodName : "drawtotile"});
-		}
-	}
-	haxegon_Gfx.endquadbatch();
-	if(haxegon_Gfx.drawto != null) {
-		haxegon_Gfx.drawto.bundleunlock();
-	}
-	haxegon_Gfx.promotetorendertarget(haxegon_Gfx.tiles[tileset].tiles[tilenum]);
-	haxegon_Gfx.drawto = js_Boot.__cast(haxegon_Gfx.tiles[tileset].tiles[tilenum].get_texture() , starling_textures_RenderTexture);
-	if(haxegon_Gfx.drawto != null) {
-		haxegon_Gfx.drawto.bundlelock();
-	}
-};
-haxegon_Gfx.imagealignx = function(imagewidth,x) {
-	if(x <= -5000) {
-		haxegon_Gfx.t1 = x - haxegon_Gfx.CENTER;
-		haxegon_Gfx.t2 = x - haxegon_Gfx.LEFT;
-		haxegon_Gfx.t3 = x - haxegon_Gfx.RIGHT;
-		if(haxegon_Gfx.t1 == 0 || Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t2) && Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t3)) {
-			return haxegon_Gfx.t1 + haxegon_Gfx.screenwidthmid - (imagewidth / 2 | 0);
-		} else if(haxegon_Gfx.t2 == 0 || Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t1) && Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t3)) {
-			return haxegon_Gfx.t2;
-		} else {
-			return haxegon_Gfx.t3 + imagewidth;
-		}
-	}
-	return x;
-};
-haxegon_Gfx.imagealigny = function(imageheight,y) {
-	if(y <= -5000) {
-		haxegon_Gfx.t1 = y - haxegon_Gfx.CENTER;
-		haxegon_Gfx.t2 = y - haxegon_Gfx.TOP;
-		haxegon_Gfx.t3 = y - haxegon_Gfx.BOTTOM;
-		if(haxegon_Gfx.t1 == 0 || Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t2) && Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t3)) {
-			return haxegon_Gfx.t1 + haxegon_Gfx.screenheightmid - (imageheight / 2 | 0);
-		} else if(haxegon_Gfx.t2 == 0 || Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t1) && Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t3)) {
-			return haxegon_Gfx.t2;
-		} else {
-			return haxegon_Gfx.t3 + imageheight;
-		}
-	}
-	return y;
-};
-haxegon_Gfx.imagealignonimagex = function(imagewidth,x) {
-	if(x <= -5000) {
-		haxegon_Gfx.t1 = x - haxegon_Gfx.CENTER;
-		haxegon_Gfx.t2 = x - haxegon_Gfx.LEFT;
-		haxegon_Gfx.t3 = x - haxegon_Gfx.RIGHT;
-		if(haxegon_Gfx.t1 == 0 || Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t2) && Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t3)) {
-			return haxegon_Gfx.t1 + (imagewidth / 2 | 0);
-		} else if(haxegon_Gfx.t2 == 0 || Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t1) && Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t3)) {
-			return haxegon_Gfx.t2;
-		} else {
-			return haxegon_Gfx.t3 + imagewidth;
-		}
-	}
-	return x;
-};
-haxegon_Gfx.imagealignonimagey = function(imageheight,y) {
-	if(y <= -5000) {
-		haxegon_Gfx.t1 = y - haxegon_Gfx.CENTER;
-		haxegon_Gfx.t2 = y - haxegon_Gfx.TOP;
-		haxegon_Gfx.t3 = y - haxegon_Gfx.BOTTOM;
-		if(haxegon_Gfx.t1 == 0 || Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t2) && Math.abs(haxegon_Gfx.t1) < Math.abs(haxegon_Gfx.t3)) {
-			return haxegon_Gfx.t1 + (imageheight / 2 | 0);
-		} else if(haxegon_Gfx.t2 == 0 || Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t1) && Math.abs(haxegon_Gfx.t2) < Math.abs(haxegon_Gfx.t3)) {
-			return haxegon_Gfx.t2;
-		} else {
-			return haxegon_Gfx.t3 + imageheight;
-		}
-	}
-	return y;
-};
-haxegon_Gfx.internaldrawimage = function(x,y,image,imagewidth,imageheight) {
-	if(!haxegon_Gfx.transform && !haxegon_Gfx.coltransform) {
-		haxegon_Gfx.shapematrix.identity();
-		haxegon_Gfx.shapematrix.translate(x | 0,y | 0);
-		haxegon_Gfx.quadbatch.addImage(image,1.0,haxegon_Gfx.shapematrix);
-	} else {
-		haxegon_Gfx.tempxalign = 0;
-		haxegon_Gfx.tempyalign = 0;
-		haxegon_Gfx.shapematrix.identity();
-		if(haxegon_Gfx.imagexscale != 1.0 || haxegon_Gfx.imageyscale != 1.0) {
-			if(haxegon_Gfx.imagescalexpivot != 0.0) {
-				haxegon_Gfx.tempxalign = haxegon_Gfx.imagealignonimagex(imagewidth,haxegon_Gfx.imagescalexpivot);
-			}
-			if(haxegon_Gfx.imagescaleypivot != 0.0) {
-				haxegon_Gfx.tempyalign = haxegon_Gfx.imagealignonimagey(imageheight,haxegon_Gfx.imagescaleypivot);
-			}
-			haxegon_Gfx.shapematrix.translate(-haxegon_Gfx.tempxalign,-haxegon_Gfx.tempyalign);
-			haxegon_Gfx.shapematrix.scale(haxegon_Gfx.imagexscale,haxegon_Gfx.imageyscale);
-			haxegon_Gfx.shapematrix.translate(haxegon_Gfx.tempxalign,haxegon_Gfx.tempyalign);
-		}
-		if(haxegon_Gfx.imagerotate != 0) {
-			if(haxegon_Gfx.imagerotatexpivot != 0.0) {
-				haxegon_Gfx.tempxalign = haxegon_Gfx.imagealignonimagex(imagewidth,haxegon_Gfx.imagerotatexpivot);
-			}
-			if(haxegon_Gfx.imagerotateypivot != 0.0) {
-				haxegon_Gfx.tempyalign = haxegon_Gfx.imagealignonimagey(imageheight,haxegon_Gfx.imagerotateypivot);
-			}
-			haxegon_Gfx.shapematrix.translate(-haxegon_Gfx.tempxalign,-haxegon_Gfx.tempyalign);
-			haxegon_Gfx.shapematrix.rotate(haxegon_Gfx.imagerotate * 3.1415 / 180);
-			haxegon_Gfx.shapematrix.translate(haxegon_Gfx.tempxalign,haxegon_Gfx.tempyalign);
-		}
-		haxegon_Gfx.shapematrix.translate(x,y);
-		if(haxegon_Gfx.coltransform) {
-			image.set_color(haxegon_Gfx.imagecolormult);
-			haxegon_Gfx.quadbatch.addImage(image,haxegon_Gfx.imagealphamult,haxegon_Gfx.shapematrix);
-			image.set_color(haxegon_Col.WHITE);
-		} else {
-			haxegon_Gfx.quadbatch.addImage(image,1.0,haxegon_Gfx.shapematrix);
-		}
-	}
-};
-haxegon_Gfx.drawimage = function(x,y,imagename) {
-	var _this = haxegon_Gfx.imageindex;
-	if(!(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename))) {
-		haxegon_Gfx.loadimage(imagename);
-	}
-	haxegon_Gfx.endquadbatch();
-	haxegon_Gfx.quadbatchcount++;
-	if(haxegon_Gfx.quadbatchcount >= 16383) {
-		haxegon_Gfx.endquadbatch();
-	}
-	haxegon_Gfx.drawstate = 3;
-	var _this1 = haxegon_Gfx.imageindex;
-	haxegon_Gfx.haxegonimage = haxegon_Gfx.images[__map_reserved[imagename] != null ? _this1.getReserved(imagename) : _this1.h[imagename]];
-	x = haxegon_Gfx.imagealignx(haxegon_Gfx.haxegonimage.width,x);
-	y = haxegon_Gfx.imagealigny(haxegon_Gfx.haxegonimage.height,y);
-	haxegon_Gfx.internaldrawimage(x,y,haxegon_Gfx.haxegonimage.contents,haxegon_Gfx.haxegonimage.width,haxegon_Gfx.haxegonimage.height);
-	haxegon_Gfx.endquadbatch();
-};
-haxegon_Gfx.drawsubimage = function(x,y,x1,y1,w1,h1,imagename) {
-	var _this = haxegon_Gfx.imageindex;
-	if(!(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename))) {
-		haxegon_Debug.log("ERROR: In drawsubimage, cannot find image \"" + imagename + "\".",{ fileName : "Gfx.hx", lineNumber : 601, className : "haxegon.Gfx", methodName : "drawsubimage"});
-		return;
-	}
-	haxegon_Gfx.endquadbatch();
-	haxegon_Gfx.quadbatchcount++;
-	if(haxegon_Gfx.quadbatchcount >= 16383) {
-		haxegon_Gfx.endquadbatch();
-	}
-	var _this1 = haxegon_Gfx.imageindex;
-	haxegon_Gfx.haxegonimage = haxegon_Gfx.images[__map_reserved[imagename] != null ? _this1.getReserved(imagename) : _this1.h[imagename]];
-	x = haxegon_Gfx.imagealignx(haxegon_Gfx.haxegonimage.width,x);
-	y = haxegon_Gfx.imagealigny(haxegon_Gfx.haxegonimage.height,y);
-	haxegon_Gfx.trect.x = x1;
-	haxegon_Gfx.trect.y = y1;
-	haxegon_Gfx.trect.width = w1;
-	haxegon_Gfx.trect.height = h1;
-	var subtex = starling_textures_Texture.fromTexture(haxegon_Gfx.haxegonimage.contents.get_texture(),haxegon_Gfx.trect);
-	var subimage = new starling_display_Image(subtex);
-	subimage.set_touchable(false);
-	subimage.set_smoothing("none");
-	haxegon_Gfx.internaldrawimage(x,y,subimage,subimage.get_width() | 0,subimage.get_height() | 0);
-	haxegon_Gfx.endquadbatch();
-	subtex.dispose();
-	subimage.dispose();
-};
-haxegon_Gfx.grabtilefromscreen = function(tilesetname,tilenumber,screenx,screeny) {
-	haxegon_Gfx.changetileset(tilesetname);
-	if(tilenumber >= haxegon_Gfx.numberoftiles(tilesetname)) {
-		if(tilenumber == haxegon_Gfx.numberoftiles(tilesetname)) {
-			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenumber == null ? "null" : "" + tilenumber) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\". (Because this includes tile number 0, " + (tilenumber == null ? "null" : "" + tilenumber) + " is not a valid tile.)",{ fileName : "Gfx.hx", lineNumber : 639, className : "haxegon.Gfx", methodName : "grabtilefromscreen"});
-			return;
-		} else {
-			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenumber == null ? "null" : "" + tilenumber) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\".",{ fileName : "Gfx.hx", lineNumber : 642, className : "haxegon.Gfx", methodName : "grabtilefromscreen"});
-			return;
-		}
-	}
-	haxegon_Gfx.endquadbatch();
-	haxegon_Gfx.promotetorendertarget(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[tilenumber]);
-	haxegon_Gfx.shapematrix.identity();
-	haxegon_Gfx.shapematrix.translate(-screenx,-screeny);
-	(js_Boot.__cast(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[tilenumber].get_texture() , starling_textures_RenderTexture)).draw(haxegon_Gfx.screen,haxegon_Gfx.shapematrix);
-};
-haxegon_Gfx.grabtilefromimage = function(tilesetname,tilenumber,imagename,imagex,imagey) {
-	var _this = haxegon_Gfx.imageindex;
-	if(!(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename))) {
-		throw new js__$Boot_HaxeError("ERROR: In grabtilefromimage, \"" + imagename + "\" does not exist.");
-	}
-	haxegon_Gfx.changetileset(tilesetname);
-	if(tilenumber >= haxegon_Gfx.numberoftiles(tilesetname)) {
-		if(tilenumber == haxegon_Gfx.numberoftiles(tilesetname)) {
-			haxegon_Debug.log("ERROR: Tried to grab tile from image to tile number " + (tilenumber == null ? "null" : "" + tilenumber) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\". (Because this includes tile number 0, " + (tilenumber == null ? "null" : "" + tilenumber) + " is not a valid tile.)",{ fileName : "Gfx.hx", lineNumber : 670, className : "haxegon.Gfx", methodName : "grabtilefromimage"});
-			return;
-		} else {
-			haxegon_Debug.log("ERROR: Tried to grab tile from image to tile number " + (tilenumber == null ? "null" : "" + tilenumber) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\".",{ fileName : "Gfx.hx", lineNumber : 673, className : "haxegon.Gfx", methodName : "grabtilefromimage"});
-			return;
-		}
-	}
-	haxegon_Gfx.endquadbatch();
-	haxegon_Gfx.promotetorendertarget(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[tilenumber]);
-	haxegon_Gfx.shapematrix.identity();
-	haxegon_Gfx.shapematrix.translate(-imagex,-imagey);
-	var tmp = js_Boot.__cast(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[tilenumber].get_texture() , starling_textures_RenderTexture);
-	var _this1 = haxegon_Gfx.imageindex;
-	tmp.draw(haxegon_Gfx.images[__map_reserved[imagename] != null ? _this1.getReserved(imagename) : _this1.h[imagename]].contents,haxegon_Gfx.shapematrix);
-};
-haxegon_Gfx.grabimagefromscreen = function(imagename,screenx,screeny) {
-	var _this = haxegon_Gfx.imageindex;
-	if(!(__map_reserved[imagename] != null ? _this.existsReserved(imagename) : _this.h.hasOwnProperty(imagename))) {
-		haxegon_Debug.log("ERROR: In Gfx.grabimagefromscreen, \"" + imagename + "\" does not exist. You need to create an image label first before using this function.",{ fileName : "Gfx.hx", lineNumber : 693, className : "haxegon.Gfx", methodName : "grabimagefromscreen"});
-		return;
-	}
-	haxegon_Gfx.endquadbatch();
-	var _this1 = haxegon_Gfx.imageindex;
-	haxegon_Gfx.haxegonimage = haxegon_Gfx.images[__map_reserved[imagename] != null ? _this1.getReserved(imagename) : _this1.h[imagename]];
-	haxegon_Gfx.promotetorendertarget(haxegon_Gfx.haxegonimage.contents);
-	haxegon_Gfx.shapematrix.identity();
-	haxegon_Gfx.shapematrix.translate(-screenx,-screeny);
-	(js_Boot.__cast(haxegon_Gfx.haxegonimage.contents.get_texture() , starling_textures_RenderTexture)).draw(haxegon_Gfx.screen,haxegon_Gfx.shapematrix);
-};
-haxegon_Gfx.grabimagefromimage = function(destinationimage,sourceimage,sourceimagex,sourceimagey) {
-	var _this = haxegon_Gfx.imageindex;
-	if(!(__map_reserved[destinationimage] != null ? _this.existsReserved(destinationimage) : _this.h.hasOwnProperty(destinationimage))) {
-		haxegon_Debug.log("ERROR: In grabimagefromimage, \"" + destinationimage + "\" does not exist. You need to create an image label first before using this function.",{ fileName : "Gfx.hx", lineNumber : 713, className : "haxegon.Gfx", methodName : "grabimagefromimage"});
-		return;
-	}
-	var _this1 = haxegon_Gfx.imageindex;
-	if(!(__map_reserved[sourceimage] != null ? _this1.existsReserved(sourceimage) : _this1.h.hasOwnProperty(sourceimage))) {
-		haxegon_Debug.log("ERROR: No image called \"" + sourceimage + "\" found.",{ fileName : "Gfx.hx", lineNumber : 718, className : "haxegon.Gfx", methodName : "grabimagefromimage"});
-		return;
-	}
-	haxegon_Gfx.endquadbatch();
-	var _this2 = haxegon_Gfx.imageindex;
-	haxegon_Gfx.haxegonimage = haxegon_Gfx.images[__map_reserved[destinationimage] != null ? _this2.getReserved(destinationimage) : _this2.h[destinationimage]];
-	var _this3 = haxegon_Gfx.imageindex;
-	var sourceimage1 = haxegon_Gfx.images[__map_reserved[sourceimage] != null ? _this3.getReserved(sourceimage) : _this3.h[sourceimage]];
-	haxegon_Gfx.promotetorendertarget(haxegon_Gfx.haxegonimage.contents);
-	haxegon_Gfx.shapematrix.identity();
-	haxegon_Gfx.shapematrix.translate(-sourceimagex,-sourceimagey);
-	(js_Boot.__cast(haxegon_Gfx.haxegonimage.contents.get_texture() , starling_textures_RenderTexture)).draw(sourceimage1.contents,haxegon_Gfx.shapematrix);
-};
-haxegon_Gfx.copytile = function(totileset,totilenumber,fromtileset,fromtilenumber) {
-	var _this = haxegon_Gfx.tilesetindex;
-	if(__map_reserved[fromtileset] != null ? _this.existsReserved(fromtileset) : _this.h.hasOwnProperty(fromtileset)) {
-		var tmp;
-		var _this1 = haxegon_Gfx.tilesetindex;
-		if(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width == haxegon_Gfx.tiles[__map_reserved[fromtileset] != null ? _this1.getReserved(fromtileset) : _this1.h[fromtileset]].width) {
-			var _this2 = haxegon_Gfx.tilesetindex;
-			tmp = haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height == haxegon_Gfx.tiles[__map_reserved[fromtileset] != null ? _this2.getReserved(fromtileset) : _this2.h[fromtileset]].height;
-		} else {
-			tmp = false;
-		}
-		if(tmp) {
-			var _this3 = haxegon_Gfx.tilesetindex;
-			haxegon_Gfx.promotetorendertarget(haxegon_Gfx.tiles[__map_reserved[totileset] != null ? _this3.getReserved(totileset) : _this3.h[totileset]].tiles[totilenumber]);
-			haxegon_Gfx.shapematrix.identity();
-			var _this4 = haxegon_Gfx.tilesetindex;
-			var tmp1 = js_Boot.__cast(haxegon_Gfx.tiles[__map_reserved[totileset] != null ? _this4.getReserved(totileset) : _this4.h[totileset]].tiles[totilenumber].get_texture() , starling_textures_RenderTexture);
-			var _this5 = haxegon_Gfx.tilesetindex;
-			tmp1.draw(haxegon_Gfx.tiles[__map_reserved[fromtileset] != null ? _this5.getReserved(fromtileset) : _this5.h[fromtileset]].tiles[fromtilenumber],haxegon_Gfx.shapematrix);
-		} else {
-			var tmp2 = "ERROR: Tilesets " + totileset + " (" + Std.string(haxegon_Gfx.tilewidth(totileset)) + "x" + Std.string(haxegon_Gfx.tileheight(totileset)) + ") and " + fromtileset + " (";
-			var _this6 = haxegon_Gfx.tilesetindex;
-			var tmp3 = tmp2 + Std.string(haxegon_Gfx.tiles[__map_reserved[fromtileset] != null ? _this6.getReserved(fromtileset) : _this6.h[fromtileset]].width) + "x";
-			var _this7 = haxegon_Gfx.tilesetindex;
-			haxegon_Debug.log(tmp3 + Std.string(haxegon_Gfx.tiles[__map_reserved[fromtileset] != null ? _this7.getReserved(fromtileset) : _this7.h[fromtileset]].height) + ") are different sizes. Maybe try just drawing to the tile you want instead with Gfx.drawtotile()?",{ fileName : "Gfx.hx", lineNumber : 746, className : "haxegon.Gfx", methodName : "copytile"});
-			return;
-		}
-	} else {
-		haxegon_Debug.log("ERROR: Tileset " + fromtileset + " hasn't been loaded or created.",{ fileName : "Gfx.hx", lineNumber : 750, className : "haxegon.Gfx", methodName : "copytile"});
-		return;
-	}
-};
-haxegon_Gfx.drawsubtile = function(x,y,tilesetname,tilenum,x1,y1,w,h) {
-	haxegon_Gfx.changetileset(tilesetname);
-	if(tilenum >= haxegon_Gfx.numberoftiles(tilesetname)) {
-		if(tilenum == haxegon_Gfx.numberoftiles(tilesetname)) {
-			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenum == null ? "null" : "" + tilenum) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\". (Because this includes tile number 0, " + (tilenum == null ? "null" : "" + tilenum) + " is not a valid tile.)",{ fileName : "Gfx.hx", lineNumber : 764, className : "haxegon.Gfx", methodName : "drawsubtile"});
-			return;
-		} else {
-			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenum == null ? "null" : "" + tilenum) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\".",{ fileName : "Gfx.hx", lineNumber : 767, className : "haxegon.Gfx", methodName : "drawsubtile"});
-			return;
-		}
-	}
-	haxegon_Gfx.endquadbatch();
-	haxegon_Gfx.quadbatchcount++;
-	if(haxegon_Gfx.quadbatchcount >= 16383) {
-		haxegon_Gfx.endquadbatch();
-	}
-	x = haxegon_Gfx.tilealignx(x);
-	y = haxegon_Gfx.tilealigny(y);
-	haxegon_Gfx.trect.x = x1;
-	haxegon_Gfx.trect.y = y1;
-	haxegon_Gfx.trect.width = w;
-	haxegon_Gfx.trect.height = h;
-	var subtex = starling_textures_Texture.fromTexture(haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[tilenum].get_texture(),haxegon_Gfx.trect);
-	var subimage = new starling_display_Image(subtex);
-	subimage.set_touchable(false);
-	haxegon_Gfx.internaldrawimage(x,y,subimage,subimage.get_width() | 0,subimage.get_height() | 0);
-	haxegon_Gfx.endquadbatch();
-	subtex.dispose();
-	subimage.dispose();
-};
-haxegon_Gfx.drawtile = function(x,y,tilesetname,tilenum) {
-	haxegon_Gfx.changetileset(tilesetname);
-	if(tilenum >= haxegon_Gfx.numberoftiles(tilesetname)) {
-		if(tilenum == haxegon_Gfx.numberoftiles(tilesetname)) {
-			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenum == null ? "null" : "" + tilenum) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\". (Because this includes tile number 0, " + (tilenum == null ? "null" : "" + tilenum) + " is not a valid tile.)",{ fileName : "Gfx.hx", lineNumber : 804, className : "haxegon.Gfx", methodName : "drawtile"});
-			return;
-		} else {
-			haxegon_Debug.log("ERROR: Tried to draw tile number " + (tilenum == null ? "null" : "" + tilenum) + ", but there are only " + Std.string(haxegon_Gfx.numberoftiles(tilesetname)) + " tiles in tileset \"" + haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].name + "\".",{ fileName : "Gfx.hx", lineNumber : 807, className : "haxegon.Gfx", methodName : "drawtile"});
-			return;
-		}
-	}
-	if(haxegon_Gfx.drawstate != 4) {
-		haxegon_Gfx.endquadbatch();
-	}
-	haxegon_Gfx.quadbatchcount++;
-	if(haxegon_Gfx.quadbatchcount >= 16383) {
-		haxegon_Gfx.endquadbatch();
-	}
-	haxegon_Gfx.drawstate = 4;
-	x = haxegon_Gfx.tilealignx(x);
-	y = haxegon_Gfx.tilealigny(y);
-	haxegon_Gfx.internaldrawimage(x,y,haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].tiles[tilenum],haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width,haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height);
-};
-haxegon_Gfx.tilealignx = function(x) {
-	if(x == haxegon_Gfx.CENTER) {
-		return haxegon_Gfx.screenwidthmid - (haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width / 2 | 0);
-	}
-	if(x == haxegon_Gfx.LEFT || x == haxegon_Gfx.TOP) {
-		return 0;
-	}
-	if(x == haxegon_Gfx.RIGHT || x == haxegon_Gfx.BOTTOM) {
-		return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width;
-	}
-	return x;
-};
-haxegon_Gfx.tilealigny = function(y) {
-	if(y == haxegon_Gfx.CENTER) {
-		return haxegon_Gfx.screenheightmid - (haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height / 2 | 0);
-	}
-	if(y == haxegon_Gfx.LEFT || y == haxegon_Gfx.TOP) {
-		return 0;
-	}
-	if(y == haxegon_Gfx.RIGHT || y == haxegon_Gfx.BOTTOM) {
-		return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height;
-	}
-	return y;
-};
-haxegon_Gfx.tilealignontilex = function(x) {
-	if(x == haxegon_Gfx.CENTER) {
-		return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width / 2 | 0;
-	}
-	if(x == haxegon_Gfx.LEFT || x == haxegon_Gfx.TOP) {
-		return 0;
-	}
-	if(x == haxegon_Gfx.RIGHT || x == haxegon_Gfx.BOTTOM) {
-		return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].width;
-	}
-	return x;
-};
-haxegon_Gfx.tilealignontiley = function(y) {
-	if(y == haxegon_Gfx.CENTER) {
-		return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height / 2 | 0;
-	}
-	if(y == haxegon_Gfx.LEFT || y == haxegon_Gfx.TOP) {
-		return 0;
-	}
-	if(y == haxegon_Gfx.RIGHT || y == haxegon_Gfx.BOTTOM) {
-		return haxegon_Gfx.tiles[haxegon_Gfx.currenttileset].height;
-	}
-	return y;
-};
-haxegon_Gfx.drawline = function(x1,y1,x2,y2,color,alpha) {
-	if(alpha == null) {
-		alpha = 1.0;
-	}
-	if(color == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
-		return;
-	}
-	if(haxegon_Gfx.drawstate != 1) {
-		haxegon_Gfx.endquadbatch();
-	}
-	haxegon_Gfx.quadbatchcount++;
-	if(haxegon_Gfx.quadbatchcount >= 16383) {
-		haxegon_Gfx.endquadbatch();
-	}
-	haxegon_Gfx.drawstate = 1;
-	haxegon_Gfx.templine.setPosition(x1,y1,x2,y2);
-	haxegon_Gfx.templine.thickness = haxegon_Gfx.get_linethickness();
-	haxegon_Gfx.templine.set_color(color);
-	haxegon_Gfx.templine.set_alpha(alpha);
-	haxegon_Gfx.quadbatch.addQuad(haxegon_Gfx.templine);
-};
-haxegon_Gfx.drawhexagon = function(x,y,radius,angle,color,alpha) {
-	if(alpha == null) {
-		alpha = 1.0;
-	}
-	if(color == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
-		return;
-	}
-	if(radius <= 0) {
-		return;
-	}
-	if(!haxegon_Geom.inbox(x,y,-radius,-radius,haxegon_Gfx.screenwidth + radius * 2,haxegon_Gfx.screenheight + radius * 2)) {
-		return;
-	}
-	if(haxegon_Gfx.drawstate != 1) {
-		haxegon_Gfx.endquadbatch();
-	}
-	haxegon_Gfx.drawstate = 1;
-	var tempring = new starling_display_Ring(x - radius,y - radius,radius - haxegon_Gfx.get_linethickness(),radius,color,alpha,true,6,angle);
-	var _g1 = 0;
-	var _g = tempring._polygons.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		haxegon_Gfx.quadbatchcount++;
-		if(haxegon_Gfx.quadbatchcount >= 16383) {
-			haxegon_Gfx.endquadbatch();
-		}
-		haxegon_Gfx.quadbatch.addQuad(tempring._polygons[i]);
-	}
-};
-haxegon_Gfx.fillhexagon = function(x,y,radius,angle,color,alpha) {
-	if(alpha == null) {
-		alpha = 1.0;
-	}
-	if(color == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
-		return;
-	}
-	if(radius <= 0) {
-		return;
-	}
-	if(!haxegon_Geom.inbox(x,y,-radius,-radius,haxegon_Gfx.screenwidth + radius * 2,haxegon_Gfx.screenheight + radius * 2)) {
-		return;
-	}
-	if(haxegon_Gfx.drawstate != 1) {
-		haxegon_Gfx.endquadbatch();
-	}
-	haxegon_Gfx.drawstate = 1;
-	var tempring = new starling_display_Disk(x - radius,y - radius,radius,color,alpha,true,6,angle);
-	var _g1 = 0;
-	var _g = tempring._polygons.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		haxegon_Gfx.quadbatchcount++;
-		if(haxegon_Gfx.quadbatchcount >= 16383) {
-			haxegon_Gfx.endquadbatch();
-		}
-		haxegon_Gfx.quadbatch.addQuad(tempring._polygons[i]);
-	}
-};
-haxegon_Gfx.drawcircle = function(x,y,radius,color,alpha) {
-	if(alpha == null) {
-		alpha = 1.0;
-	}
-	if(color == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
-		return;
-	}
-	if(radius <= 0) {
-		return;
-	}
-	if(!haxegon_Geom.inbox(x,y,-radius,-radius,haxegon_Gfx.screenwidth + radius * 2,haxegon_Gfx.screenheight + radius * 2)) {
-		return;
-	}
-	if(haxegon_Gfx.drawstate != 1) {
-		haxegon_Gfx.endquadbatch();
-	}
-	haxegon_Gfx.drawstate = 1;
-	var tempring = new starling_display_Ring(x - radius,y - radius,radius - haxegon_Gfx.get_linethickness(),radius,color,alpha);
-	var _g1 = 0;
-	var _g = tempring._polygons.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		haxegon_Gfx.quadbatchcount++;
-		if(haxegon_Gfx.quadbatchcount >= 16383) {
-			haxegon_Gfx.endquadbatch();
-		}
-		haxegon_Gfx.quadbatch.addQuad(tempring._polygons[i]);
-	}
-};
-haxegon_Gfx.fillcircle = function(x,y,radius,col,alpha) {
-	if(alpha == null) {
-		alpha = 1.0;
-	}
-	if(col == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
-		return;
-	}
-	if(radius <= 0) {
-		return;
-	}
-	if(!haxegon_Geom.inbox(x,y,-radius,-radius,haxegon_Gfx.screenwidth + radius * 2,haxegon_Gfx.screenheight + radius * 2)) {
-		return;
-	}
-	if(haxegon_Gfx.drawstate != 1) {
-		haxegon_Gfx.endquadbatch();
-	}
-	haxegon_Gfx.drawstate = 1;
-	var tempring = new starling_display_Disk(x - radius,y - radius,radius,col,alpha);
-	var _g1 = 0;
-	var _g = tempring._polygons.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		haxegon_Gfx.quadbatchcount++;
-		if(haxegon_Gfx.quadbatchcount >= 16383) {
-			haxegon_Gfx.endquadbatch();
-		}
-		haxegon_Gfx.quadbatch.addQuad(tempring._polygons[i]);
-	}
-};
-haxegon_Gfx.drawtri = function(x1,y1,x2,y2,x3,y3,color,alpha) {
-	if(alpha == null) {
-		alpha = 1.0;
-	}
-	if(color == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
-		return;
-	}
-	haxegon_Gfx.drawline(x1,y1,x2,y2,color,alpha);
-	haxegon_Gfx.drawline(x1,y1,x3,y3,color,alpha);
-	haxegon_Gfx.drawline(x2,y2,x3,y3,color,alpha);
-};
-haxegon_Gfx.filltri = function(x1,y1,x2,y2,x3,y3,color,alpha) {
-	if(alpha == null) {
-		alpha = 1.0;
-	}
-	if(color == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
-		return;
-	}
-	if(haxegon_Gfx.drawstate != 2) {
-		haxegon_Gfx.endquadbatch();
-	}
-	haxegon_Gfx.quadbatchcount++;
-	if(haxegon_Gfx.quadbatchcount >= 16383) {
-		haxegon_Gfx.endquadbatch();
-	}
-	haxegon_Gfx.drawstate = 2;
-	haxegon_Gfx.temppoly4.setVertexPositions(x1,y1,x2,y2,x3,y3,x3,y3);
-	haxegon_Gfx.temppoly4.set_color(color);
-	haxegon_Gfx.temppoly4.set_alpha(alpha);
-	haxegon_Gfx.quadbatch.addQuad(haxegon_Gfx.temppoly4);
-};
-haxegon_Gfx.drawbox = function(x,y,width,height,color,alpha) {
-	if(alpha == null) {
-		alpha = 1.0;
-	}
-	if(color == haxegon_Col.TRANSPARENT || haxegon_Gfx.drawto == null) {
-		return;
-	}
-	if(width < 0) {
-		width = -width;
-		x -= width;
-	}
-	if(height < 0) {
-		height = -height;
-		y -= height;
-	}
-	haxegon_Gfx.fillbox(x,y,width,haxegon_Gfx.get_linethickness(),color,alpha);
-	haxegon_Gfx.fillbox(x + haxegon_Gfx.get_linethickness(),y + height - haxegon_Gfx.get_linethickness(),width - haxegon_Gfx.get_linethickness() * 2,haxegon_Gfx.get_linethickness(),color,alpha);
-	haxegon_Gfx.fillbox(x,y + haxegon_Gfx.get_linethickness(),haxegon_Gfx.get_linethickness(),height - haxegon_Gfx.get_linethickness(),color,alpha);
-	haxegon_Gfx.fillbox(x + width - haxegon_Gfx.get_linethickness(),y + haxegon_Gfx.get_linethickness(),haxegon_Gfx.get_linethickness(),height - haxegon_Gfx.get_linethickness(),color,alpha);
-};
-haxegon_Gfx.fillbox = function(x,y,width,height,col,alpha) {
-	if(alpha == null) {
-		alpha = 1.0;
-	}
-	if(col == haxegon_Col.TRANSPARENT) {
-		return;
-	}
-	if(haxegon_Gfx.drawstate != 1) {
-		haxegon_Gfx.endquadbatch();
-	}
-	haxegon_Gfx.quadbatchcount++;
-	if(haxegon_Gfx.quadbatchcount >= 16383) {
-		haxegon_Gfx.endquadbatch();
-	}
-	haxegon_Gfx.drawstate = 1;
-	haxegon_Gfx.tempquad.set_x(x);
-	haxegon_Gfx.tempquad.set_y(y);
-	haxegon_Gfx.tempquad.set_width(width);
-	haxegon_Gfx.tempquad.set_height(height);
-	haxegon_Gfx.tempquad.set_color(col);
-	haxegon_Gfx.tempquad.set_alpha(alpha);
-	haxegon_Gfx.quadbatch.addQuad(haxegon_Gfx.tempquad);
-};
-haxegon_Gfx.updatequadbatch = function() {
-	haxegon_Gfx.quadbatchcount++;
-	if(haxegon_Gfx.quadbatchcount >= 16383) {
-		haxegon_Gfx.endquadbatch();
-	}
-};
-haxegon_Gfx.endquadbatch = function() {
-	if(haxegon_Gfx.quadbatchcount > 0) {
-		haxegon_Gfx.drawto.draw(haxegon_Gfx.quadbatch);
-		haxegon_Gfx.quadbatch.reset();
-		haxegon_Gfx.quadbatchcount = 0;
-		haxegon_Gfx.drawstate = 0;
-	}
-};
-haxegon_Gfx.endquadbatchonsurface = function(d) {
-	if(haxegon_Gfx.quadbatchcount > 0) {
-		d.draw(haxegon_Gfx.quadbatch);
-		haxegon_Gfx.quadbatch.reset();
-		haxegon_Gfx.quadbatchcount = 0;
-	}
-};
-haxegon_Gfx.get_linethickness = function() {
-	return haxegon_Gfx._linethickness;
-};
-haxegon_Gfx.set_linethickness = function(size) {
-	haxegon_Gfx._linethickness = size;
-	if(haxegon_Gfx._linethickness < 1) {
-		haxegon_Gfx._linethickness = 1;
-	}
-	if(haxegon_Gfx._linethickness > 255) {
-		haxegon_Gfx._linethickness = 255;
-	}
-	return haxegon_Gfx._linethickness;
-};
-haxegon_Gfx.clearscreen = function(color) {
-	if(color == null) {
-		color = 0;
-	}
-	if(haxegon_Gfx.drawto == null) {
-		return;
-	}
-	haxegon_Gfx.endquadbatch();
-	if(color == haxegon_Col.TRANSPARENT) {
-		haxegon_Gfx.drawto.clear();
-	} else {
-		haxegon_Gfx.drawto.clear(color,1.0);
-	}
-};
-haxegon_Gfx.setpixel = function(x,y,color,alpha) {
-	if(alpha == null) {
-		alpha = 1.0;
-	}
-	if(color == haxegon_Col.TRANSPARENT && haxegon_Gfx.drawto != null) {
-		return;
-	}
-	haxegon_Gfx.fillbox(x,y,1,1,color,alpha);
-};
-haxegon_Gfx.getpixel = function(x,y) {
-	var w;
-	var h;
-	var xs;
-	var ys;
-	var resultpixel = haxegon_Col.TRANSPARENT;
-	if(haxegon_Gfx.drawto == haxegon_Gfx.backbuffer) {
-		w = haxegon_Gfx.screenwidth;
-		h = haxegon_Gfx.screenheight;
-		xs = starling_core_Starling.get_current().get_viewPort().width / w;
-		ys = starling_core_Starling.get_current().get_viewPort().height / h;
-		var screenshot = new openfl_display_BitmapData(w,h);
-		screenshot = starling_core_Starling.get_current().get_stage().drawToBitmapData(screenshot,false);
-		var pixelalpha = screenshot.getPixel32(x * xs | 0,y * ys | 0) >> 24 & 255;
-		var pixel = screenshot.getPixel(x * xs | 0,y * ys | 0);
-		if(pixelalpha == 0) {
-			resultpixel = haxegon_Col.TRANSPARENT;
-		} else {
-			resultpixel = pixel;
-		}
-		screenshot.dispose();
-	} else {
-		w = haxegon_Gfx.screenwidth;
-		h = haxegon_Gfx.screenheight;
-		xs = starling_core_Starling.get_current().get_viewPort().width / w;
-		ys = starling_core_Starling.get_current().get_viewPort().height / h;
-		haxegon_Gfx.endquadbatch();
-		haxegon_Gfx.drawto.bundleunlock();
-		var screenshot1 = new openfl_display_BitmapData(w,h);
-		screenshot1 = starling_core_Starling.get_current().get_stage().drawToBitmapData(screenshot1,false);
-		haxegon_Gfx.backbuffer.bundlelock();
-		haxegon_Gfx.backbuffer.clear();
-		haxegon_Gfx.backbuffer.draw(new starling_display_Image(haxegon_Gfx.drawto));
-		haxegon_Gfx.backbuffer.bundleunlock();
-		var screenshot2 = new openfl_display_BitmapData(w,h);
-		screenshot2 = starling_core_Starling.get_current().get_stage().drawToBitmapData(screenshot2,true);
-		var pixelalpha1 = screenshot2.getPixel32(x * xs | 0,y * ys | 0) >> 24 & 255;
-		var pixel1 = screenshot2.getPixel(x * xs | 0,y * ys | 0);
-		if(pixelalpha1 == 0) {
-			resultpixel = haxegon_Col.TRANSPARENT;
-		} else {
-			resultpixel = pixel1;
-		}
-		screenshot2.dispose();
-		haxegon_Gfx.backbuffer.draw(new starling_display_Image(starling_textures_Texture.fromBitmapData(screenshot1)));
-		screenshot1.dispose();
-	}
-	return resultpixel;
-};
-haxegon_Gfx.updategraphicsmode = function(windowwidth,windowheight) {
-	if(!haxegon_Gfx._fullscreen) {
-		if(haxegon_Gfx.flashstage.get_displayState() == 1 || haxegon_Gfx.flashstage.get_displayState() == 0) {
-			haxegon_Gfx.flashstage.set_displayState(2);
-		}
-	} else if(haxegon_Gfx.flashstage.get_displayState() == 2) {
-		try {
-			haxegon_Gfx.flashstage.set_displayState(1);
-		} catch( e ) {
-			haxe_CallStack.lastException = e;
-		}
-	}
-	if(windowwidth == 0 && windowheight == 0) {
-		return;
-	}
-	haxegon_Gfx.starstage.set_stageWidth(haxegon_Gfx.screenwidth);
-	haxegon_Gfx.starstage.set_stageHeight(haxegon_Gfx.screenheight);
-	var stretchscalex;
-	var stretchscaley;
-	var stretchscalex1 = (windowwidth | 0) / haxegon_Gfx.screenwidth;
-	var stretchscaley1 = (windowheight | 0) / haxegon_Gfx.screenheight;
-	var stretchscale = Math.min(stretchscalex1,stretchscaley1);
-	var viewPortRectangle = new openfl_geom_Rectangle();
-	viewPortRectangle.width = haxegon_Gfx.screenwidth * stretchscale;
-	viewPortRectangle.height = haxegon_Gfx.screenheight * stretchscale;
-	viewPortRectangle.x = (windowwidth - (haxegon_Gfx.screenwidth * stretchscale | 0)) / 2 | 0;
-	viewPortRectangle.y = (windowheight - (haxegon_Gfx.screenheight * stretchscale | 0)) / 2 | 0;
-	starling_core_Starling.get_current().set_viewPort(viewPortRectangle);
-};
-haxegon_Gfx.getscreenx = function(_x) {
-	return Math.floor((_x - starling_core_Starling.get_current().get_viewPort().x) * haxegon_Gfx.screenwidth / starling_core_Starling.get_current().get_viewPort().width);
-};
-haxegon_Gfx.getscreeny = function(_y) {
-	return Math.floor((_y - starling_core_Starling.get_current().get_viewPort().y) * haxegon_Gfx.screenheight / starling_core_Starling.get_current().get_viewPort().height);
-};
-haxegon_Gfx.resizescreen = function(width,height) {
-	haxegon_Gfx.initgfx(width | 0,height | 0);
-	haxegon_Text.init(haxegon_Gfx.starstage);
-	haxegon_Gfx.updategraphicsmode(haxegon_Gfx.starstage.get_stageWidth(),haxegon_Gfx.starstage.get_stageHeight());
-};
-haxegon_Gfx.get_fullscreen = function() {
-	return haxegon_Gfx._fullscreen;
-};
-haxegon_Gfx.set_fullscreen = function(fs) {
-	haxegon_Gfx._fullscreen = fs;
-	if(fs) {
-		haxegon_Debug.log("Warning: HTML5 target does not currently support fullscreen. Check again in a later version!",{ fileName : "Gfx.hx", lineNumber : 1198, className : "haxegon.Gfx", methodName : "set_fullscreen"});
-	}
-	return fs;
-};
-haxegon_Gfx.init = function(_starlingstage,_flashstage) {
-	haxegon_Gfx.starstage = _starlingstage;
-	haxegon_Gfx.flashstage = _flashstage;
-	haxegon_Gfx.starstage.addEventListener("resize",haxegon_Gfx.onresize);
-	haxegon_Gfx.quadbatch = new starling_display_QuadBatch();
-	haxegon_Gfx.set_linethickness(1);
-	haxegon_Gfx.loadpackedtextures();
-	haxegon_Gfx.reset();
-};
-haxegon_Gfx.onresize = function(e) {
-	haxegon_Gfx.updategraphicsmode(e.get_width(),e.get_height());
-};
-haxegon_Gfx.loadpackedtextures = function() {
-	if(!haxegon_Gfx.gfxinit) {
-		haxegon_Gfx.starlingassets = new starling_utils_AssetManager();
-		haxegon_Gfx.starlingassets.set_verbose(false);
-		var atlasnum = 0;
-		var _g = 0;
-		var _g1 = openfl_utils_Assets.list("TEXT");
-		while(_g < _g1.length) {
-			var t = _g1[_g];
-			++_g;
-			var extension = haxegon_S.getlastbranch(t,".");
-			if(extension == "xml") {
-				var xml = Xml.parse(openfl_utils_Assets.getText(t)).firstElement();
-				if(xml.nodeType != Xml.Element) {
-					throw new js__$Boot_HaxeError("Bad node type, expected Element but found " + xml.nodeType);
-				}
-				if(xml.nodeName == "TextureAtlas") {
-					var texturepackedimage = starling_textures_Texture.fromBitmapData(openfl_utils_Assets.getBitmapData("data/graphics/" + xml.get("imagePath")),false);
-					haxegon_Gfx.starlingassets.addTexture("atlas" + atlasnum,texturepackedimage);
-					haxegon_Gfx.starlingassets.addTextureAtlas("atlas" + atlasnum,new starling_textures_TextureAtlas(texturepackedimage,xml));
-					++atlasnum;
-					var i = xml.elementsNamed("SubTexture");
-					while(i.hasNext()) {
-						var i1 = i.next();
-						haxegon_Gfx.loadimagefrompackedtexture(i1.get("name"),haxegon_Gfx.getassetpackedtexture(i1.get("name")));
-					}
-				}
-			}
-		}
-	}
-};
-haxegon_Gfx.initgfx = function(width,height) {
-	haxegon_Gfx.screenwidth = width;
-	haxegon_Gfx.screenheight = height;
-	haxegon_Gfx.screenwidthmid = haxegon_Gfx.screenwidth / 2 | 0;
-	haxegon_Gfx.screenheightmid = haxegon_Gfx.screenheight / 2 | 0;
-	haxegon_Gfx.devicexres = openfl_system_Capabilities.get_screenResolutionX() | 0;
-	haxegon_Gfx.deviceyres = openfl_system_Capabilities.get_screenResolutionY() | 0;
-	if(!haxegon_Gfx.gfxinit) {
-		haxegon_Gfx.backbuffer = new starling_textures_RenderTexture(width,height,true);
-		haxegon_Gfx.drawto = haxegon_Gfx.backbuffer;
-		haxegon_Gfx.screen = new starling_display_Image(haxegon_Gfx.backbuffer);
-		haxegon_Gfx.screen.set_touchable(false);
-		haxegon_Gfx.screen.set_scale(1);
-		haxegon_Gfx.screen.set_smoothing("none");
-		haxegon_Gfx.starstage.addChildAt(haxegon_Gfx.screen,0);
-		haxegon_Filter.init();
-	}
-	haxegon_Gfx.gfxinit = true;
-};
-haxegon_Gfx.settrect = function(x,y,w,h) {
-	haxegon_Gfx.trect.x = x;
-	haxegon_Gfx.trect.y = y;
-	haxegon_Gfx.trect.width = w;
-	haxegon_Gfx.trect.height = h;
-};
-haxegon_Gfx.startframe = function() {
-	haxegon_Gfx.drawstate = 0;
-	haxegon_Gfx.drawto.bundlelock();
-	if(haxegon_Gfx.clearcolor != haxegon_Col.TRANSPARENT) {
-		haxegon_Gfx.clearscreen(haxegon_Gfx.clearcolor);
-	}
-	haxegon_Gfx.quadbatch.reset();
-	haxegon_Gfx.quadbatchcount = 0;
-	haxegon_Text.resettextfields();
-};
-haxegon_Gfx.endframe = function() {
-	haxegon_Gfx.endquadbatch();
-	haxegon_Gfx.drawto.bundleunlock();
 };
 var haxegon_Keystate = $hxClasses["haxegon.Keystate"] = { __ename__ : ["haxegon","Keystate"], __constructs__ : ["justreleased","notpressed","pressed","justpressed","forcerelease"] };
 haxegon_Keystate.justreleased = ["justreleased",0];
@@ -41020,7 +41087,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 776130;
+	this.version = 677660;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = ["lime","utils","AssetCache"];
@@ -86914,16 +86981,91 @@ Debris._MIN_SPEED = 5;
 Debris._MAX_SPEED = 7;
 Debris._MIN_SIZE = 10;
 Debris._MAX_SIZE = 20;
+lime_math_Matrix3.__identity = new lime_math_Matrix3();
+openfl_geom_Matrix.__identity = new openfl_geom_Matrix();
+openfl_geom_Matrix.__matrix3 = new lime_math_Matrix3();
+openfl_geom_Matrix.__pool = new lime_utils_ObjectPool_$openfl_$geom_$Matrix(function() {
+	return new openfl_geom_Matrix();
+},function(m) {
+	m.identity();
+});
+starling_events_EventDispatcher.sBubbleChains = [];
+openfl_geom_Point.__pool = new lime_utils_ObjectPool_$openfl_$geom_$Point(function() {
+	return new openfl_geom_Point();
+},function(p) {
+	p.setTo(0,0);
+});
+openfl_geom_Rectangle.__pool = new lime_utils_ObjectPool_$openfl_$geom_$Rectangle(function() {
+	return new openfl_geom_Rectangle();
+},function(r) {
+	r.setTo(0,0,0,0);
+});
+starling_display_DisplayObject.sAncestors = openfl__$Vector_Vector_$Impl_$.toObjectVector(null);
+starling_display_DisplayObject.sHelperPoint = new openfl_geom_Point();
+starling_display_DisplayObject.sHelperPoint3D = new openfl_geom_Vector3D();
+starling_display_DisplayObject.sHelperPointAlt3D = new openfl_geom_Vector3D();
+starling_display_DisplayObject.sHelperRect = new openfl_geom_Rectangle();
+starling_display_DisplayObject.sHelperMatrix = new openfl_geom_Matrix();
+starling_display_DisplayObject.sHelperMatrixAlt = new openfl_geom_Matrix();
+starling_display_DisplayObject.sHelperMatrix3D = new openfl_geom_Matrix3D();
+starling_display_DisplayObject.sHelperMatrixAlt3D = new openfl_geom_Matrix3D();
+starling_display_Quad.sHelperPoint = new openfl_geom_Point();
+starling_display_Quad.sHelperPoint3D = new openfl_geom_Vector3D();
+starling_display_Quad.sHelperMatrix = new openfl_geom_Matrix();
+starling_display_Quad.sHelperMatrix3D = new openfl_geom_Matrix3D();
+openfl_errors_Error.DEFAULT_TO_STRING = "Error";
+starling_utils_VertexData.ELEMENTS_PER_VERTEX = 8;
+starling_utils_VertexData.POSITION_OFFSET = 0;
+starling_utils_VertexData.COLOR_OFFSET = 2;
+starling_utils_VertexData.TEXCOORD_OFFSET = 6;
+starling_utils_VertexData.sHelperPoint = new openfl_geom_Point();
+starling_utils_VertexData.sHelperPoint3D = new openfl_geom_Vector3D();
+haxegon_Gfx.MAX_NUM_QUADS = 16383;
+haxegon_Gfx.LEFT = -10000;
+haxegon_Gfx.RIGHT = -20000;
+haxegon_Gfx.TOP = -10000;
+haxegon_Gfx.BOTTOM = -20000;
+haxegon_Gfx.CENTER = -15000;
+haxegon_Gfx.clearcolor = 0;
+haxegon_Gfx.quadbatchcount = 0;
+haxegon_Gfx.tempquad = new starling_display_Quad(1,1);
+haxegon_Gfx.temppoly4 = new starling_display_Poly4(0,0,1,0,1,1,0,1);
+haxegon_Gfx.templine = new starling_display_Line(1,1,2,2,1,16777215);
+haxegon_Gfx.drawstate = 0;
+haxegon_Gfx.DRAWSTATE_NONE = 0;
+haxegon_Gfx.DRAWSTATE_QUAD = 1;
+haxegon_Gfx.DRAWSTATE_POLY4 = 2;
+haxegon_Gfx.DRAWSTATE_IMAGE = 3;
+haxegon_Gfx.DRAWSTATE_TILES = 4;
+haxegon_Gfx.DRAWSTATE_TEXT = 5;
+haxegon_Gfx.trect = new openfl_geom_Rectangle();
+haxegon_Gfx.shapematrix = new openfl_geom_Matrix();
+haxegon_Gfx.imageindex = new haxe_ds_StringMap();
+haxegon_Gfx.images = [];
+haxegon_Gfx.tiles = [];
+haxegon_Gfx.tilesetindex = new haxe_ds_StringMap();
+haxegon_Gfx.currenttileset = -1;
+haxegon_Gfx.gfxinit = false;
+Globals.level = 0;
+Globals._songPlaying = true;
 Globals._HIGH_SCORE = 0;
 Globals._MIN_SPEED = 5;
 Globals._MAX_SPEED = 7;
 Globals._MIN_SIZE = 10;
 Globals._MAX_SIZE = 20;
-Globals.backgroundSaturation = 0.3;
-Globals.backgroundLightness = 0.3;
+Globals.backgroundSaturation = 0.25;
+Globals.backgroundLightness = 0.2;
 Globals.backgroundChangeSpeed = 35;
-Globals.UI_TEXT_SATURATION = 0.2;
-Globals.UI_TEXT_LIGHTNESS = 0.2;
+Globals.UI_TEXT_SATURATION = 0.35;
+Globals.UI_TEXT_LIGHTNESS = 0.35;
+Globals._INIT_SIZE = 35;
+Globals._MAX_CIRCLES_SIZE = 70;
+Globals._BACKGROUND_CIRCLES_INCREASE_SPEED = 1;
+Globals.backgroundCirclesAmount = 7;
+Globals.mult = 1.6;
+Globals.X_MID = haxegon_Gfx.screenwidthmid;
+Globals.Y_MID = haxegon_Gfx.screenheightmid;
+Globals.allowBackgroundCircles = true;
 openfl_text_Font.__registeredFonts = [];
 PowerUp._HITBOX = 1;
 PowerUp._SATURATION = 0.5;
@@ -87007,34 +87149,6 @@ haxegon_Col.LIGHTBLUE = 11721967;
 haxegon_Col.MAGENTA = 16711935;
 haxegon_Col.TRANSPARENT = 1;
 haxegon_Col.hslval = [0.0,0.0,0.0];
-starling_events_EventDispatcher.sBubbleChains = [];
-lime_math_Matrix3.__identity = new lime_math_Matrix3();
-openfl_geom_Matrix.__identity = new openfl_geom_Matrix();
-openfl_geom_Matrix.__matrix3 = new lime_math_Matrix3();
-openfl_geom_Matrix.__pool = new lime_utils_ObjectPool_$openfl_$geom_$Matrix(function() {
-	return new openfl_geom_Matrix();
-},function(m) {
-	m.identity();
-});
-openfl_geom_Point.__pool = new lime_utils_ObjectPool_$openfl_$geom_$Point(function() {
-	return new openfl_geom_Point();
-},function(p) {
-	p.setTo(0,0);
-});
-openfl_geom_Rectangle.__pool = new lime_utils_ObjectPool_$openfl_$geom_$Rectangle(function() {
-	return new openfl_geom_Rectangle();
-},function(r) {
-	r.setTo(0,0,0,0);
-});
-starling_display_DisplayObject.sAncestors = openfl__$Vector_Vector_$Impl_$.toObjectVector(null);
-starling_display_DisplayObject.sHelperPoint = new openfl_geom_Point();
-starling_display_DisplayObject.sHelperPoint3D = new openfl_geom_Vector3D();
-starling_display_DisplayObject.sHelperPointAlt3D = new openfl_geom_Vector3D();
-starling_display_DisplayObject.sHelperRect = new openfl_geom_Rectangle();
-starling_display_DisplayObject.sHelperMatrix = new openfl_geom_Matrix();
-starling_display_DisplayObject.sHelperMatrixAlt = new openfl_geom_Matrix();
-starling_display_DisplayObject.sHelperMatrix3D = new openfl_geom_Matrix3D();
-starling_display_DisplayObject.sHelperMatrixAlt3D = new openfl_geom_Matrix3D();
 starling_display_DisplayObjectContainer.sHelperMatrix = new openfl_geom_Matrix();
 starling_display_DisplayObjectContainer.sHelperPoint = new openfl_geom_Point();
 starling_display_DisplayObjectContainer.sBroadcastListeners = openfl__$Vector_Vector_$Impl_$.toObjectVector(null);
@@ -87056,43 +87170,6 @@ haxegon_Debug.posinfo = [];
 haxegon_Debug.repeatcount = [];
 haxegon_Geom.rect1 = new openfl_geom_Rectangle();
 haxegon_Geom.rect2 = new openfl_geom_Rectangle();
-starling_display_Quad.sHelperPoint = new openfl_geom_Point();
-starling_display_Quad.sHelperPoint3D = new openfl_geom_Vector3D();
-starling_display_Quad.sHelperMatrix = new openfl_geom_Matrix();
-starling_display_Quad.sHelperMatrix3D = new openfl_geom_Matrix3D();
-openfl_errors_Error.DEFAULT_TO_STRING = "Error";
-starling_utils_VertexData.ELEMENTS_PER_VERTEX = 8;
-starling_utils_VertexData.POSITION_OFFSET = 0;
-starling_utils_VertexData.COLOR_OFFSET = 2;
-starling_utils_VertexData.TEXCOORD_OFFSET = 6;
-starling_utils_VertexData.sHelperPoint = new openfl_geom_Point();
-starling_utils_VertexData.sHelperPoint3D = new openfl_geom_Vector3D();
-haxegon_Gfx.MAX_NUM_QUADS = 16383;
-haxegon_Gfx.LEFT = -10000;
-haxegon_Gfx.RIGHT = -20000;
-haxegon_Gfx.TOP = -10000;
-haxegon_Gfx.BOTTOM = -20000;
-haxegon_Gfx.CENTER = -15000;
-haxegon_Gfx.clearcolor = 0;
-haxegon_Gfx.quadbatchcount = 0;
-haxegon_Gfx.tempquad = new starling_display_Quad(1,1);
-haxegon_Gfx.temppoly4 = new starling_display_Poly4(0,0,1,0,1,1,0,1);
-haxegon_Gfx.templine = new starling_display_Line(1,1,2,2,1,16777215);
-haxegon_Gfx.drawstate = 0;
-haxegon_Gfx.DRAWSTATE_NONE = 0;
-haxegon_Gfx.DRAWSTATE_QUAD = 1;
-haxegon_Gfx.DRAWSTATE_POLY4 = 2;
-haxegon_Gfx.DRAWSTATE_IMAGE = 3;
-haxegon_Gfx.DRAWSTATE_TILES = 4;
-haxegon_Gfx.DRAWSTATE_TEXT = 5;
-haxegon_Gfx.trect = new openfl_geom_Rectangle();
-haxegon_Gfx.shapematrix = new openfl_geom_Matrix();
-haxegon_Gfx.imageindex = new haxe_ds_StringMap();
-haxegon_Gfx.images = [];
-haxegon_Gfx.tiles = [];
-haxegon_Gfx.tilesetindex = new haxe_ds_StringMap();
-haxegon_Gfx.currenttileset = -1;
-haxegon_Gfx.gfxinit = false;
 haxegon_Input.clipboardbuffer = [""];
 haxegon_Input.keymap = new haxe_ds_EnumValueMap();
 haxegon_Input.lookup = new haxe_ds_IntMap();
