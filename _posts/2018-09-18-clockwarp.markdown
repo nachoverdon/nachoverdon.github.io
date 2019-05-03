@@ -13,7 +13,7 @@ tags:
 subtitle: I was here.
 author: Nacho Verdón
 avatar: img/authors/bazoo.png
-image: "/uploads/cw.mp4"
+image: "/uploads/clckwrp.gif"
 ---
 
 ### Clockwarp
