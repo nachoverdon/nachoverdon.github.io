@@ -1,6 +1,6 @@
 ---
 title: Dotger
-date: 2017-08-08 14:12:00 +02:00
+date: 2017-08-08 14:12:00 +01:00
 categories:
 - games
 - haxe
