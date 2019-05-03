@@ -16,7 +16,6 @@ image: "/uploads/LDToaH.gif"
 ---
 
 ### Dotger
-![Dotger](https://img.itch.zone/aW1hZ2UvMTY2NTI4Lzc3MDM3Ni5naWY=/original/LDToaH.gif)
 
 A colorful arcade game about dodging for survival that I made for the [Ludum Dare #39](https://ldjam.com/events/ludum-dare/39/dotger), written in [Haxe](https://haxe.org/) using [Haxegon](https://github.com/haxegon/haxegon), inspired by Terry Cavanagh games.
 
