@@ -18,7 +18,7 @@ image: "/uploads/clckwrp.gif"
 
 ### Clockwarp
 
-A game I made for the GamedevES #1 game jam, which was selected as the winner entry. Written in [Haxe](https://haxe.org/) using [HaxeFlixel](http://haxeflixel.com/).
+A game I made for the GamedevES #1 game jam, which was [selected as the winner](http://www.gamedev.es/los-ganadores-de-la-gamejam/). Written in [Haxe](https://haxe.org/) using [HaxeFlixel](http://haxeflixel.com/).
 
 [Play it on Itch.io](https://bazoo.itch.io/clockwarp)
 
