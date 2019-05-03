@@ -33,7 +33,7 @@ image: "/uploads/s2v.png"
 
 ### Slippi2Video
 
-A tool that converts [Project Slippi](https://slippi.gg/) powered Super Smash Bros. Melee replays into to video using [OBS Studio]()https://obsproject.com/ through [OBS Websocket](https://github.com/Palakis/obs-websocket), with a simple user interface to set things up. Written in [Haxe](https://haxe.org), using [HaxeUI](http://haxeui.org/) and my [own parser for .slp files](https://github.com/nachoverdon/SlippiHx).
+A tool that converts [Project Slippi](https://slippi.gg/) powered Super Smash Bros. Melee replays into video using [OBS Studio]()https://obsproject.com/ through [OBS Websocket](https://github.com/Palakis/obs-websocket), with a simple user interface to set things up. Written in [Haxe](https://haxe.org), using [HaxeUI](http://haxeui.org/) and my [own parser for .slp files](https://github.com/nachoverdon/SlippiHx).
 
 [Download it from GitHub](https://github.com/nachoverdon/Slippi2VideoHX/releases/tag/v1.0)
 
