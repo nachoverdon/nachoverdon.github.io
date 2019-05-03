@@ -21,7 +21,7 @@ tags:
 subtitle: Melee streams made easy!
 author: Nacho Verdón
 avatar: img/authors/bazoo.png
-image: 
+image: "/uploads/mss.png"
 ---
 
 ### Melee Stream Scoreboard
