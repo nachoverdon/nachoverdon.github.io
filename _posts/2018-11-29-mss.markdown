@@ -29,4 +29,5 @@ image: "/uploads/mss.png"
 A tool to easily administrate Super Smash Bros. Melee tournament streams, generating JSON data from a simple GUI, written in Java.
 
 [Download it from GitHub](https://github.com/nachoverdon/MeleeStreamScoreboard/releases/tag/0.1)
+
 [Get the source code](https://github.com/nachoverdon/MeleeStreamScoreboard)
