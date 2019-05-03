@@ -1,6 +1,6 @@
 ---
 title: Dotger
-date: 2017-08-08 12:12:00 Z
+date: 2017-08-08 14:12:00 +02:00
 categories:
 - games
 - haxe
@@ -20,3 +20,4 @@ image: "/uploads/LDToaH.gif"
 A colorful arcade game about dodging for survival that I made for the [Ludum Dare #39](https://ldjam.com/events/ludum-dare/39/dotger), written in [Haxe](https://haxe.org/) using [Haxegon](https://github.com/haxegon/haxegon), inspired by Terry Cavanagh games.
 
 [Play it on Itch.io](https://bazoo.itch.io/dotger)
+[Get the code on GitHub](https://github.com/nachoverdon/DotgerHaxegon)
