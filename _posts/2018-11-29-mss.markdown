@@ -1,0 +1,28 @@
+---
+title: Melee Stream Scoreboard
+date: 2018-11-29 16:02:00 +01:00
+categories:
+- Melee
+- tool
+- Java
+- JSON
+tags:
+- Melee
+- Stream
+- Scoreboard
+- tool
+- smash
+- bros
+- torunament
+- stream
+- json
+- GUI
+- Java
+---
+
+### Melee Stream Scoreboard
+
+A tool to easily administrate Super Smash Bros. Melee tournament streams, generating JSON data from a simple GUI, written in Java.
+
+[Download it from GitHub](https://github.com/nachoverdon/MeleeStreamScoreboard/releases/tag/0.1)
+[Get the source code](https://github.com/nachoverdon/MeleeStreamScoreboard)
