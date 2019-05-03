@@ -1,10 +1,10 @@
 ---
-title:  "Absense of light"
-subtitle: "Only lights from space"
-author: "Wferr"
-avatar: "img/authors/wferr.png"
-image: "img/d.jpg"
-date:   2015-04-23 12:12:12
+title: Absense of light
+date: 2015-04-23 12:12:12 Z
+subtitle: Only lights from space
+author: Wferr
+avatar: img/authors/wferr.png
+image: img/d.jpg
 ---
 
 ### Dolor sit amet?
