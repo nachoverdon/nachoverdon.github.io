@@ -1,10 +1,10 @@
 ---
-title: Planes are cool!
-date: 2015-04-20 12:12:12 Z
-subtitle: The Fly!
+title: Absense of light
+date: 2015-04-23 12:12:12 Z
+subtitle: Only lights from space
 author: Wferr
 avatar: img/authors/wferr.png
-image: img/a.jpg
+image: img/d.jpg
 ---
 
 ### Dolor sit amet?

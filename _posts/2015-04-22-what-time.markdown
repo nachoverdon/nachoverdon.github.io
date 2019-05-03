@@ -1,10 +1,10 @@
 ---
-title: Planes are cool!
-date: 2015-04-20 12:12:12 Z
-subtitle: The Fly!
+title: Watches
+date: 2015-04-22 12:12:12 Z
+subtitle: The Bigger the better?
 author: Wferr
 avatar: img/authors/wferr.png
-image: img/a.jpg
+image: img/c.jpg
 ---
 
 ### Dolor sit amet?
