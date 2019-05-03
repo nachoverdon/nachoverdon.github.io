@@ -1,6 +1,6 @@
 ---
 title: Nacho Verdón
-timezone: UTC
+timezone: Europe/Madrid
 collections:
   posts:
     title: Posts
@@ -11,16 +11,11 @@ collections:
 email: nverblaz@gmail.com
 description: My portfolio
 keywords: Developer, Java, Haxe, Javascript, Python, HTML, Games
-author: nachoverdon
-baseurl: ''
+author: Nacho Verdón
+baseurl: 
 url: http://justht.ml/
-title_description: Games. Web. SSBM. Foutaises.
 title_image: http://i.imgur.com/23HNUKl.png
 post_limit: 5
-twitter_username: bazoo_mv
-github_username: nachoverdon
-instagram_username: 
-reddit_username: 
 markdown: kramdown
 kramdown:
   input: GFM
