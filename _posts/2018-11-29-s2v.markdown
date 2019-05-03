@@ -1,0 +1,40 @@
+---
+title: Slippi2Video
+date: 2019-04-15 20:48:00 +01:00
+categories:
+- Melee
+- tool
+- Haxe
+- JSON
+- Websocket
+tags:
+- Melee
+- OBS
+- Websocket
+- tool
+- Smash
+- Bros
+- Project
+- Slippi
+- video
+- replay
+- convert
+- json
+- GUI
+- Haxe
+- HaxeUI
+- SLP
+- parser
+subtitle: Automate the boring stuff...
+author: Nacho Verdón
+avatar: img/authors/bazoo.png
+image: "/uploads/s2v.png"
+---
+
+### Slippi2Video
+
+A tool that converts [Project Slippi](https://slippi.gg/) powered Super Smash Bros. Melee replays into to video using [OBS Studio]()https://obsproject.com/ through [OBS Websocket](https://github.com/Palakis/obs-websocket), with a simple user interface to set things up. Written in [Haxe](https://haxe.org), using [HaxeUI](http://haxeui.org/) and my [own parser for .slp files](https://github.com/nachoverdon/SlippiHx).
+
+[Download it from GitHub](https://github.com/nachoverdon/Slippi2VideoHX/releases/tag/v1.0)
+
+[Get the source code](https://github.com/nachoverdon/Slippi2VideoHX)
