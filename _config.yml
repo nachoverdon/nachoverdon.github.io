@@ -9,7 +9,9 @@ collections:
     title: Uploads
     output: true
 email: nverblaz@gmail.com
-description: Games. Web. SSBM. Foutaises.
+description: My portfolio
+keywords: Developer, Java, Haxe, Javascript, Python, HTML, Games
+author: nachoverdon
 baseurl: ''
 url: http://justht.ml/
 title_description: Games. Web. SSBM. Foutaises.
@@ -19,10 +21,6 @@ twitter_username: bazoo_mv
 github_username: nachoverdon
 instagram_username: 
 reddit_username: 
-footer_left: Made with <i class="fa fa-heart"></i> by <a href="https://twitter.com/_JacobTomlinson">Jacob
-  Tomlinson</a>
-footer_right: '&lt;/&gt; on <a href="https://github.com/jacobtomlinson/carte-noire">Github</a>
-  &nbsp;<i class="fa fa-github-alt"></i>'
 markdown: kramdown
 kramdown:
   input: GFM
@@ -31,5 +29,3 @@ permalink: pretty
 exclude:
 - vendor
 show_downloads: true
-gems:
-- jekyll-mentions
