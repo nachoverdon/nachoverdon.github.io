@@ -18,6 +18,10 @@ tags:
 - json
 - GUI
 - Java
+subtitle: Melee streams made easy!
+author: Nacho Verdón
+avatar: img/authors/bazoo.png
+image: "/uploads/LDToaH.gif"
 ---
 
 ### Melee Stream Scoreboard
